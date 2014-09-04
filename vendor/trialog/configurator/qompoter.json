@@ -1,0 +1,12 @@
+{
+	"name": "fylhan/configurator",
+	"description": "JSON configuration files for Qt project.",
+	"keywords": ["Qt", "C++", "JSON", "configuration"],
+	"authors": [
+		{
+			"name": "Fylhan",
+			"homepage": "http://fylhan.la-bnbox.fr"
+		}
+	],
+	"license": "LGPL-3.1"
+}

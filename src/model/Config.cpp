@@ -81,8 +81,7 @@ Config Config::fromFile(QString filepath)
 {
     Config config;
     // -- Get configuration file data
-    ConfigFileManager configFileManager;
-    QVariantMap data = configFileManager.parseFile(filepath);
+    QVariantMap data = ConfigFileManager::parseFile(filepath);
     // Error or no data
     if (data.size() <= 0) {
         qCritical()<<"No data";

@@ -1,0 +1,17 @@
+{
+	"name": "fylhan/test-engine",
+	"description": "A unit test engine over Qt QTest.",
+	"keywords": ["Qt", "C++", "test", "unit test", "test engine"],
+	"authors": [
+		{
+			"name": "Fylhan",
+			"homepage": "http://fylhan.la-bnbox.fr"
+		}
+	],
+	"license": "LGPL-3.1",
+	"version": "1.0.0",
+	"require": {
+		"qt": "4.8.1",
+		"fylhan/solilogger": "1.*"
+	}
+}

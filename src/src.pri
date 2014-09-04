@@ -20,7 +20,7 @@ HEADERS += $$PWD/model/Config.h \
     $$PWD/loader/GitLoader.h
 
 OTHER_FILES += $$PWD/../qompoter.json \
-    $$PWD/../README.txt \
+    $$PWD/../README.md \
 
 INCLUDEPATH += $$PWD/model \
     $$PWD/loader \
