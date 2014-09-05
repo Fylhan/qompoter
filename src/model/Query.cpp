@@ -27,6 +27,16 @@ void Qompoter::Query::setVerbose(const bool &verbose)
     _verbose = verbose;
 }
 
+const bool &Qompoter::Query::isGlobal() const
+{
+    return _global;
+}
+
+void Qompoter::Query::setGlobal(const bool &global)
+{
+    _global = global;
+}
+
 const QString &Qompoter::Query::getQompoterFile() const
 {
     return _qompoterFile;

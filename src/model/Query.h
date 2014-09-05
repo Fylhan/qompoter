@@ -15,6 +15,9 @@ public:
     const bool &isVerbose() const;
     void setVerbose(const bool &verbose);
 
+    const bool &isGlobal() const;
+    void setGlobal(const bool &global);
+
     const QString &getQompoterFile() const;
     void setQompoterFile(const QString &qompoterFile);
 
@@ -27,6 +30,7 @@ public:
 private:
     QString _action;
     bool _verbose;
+    bool _global;
     QString _qompoterFile;
     QString _workingDir;
     QString _vendorDir;
