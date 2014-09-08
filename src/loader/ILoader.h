@@ -19,6 +19,7 @@ public:
     }
     virtual QString getLoadingType() const = 0;
     virtual bool isAvailable(const DependencyInfo &packageInfo, const RepositoryInfo &repositoryInfo) const = 0;
+    virtual QList<DependencyInfo> loadDependencies(const Qompoter::DependencyInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const = 0;
     virtual bool load(const DependencyInfo &packageInfo, const RepositoryInfo &repositoryInfo) const = 0;
 
 protected:

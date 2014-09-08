@@ -2,7 +2,6 @@
 
 using namespace Qompoter;
 
-
 Qompoter::DependencyInfo::DependencyInfo(QString name, QString version) :
     _packageName(name),
     _version(version),

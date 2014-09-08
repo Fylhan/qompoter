@@ -18,40 +18,40 @@ public:
     static Config fromFile(QString ilepath);
     QString toString(QString prefixe="");
 
-    const QString& packageName();
+    const QString& packageName() const;
     void setPackageName(const QString& packageName);
 
-    QString vendorName();
-    QString projectName();
+    QString vendorName() const;
+    QString projectName() const;
 
-    const QString& description();
+    const QString& description() const;
     void setDescription(const QString& description);
 
-    const QList<QString>& keywords();
+    const QList<QString>& keywords() const;
     void setKeywords(const QList<QString>& keywords);
     void addKeyword(const QString& keyword);
 
-    const QList<AuthorInfo>& authors();
+    const QList<AuthorInfo>& authors() const;
     void setAuthors(const QList<AuthorInfo>& authors);
     void addAuthor(const AuthorInfo& author);
 
-    const QString& license();
+    const QString& license() const;
     void setLicense(const QString& license);
 
-    const QString& version();
+    const QString& version() const;
     void setVersion(const QString& version);
 
-    const QList<DependencyInfo>& require();
-    const QList<DependencyInfo>& packages();
+    const QList<DependencyInfo>& require() const;
+    const QList<DependencyInfo>& packages() const;
     void setRequires(const QList<DependencyInfo>& require);
     void addPackage(const DependencyInfo& require);
 
-    const QList<DependencyInfo>& requireDev();
-    const QList<DependencyInfo>& packagesDev();
+    const QList<DependencyInfo>& requireDev() const;
+    const QList<DependencyInfo>& packagesDev() const;
     void setRequireDevs(const QList<DependencyInfo>& requireDev);
     void addPackageDev(const DependencyInfo& requireDev);
 
-    const QList<RepositoryInfo>& repositories();
+    const QList<RepositoryInfo>& repositories() const;
     void setRepositories(const QList<RepositoryInfo>& repositories);
     void addRepository(const RepositoryInfo& repository);
 

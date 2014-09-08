@@ -3,6 +3,12 @@
 #include <QDebug>
 #include <QDir>
 
+#include "Config.h"
+#include "DependencyInfo.h"
+#include "ConfigFileManager.h"
+
+using namespace Qompoter;
+
 Qompoter::FsLoader::FsLoader(const Qompoter::Query &query) :
     ILoader(query)
 {
@@ -19,6 +25,17 @@ bool Qompoter::FsLoader::isAvailable(const Qompoter::DependencyInfo &packageInfo
     return QDir(repositoryInfo.url()+packageInfo.packageName()).exists();
 }
 
+QList<DependencyInfo> Qompoter::FsLoader::loadDependencies(const Qompoter::DependencyInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const
+{
+    QString qompoterFile = repositoryInfo.url()+packageInfo.packageName()+"/qompoter.json";
+    if (QFile(qompoterFile).exists()) {
+        qCritical()<<"\tNo qompoter.json file for this dependency";
+        return QList<DependencyInfo>();
+    }
+    Config subConfig(ConfigFileManager::parseFile(qompoterFile));
+    return subConfig.packages();
+}
+
 bool Qompoter::FsLoader::load(const Qompoter::DependencyInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const
 {
     QString packageDestPath = _query.getWorkingDir()+_query.getVendorDir()+packageInfo.packageName();
@@ -27,7 +44,7 @@ bool Qompoter::FsLoader::load(const Qompoter::DependencyInfo &packageInfo, const
         qCritical()<<"\tNo such package: "<<packageSourcePath;
         return false;
     }
-    qDebug()<<"\tDownloading... from "<<repositoryInfo.url();
+    qDebug()<<"\tDownloading...";
     return Qompoter::cpDir(packageSourcePath, packageDestPath);
 }
 

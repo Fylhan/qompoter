@@ -41,6 +41,13 @@ bool Qompoter::GitLoader::isAvailable(const Qompoter::DependencyInfo &packageInf
     return QDir(repositoryInfo.url()+packageInfo.packageName()+".git").exists();
 }
 
+QList<Qompoter::DependencyInfo> Qompoter::GitLoader::loadDependencies(const Qompoter::DependencyInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const
+{
+    // TODO
+    qCritical()<<"\tNo qompoter.json file for this dependency";
+    return QList<DependencyInfo>();
+}
+
 bool Qompoter::GitLoader::load(const Qompoter::DependencyInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const
 {
     QString packageDestPath = _query.getWorkingDir()+_query.getVendorDir()+packageInfo.packageName();
@@ -49,7 +56,7 @@ bool Qompoter::GitLoader::load(const Qompoter::DependencyInfo &packageInfo, cons
         qCritical()<<"\tNo such package: "<<packageSourcePath;
         return false;
     }
-    qDebug()<<"\tDownloading from Git... "<<repositoryInfo.url();
+    qDebug()<<"\tDownloading from Git... ";
     QProcess gitProcess;
     QString gitProgram = "git";
     QStringList arguments;

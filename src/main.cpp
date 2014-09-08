@@ -80,7 +80,201 @@ CommandLineParseResult parseCommandLine(QCommandLineParser &parser, Query &query
     return CommandLineOk;
 }
 
+bool searchOtherDependenciesAction(Config &config, const Query &query)
+{
+    FsLoader fsLoader(query);
+    GitLoader gitLoader(query);
+    QList<DependencyInfo> moreDependencies;
+    foreach (DependencyInfo dependency, config.packages()) {
+        if (!dependency.isDownloadRequired()) {
+            continue;
+        }
+        qDebug()<<"\t- Searching dependencies of:"<<dependency.packageName()<<" ("<<dependency.version()<<")";
+        foreach(RepositoryInfo repo, config.repositories()) {
+            if (repo.type() == "fs" && fsLoader.isAvailable(dependency, repo)) {
+                moreDependencies.append(fsLoader.loadDependencies(dependency, repo));
+                break;
+            }
+            else if (repo.type() == "git" && gitLoader.isAvailable(dependency, repo)) {
+                moreDependencies.append(gitLoader.loadDependencies(dependency, repo));
+                break;
+            }
+        }
+    }
+    // TODO loop until there is no more dependencies to add
+    qDebug()<<"";
+    return true;
+}
 
+bool installAction(const Config &config, const Query &query)
+{
+    bool globalResult = true;
+    FsLoader fsLoader(query);
+    GitLoader gitLoader(query);
+    foreach (DependencyInfo dependency, config.packages()) {
+        if (!dependency.isDownloadRequired()) {
+            continue;
+        }
+        bool found = false;
+        bool updated = false;
+        qDebug()<<"\t- Installing:"<<dependency.packageName()<<" ("<<dependency.version()<<")";
+        foreach(RepositoryInfo repo, config.repositories()) {
+            if (repo.type() == "fs" && fsLoader.isAvailable(dependency, repo)) {
+                found = true;
+                updated = fsLoader.load(dependency, repo);
+                break;
+            }
+            else if (repo.type() == "git" && gitLoader.isAvailable(dependency, repo)) {
+                found = true;
+                updated = gitLoader.load(dependency, repo);
+                break;
+            }
+        }
+        if (updated)
+            qDebug()<<"\tdone";
+        else if (!found)
+            qCritical()<<"\tFAILLURE: not found package";
+        else
+            qCritical()<<"\tFAILLURE";
+        qDebug()<<"";
+        globalResult *= updated;
+    }
+    return globalResult;
+}
+
+bool makeAction(const Config &config, const Query &query)
+{
+    bool globalResult = true;
+    QFile vendorPro(query.getWorkingDir()+query.getVendorDir()+"vendor.pro");
+    vendorPro.remove();
+    foreach (DependencyInfo dependency, config.packages()) {
+        if (!dependency.isDownloadRequired()) {
+            continue;
+        }
+        QString packagePath(query.getWorkingDir()+query.getVendorDir()+dependency.packageName());
+        QDir packageDir(packagePath);
+        bool found = false;
+        bool maked = false;
+        qDebug()<<"\t- Compiling:"<<dependency.packageName()<<" ("<<dependency.version()<<")";
+        if (packageDir.exists()) {
+            QString packageBuildName("build-"+dependency.projectName());
+            QDir packageBuildDir(query.getWorkingDir()+query.getVendorDir());
+            if (packageBuildDir.mkpath(packageBuildName)) {
+                found = true;
+                packageBuildDir.cd(packageBuildName);
+                QProcess makeProcess;
+                makeProcess.setWorkingDirectory(packageBuildDir.path());
+                QString program;
+                QStringList arguments;
+                // Qmake
+                program = "qmake";
+                QString proFile("../"+dependency.packageName()+"/"+dependency.projectName()+".pro");
+                QFile proFd(packageBuildDir.path()+"/"+proFile);
+                if (!proFd.exists()) {
+                    qDebug()<<"\tNo .pro file, try to generate one...";
+                    if (!proFd.open(QIODevice::ReadWrite)) {
+                        qCritical()<<"\tCan't open pro file: "<<proFd.fileName();
+                    }
+                    QString data;
+                    data.append("PUBLIC_HEADERS += \\\n");
+                    QStringList hFiles = packageDir.entryList(QStringList()<<"*.h"<<"*.hpp", QDir::Files);
+                    foreach(QString file, hFiles) {
+                        data.append("\t$$PWD/"+file+" \\\n");
+                    }
+                    data.append("\n");
+                    data.append("HEADERS += \\\n");
+                    data.append("\t$$PUBLIC_HEADERS \\\n");
+                    data.append("\n");
+                    data.append("SOURCES += \\\n");
+                    QStringList cppFiles = packageDir.entryList(QStringList()<<"*.cpp", QDir::Files);
+                    foreach(QString file, cppFiles) {
+                        data.append("\t$$PWD/"+file+" \\\n");
+                    }
+                    data.append("\n");
+                    data.append("\n\n");
+                    data.append("LIBNAME = "+dependency.projectName()+"\n");
+                    data.append("EXPORT_PATH = $$OUT_PWD/..\n");
+                    data.append("EXPORT_INCLUDEPATH = $$EXPORT_PATH/include/$$LIBNAME\n");
+                    data.append("EXPORT_LIBPATH = $$EXPORT_PATH/lib\n");
+                    data.append("TEMPLATE = lib\n");
+                    data.append("QT += core gui network script designer\n");
+                    data.append("greaterThan(QT_MAJOR_VERSION, 4): QT += widgets\n");
+                    data.append("CONFIG += QT\n");
+                    data.append("CONFIG += staticlib\n");
+                    data.append("CONFIG += debug_and_release build_all\n");
+                    data.append("CONFIG(debug,debug|release) {\n");
+                    data.append("\tLIBNAME = $${LIBNAME}d\n");
+                    data.append("}\n");
+                    data.append("TARGET = $$LIBNAME\n");
+                    data.append("DESTDIR = $$EXPORT_LIBPATH\n");
+                    data.append("headers.files = $$PUBLIC_HEADERS\n");
+                    data.append("headers.path = $$EXPORT_INCLUDEPATH\n");
+                    data.append("INSTALLS += headers\n\n");
+                    proFd.write(data.toUtf8());
+                    proFd.close();
+                }
+                arguments<<proFile;
+                qDebug()<<"\tRun "<<program<<" "<<arguments;
+                makeProcess.start(program, arguments);
+                maked = makeProcess.waitForFinished();
+                if (query.isVerbose()) {
+                    qDebug()<<"\t"<<makeProcess.readAll();
+                }
+                if (maked) {
+                    // Make
+                    program = "make";
+                    arguments.clear();
+                    qDebug()<<"\tRun "<<program<<arguments;
+                    makeProcess.start(program, arguments);
+                    maked = makeProcess.waitForFinished();
+                    if (query.isVerbose()) {
+                        qDebug()<<"\t"<<makeProcess.readAll();
+                    }
+                    if (maked) {
+                        // Make
+                        program = "make";
+                        arguments.clear();
+                        arguments<<"install";
+                        qDebug()<<"\tRun "<<program<<arguments;
+                        makeProcess.start(program, arguments);
+                        maked = makeProcess.waitForFinished();
+                        if (query.isVerbose()) {
+                            qDebug()<<"\t"<<makeProcess.readAll();
+                        }
+                    }
+                }
+
+                // Add stuff to vendor.pro
+                if (maked) {
+                    QFile vendorPro(query.getWorkingDir()+query.getVendorDir()+"vendor.pro");
+                    vendorPro.open(QIODevice::WriteOnly | QIODevice::Append);
+                    QString data;
+                    data.append(dependency.projectName()+" {\n");
+                    data.append("\tLIBNAME = "+dependency.projectName()+"\n");
+                    data.append("\tIMPORT_INCLUDEPATH = $$PWD/include/$$LIBNAME\n");
+                    data.append("\tIMPORT_LIBPATH = $$PWD/lib\n");
+                    data.append("\tCONFIG(debug,debug|release) {\n");
+                    data.append("\t\tLIBNAME = $${LIBNAME}d\n");
+                    data.append("\t}\n");
+                    data.append("\tINCLUDEPATH += $$IMPORT_INCLUDEPATH\n");
+                    data.append("\tLIBS += -L$$IMPORT_LIBPATH -l$${LIBNAME}\n");
+                    data.append("}\n\n");
+                    vendorPro.write(data.toUtf8());
+                    vendorPro.close();
+                }
+            }
+        }
+        if (maked)
+            qDebug()<<"\tdone";
+        else if (!found)
+            qCritical()<<"\tFAILLURE: not found package";
+        else
+            qCritical()<<"\tFAILLURE";
+        qDebug()<<"";
+        globalResult *= maked;
+    }
+    return globalResult;
+}
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {
@@ -126,177 +320,17 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     if (query.isVerbose()) {
         qDebug()<<"Config:\n"<<config.toString();
     }
+    //        config.addRepository("git", RepositoryInfo("git", "https://github.com/"));
+    config.addRepository(RepositoryInfo("git", "/media/Project/PlateformeVehiculeElectrique/4_workspace/"));
+    config.addRepository(RepositoryInfo("fs", "/media/Project/PlateformeVehiculeElectrique/4_workspace/"));
 
     bool globalResult = true;
     if ("install" == query.getAction() || "update" == query.getAction()) {
-        QHash<QString, RepositoryInfo> repos;
-        foreach(RepositoryInfo repo, config.repositories()) {
-            repos.insert(repo.type(), repo);
-        }
-        repos.insert("git", RepositoryInfo("git", "https://github.com/"));
-        //        repos.insert("git", RepositoryInfo("git", "/media/Project/"));
-        //        repos.insert("fs", RepositoryInfo("fs", "/media/Project/"));
-
-        FsLoader fsLoader(query);
-        GitLoader gitLoader(query);
-        foreach (DependencyInfo dependency, config.packages()) {
-            if (!dependency.isDownloadRequired()) {
-                continue;
-            }
-            bool found = false;
-            bool updated = false;
-            qDebug()<<"\t- Installing:"<<dependency.packageName()<<" ("<<dependency.version()<<")";
-            foreach(RepositoryInfo repo, repos.values()) {
-                if (repo.type() == "fs" && fsLoader.isAvailable(dependency, repo)) {
-                    found = true;
-                    updated = fsLoader.load(dependency, repo);
-                    break;
-                }
-                else if (repo.type() == "git" && gitLoader.isAvailable(dependency, repo)) {
-                    found = true;
-                    updated = gitLoader.load(dependency, repo);
-                    break;
-                }
-            }
-            if (updated)
-                qDebug()<<"\tdone";
-            else if (!found)
-                qCritical()<<"\tFAILLURE: not found package";
-            else
-                qCritical()<<"\tFAILLURE";
-            qDebug()<<"";
-            globalResult *= updated;
-        }
+        globalResult *= searchOtherDependenciesAction(config, query);
+        globalResult *= installAction(config, query);
     }
     else if ("make" == query.getAction()) {
-        QFile vendorPro(query.getWorkingDir()+query.getVendorDir()+"vendor.pro");
-        vendorPro.remove();
-        foreach (DependencyInfo dependency, config.packages()) {
-            if (!dependency.isDownloadRequired()) {
-                continue;
-            }
-            QString packagePath(query.getWorkingDir()+query.getVendorDir()+dependency.packageName());
-            QDir packageDir(packagePath);
-            bool found = false;
-            bool maked = false;
-            qDebug()<<"\t- Compiling:"<<dependency.packageName()<<" ("<<dependency.version()<<")";
-            if (packageDir.exists()) {
-                QString packageBuildName("build-"+dependency.projectName());
-                QDir packageBuildDir(query.getWorkingDir()+query.getVendorDir());
-                if (packageBuildDir.mkpath(packageBuildName)) {
-                    found = true;
-                    packageBuildDir.cd(packageBuildName);
-                    QProcess makeProcess;
-                    makeProcess.setWorkingDirectory(packageBuildDir.path());
-                    QString program;
-                    QStringList arguments;
-                    // Qmake
-                    program = "qmake";
-                    QString proFile("../"+dependency.packageName()+"/"+dependency.projectName()+".pro");
-                    QFile proFd(packageBuildDir.path()+"/"+proFile);
-                    if (!proFd.exists()) {
-                        qDebug()<<"\tNo .pro file, try to generate one...";
-                        if (!proFd.open(QIODevice::ReadWrite)) {
-                            qCritical()<<"\tCan't open pro file: "<<proFd.fileName();
-                        }
-                        QString data;
-                        data.append("PUBLIC_HEADERS += \\\n");
-                        QStringList hFiles = packageDir.entryList(QStringList()<<"*.h"<<"*.hpp", QDir::Files);
-                        foreach(QString file, hFiles) {
-                            data.append("\t$$PWD/"+file+" \\\n");
-                        }
-                        data.append("\n");
-                        data.append("HEADERS += \\\n");
-                        data.append("\t$$PUBLIC_HEADERS \\\n");
-                        data.append("\n");
-                        data.append("SOURCES += \\\n");
-                        QStringList cppFiles = packageDir.entryList(QStringList()<<"*.cpp", QDir::Files);
-                        foreach(QString file, cppFiles) {
-                            data.append("\t$$PWD/"+file+" \\\n");
-                        }
-                        data.append("\n");
-                        data.append("\n\n");
-                        data.append("LIBNAME = "+dependency.projectName()+"\n");
-                        data.append("EXPORT_PATH = $$OUT_PWD/..\n");
-                        data.append("EXPORT_INCLUDEPATH = $$EXPORT_PATH/include/$$LIBNAME\n");
-                        data.append("EXPORT_LIBPATH = $$EXPORT_PATH/lib\n");
-                        data.append("TEMPLATE = lib\n");
-                        data.append("QT += core gui network script designer\n");
-                        data.append("greaterThan(QT_MAJOR_VERSION, 4): QT += widgets\n");
-                        data.append("CONFIG += QT\n");
-                        data.append("CONFIG += staticlib\n");
-                        data.append("CONFIG += debug_and_release build_all\n");
-                        data.append("CONFIG(debug,debug|release) {\n");
-                        data.append("\tLIBNAME = $${LIBNAME}d\n");
-                        data.append("}\n");
-                        data.append("TARGET = $$LIBNAME\n");
-                        data.append("DESTDIR = $$EXPORT_LIBPATH\n");
-                        data.append("headers.files = $$PUBLIC_HEADERS\n");
-                        data.append("headers.path = $$EXPORT_INCLUDEPATH\n");
-                        data.append("INSTALLS += headers\n\n");
-                        proFd.write(data.toUtf8());
-                        proFd.close();
-                    }
-                    arguments<<proFile;
-                    qDebug()<<"\tRun "<<program<<" "<<arguments;
-                    makeProcess.start(program, arguments);
-                    maked = makeProcess.waitForFinished();
-                    if (query.isVerbose()) {
-                        qDebug()<<"\t"<<makeProcess.readAll();
-                    }
-                    if (maked) {
-                        // Make
-                        program = "make";
-                        arguments.clear();
-                        qDebug()<<"\tRun "<<program<<arguments;
-                        makeProcess.start(program, arguments);
-                        maked = makeProcess.waitForFinished();
-                        if (query.isVerbose()) {
-                            qDebug()<<"\t"<<makeProcess.readAll();
-                        }
-                        if (maked) {
-                            // Make
-                            program = "make";
-                            arguments.clear();
-                            arguments<<"install";
-                            qDebug()<<"\tRun "<<program<<arguments;
-                            makeProcess.start(program, arguments);
-                            maked = makeProcess.waitForFinished();
-                            if (query.isVerbose()) {
-                                qDebug()<<"\t"<<makeProcess.readAll();
-                            }
-                        }
-                    }
-
-                    // Add stuff to vendor.pro
-                    if (maked) {
-                        QFile vendorPro(query.getWorkingDir()+query.getVendorDir()+"vendor.pro");
-                        vendorPro.open(QIODevice::WriteOnly | QIODevice::Append);
-                        QString data;
-                        data.append(dependency.projectName()+" {\n");
-                        data.append("\tLIBNAME = "+dependency.projectName()+"\n");
-                        data.append("\tIMPORT_INCLUDEPATH = $$PWD/include/$$LIBNAME\n");
-                        data.append("\tIMPORT_LIBPATH = $$PWD/lib\n");
-                        data.append("\tCONFIG(debug,debug|release) {\n");
-                        data.append("\t\tLIBNAME = $${LIBNAME}d\n");
-                        data.append("\t}\n");
-                        data.append("\tINCLUDEPATH += $$IMPORT_INCLUDEPATH\n");
-                        data.append("\tLIBS += -L$$IMPORT_LIBPATH -l$${LIBNAME}\n");
-                        data.append("}\n\n");
-                        vendorPro.write(data.toUtf8());
-                        vendorPro.close();
-                    }
-                }
-            }
-            if (maked)
-                qDebug()<<"\tdone";
-            else if (!found)
-                qCritical()<<"\tFAILLURE: not found package";
-            else
-                qCritical()<<"\tFAILLURE";
-            qDebug()<<"";
-            globalResult *= maked;
-        }
+        globalResult *= makeAction(config, query);
     }
 
     if (!globalResult) {
