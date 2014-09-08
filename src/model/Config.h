@@ -7,7 +7,6 @@
 #include "DependencyInfo.h"
 #include "RepositoryInfo.h"
 
-
 namespace Qompoter {
 class Config
 {

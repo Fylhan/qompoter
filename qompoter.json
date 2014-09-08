@@ -12,12 +12,18 @@
 	],
 	"require": {
 		"qt/qt": "5.*",
-		"trialog/solilogger": "1.*",
+		"trialog/solilogger": "0.1.0",
 		"trialog/configurator": "1.*",
+		"Fylhan/qompoter": "dev-master",
 		"trialog/screenshot-manager": "1.*",
-		"trialog/wrong-project": "1.*",
 	},
 	"require-dev": {
 		"trialog/test-engine": "1.*"
-	}
+	},
+	"repositories": [
+		{
+			"type" : "git",
+			"url" : "https://github.com/"
+		}
+	]
 }

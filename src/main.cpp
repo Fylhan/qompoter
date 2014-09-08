@@ -117,9 +117,9 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     }
 
 
-    if (query.isVerbose()) {
-        qSetMessagePattern("[%{type} | l.%{line}	| %{function}]		%{message}");
-    }
+    //    if (query.isVerbose()) {
+    //        qSetMessagePattern("[%{type} | l.%{line}	| %{function}]		%{message}");
+    //    }
     qDebug()<<"Loading qompoter repositories with package information";
     qDebug()<<"Parsing "<<query.getQompoterFile()<<"...";
     Config config = Config::fromFile(query.getWorkingDir()+query.getQompoterFile());
@@ -133,8 +133,9 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
         foreach(RepositoryInfo repo, config.repositories()) {
             repos.insert(repo.type(), repo);
         }
-        repos.insert("fs", RepositoryInfo("git", "/media/Project/PlateformeVehiculeElectrique/4_workspace/"));
-        repos.insert("git", RepositoryInfo("fs", "/media/Project/PlateformeVehiculeElectrique/4_workspace/"));
+        repos.insert("git", RepositoryInfo("git", "https://github.com/"));
+        //        repos.insert("git", RepositoryInfo("git", "/media/Project/"));
+        //        repos.insert("fs", RepositoryInfo("fs", "/media/Project/"));
 
         FsLoader fsLoader(query);
         GitLoader gitLoader(query);

@@ -1,5 +1,10 @@
 #include "GitLoader.h"
 
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QEventLoop>
+#include <QTimer>
 #include <QProcess>
 #include <QDir>
 #include <QDebug>
@@ -16,6 +21,23 @@ QString Qompoter::GitLoader::getLoadingType() const
 
 bool Qompoter::GitLoader::isAvailable(const Qompoter::DependencyInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const
 {
+    if (repositoryInfo.url().startsWith("http")) {
+        QNetworkAccessManager manager;
+        QNetworkRequest request(QUrl(repositoryInfo.url()+packageInfo.packageName()));
+        QNetworkReply *reply = manager.head(request);
+        QEventLoop loop;
+        QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+        QTimer::singleShot(2000, &loop, SLOT(quit()));
+        loop.exec();
+        if (!reply->isFinished()) {
+            qCritical()<<"Apparently can't reach the URL "<<repositoryInfo.url()+packageInfo.packageName()<<" that quickly...";
+            return false;
+        }
+        bool res = (200 == reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt());
+        // TODO manage redirections if any
+        reply->deleteLater();
+        return res;
+    }
     return QDir(repositoryInfo.url()+packageInfo.packageName()+".git").exists();
 }
 
@@ -27,7 +49,7 @@ bool Qompoter::GitLoader::load(const Qompoter::DependencyInfo &packageInfo, cons
         qCritical()<<"\tNo such package: "<<packageSourcePath;
         return false;
     }
-    qDebug()<<"\tDownloading from Git...";
+    qDebug()<<"\tDownloading from Git... "<<repositoryInfo.url();
     QProcess gitProcess;
     QString gitProgram = "git";
     QStringList arguments;

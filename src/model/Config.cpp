@@ -17,6 +17,7 @@ Qompoter::Config::Config() :
     packagesDev_()
 {
 }
+
 Qompoter::Config::Config(const Config& config)
 {
     this->packageName_ = config.packageName_;
@@ -28,6 +29,7 @@ Qompoter::Config::Config(const Config& config)
     this->packages_ = QList<DependencyInfo>(config.packages_);
     this->packagesDev_ = QList<DependencyInfo>(config.packagesDev_);
 }
+
 Qompoter::Config::Config(QVariantMap data) :
     packageName_(),
     description_(),
@@ -70,9 +72,10 @@ void Qompoter::Config::fromData(QVariantMap data)
         }
     }
     if (data.contains("repositories")) {
-        QVariantMap repositories = data.value("repositories").toMap();
-        foreach(QString key, repositories.keys()) {
-            repositories_.append(RepositoryInfo(key, repositories.value(key).toString()));
+        QList<QVariant> repositories = data.value("repositories").toList();
+        foreach(QVariant repository, repositories) {
+            QVariantMap repositoryData = repository.toMap();
+            repositories_.append(RepositoryInfo(repositoryData.value("type", "").toString(), repositoryData.value("url", "").toString()));
         }
     }
 }

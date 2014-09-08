@@ -27,7 +27,7 @@ bool Qompoter::FsLoader::load(const Qompoter::DependencyInfo &packageInfo, const
         qCritical()<<"\tNo such package: "<<packageSourcePath;
         return false;
     }
-    qDebug()<<"\tDownloading...";
+    qDebug()<<"\tDownloading... from "<<repositoryInfo.url();
     return Qompoter::cpDir(packageSourcePath, packageDestPath);
 }
 
