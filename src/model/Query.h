@@ -18,6 +18,9 @@ public:
     const bool &isGlobal() const;
     void setGlobal(const bool &global);
 
+    const bool &isDev() const;
+    void setDev(const bool &dev);
+
     const QString &getQompoterFile() const;
     void setQompoterFile(const QString &qompoterFile);
 
@@ -30,6 +33,7 @@ public:
 private:
     QString _action;
     bool _verbose;
+    bool _dev;
     bool _global;
     QString _qompoterFile;
     QString _workingDir;

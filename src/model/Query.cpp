@@ -4,6 +4,7 @@
 
 Qompoter::Query::Query() :
     _verbose(false),
+    _dev(true),
     _qompoterFile("qompoter.json"),
     _vendorDir("vendor/")
 {
@@ -35,6 +36,16 @@ const bool &Qompoter::Query::isGlobal() const
 void Qompoter::Query::setGlobal(const bool &global)
 {
     _global = global;
+}
+
+const bool &Qompoter::Query::isDev() const
+{
+    return _dev;
+}
+
+void Qompoter::Query::setDev(const bool &dev)
+{
+    _dev = dev;
 }
 
 const QString &Qompoter::Query::getQompoterFile() const

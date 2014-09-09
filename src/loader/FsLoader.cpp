@@ -4,15 +4,14 @@
 #include <QDir>
 
 #include "Config.h"
-#include "DependencyInfo.h"
+#include "RequireInfo.h"
 #include "ConfigFileManager.h"
 
 using namespace Qompoter;
 
-Qompoter::FsLoader::FsLoader(const Qompoter::Query &query) :
-    ILoader(query)
+Qompoter::FsLoader::FsLoader(const Qompoter::Query &query, QObject *parent) :
+    ILoader(query, parent)
 {
-
 }
 
 QString Qompoter::FsLoader::getLoadingType() const
@@ -20,23 +19,23 @@ QString Qompoter::FsLoader::getLoadingType() const
     return "fs";
 }
 
-bool Qompoter::FsLoader::isAvailable(const Qompoter::DependencyInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const
+bool Qompoter::FsLoader::isAvailable(const Qompoter::RequireInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const
 {
     return QDir(repositoryInfo.url()+packageInfo.packageName()).exists();
 }
 
-QList<DependencyInfo> Qompoter::FsLoader::loadDependencies(const Qompoter::DependencyInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const
+QList<RequireInfo> Qompoter::FsLoader::loadDependencies(const Qompoter::RequireInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const
 {
     QString qompoterFile = repositoryInfo.url()+packageInfo.packageName()+"/qompoter.json";
-    if (QFile(qompoterFile).exists()) {
-        qCritical()<<"\tNo qompoter.json file for this dependency";
-        return QList<DependencyInfo>();
+    if (!QFile(qompoterFile).exists()) {
+        qCritical()<<"\t  No qompoter.json file for this dependency";
+        return QList<RequireInfo>();
     }
     Config subConfig(ConfigFileManager::parseFile(qompoterFile));
-    return subConfig.packages();
+    return subConfig.requires();
 }
 
-bool Qompoter::FsLoader::load(const Qompoter::DependencyInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const
+bool Qompoter::FsLoader::load(const Qompoter::RequireInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const
 {
     QString packageDestPath = _query.getWorkingDir()+_query.getVendorDir()+packageInfo.packageName();
     QString packageSourcePath = repositoryInfo.url()+packageInfo.packageName();

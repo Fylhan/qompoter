@@ -6,13 +6,14 @@
 namespace Qompoter {
 class GitLoader : public ILoader
 {
+    Q_OBJECT
 public:
-    GitLoader(const Query &query);
+    GitLoader(const Query &query, QObject *parent=0);
 
     QString getLoadingType() const;
-    bool isAvailable(const DependencyInfo &packageInfo, const RepositoryInfo &repositoryInfo) const;
-    QList<DependencyInfo> loadDependencies(const Qompoter::DependencyInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const;
-    bool load(const DependencyInfo &packageInfo, const RepositoryInfo &repositoryInfo) const;
+    bool isAvailable(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo) const;
+    QList<RequireInfo> loadDependencies(const Qompoter::RequireInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const;
+    bool load(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo) const;
 };
 }
 

@@ -13,8 +13,8 @@ Qompoter::Config::Config() :
     authors_(),
     license_(),
     version_(),
-    packages_(),
-    packagesDev_()
+    requires_(),
+    requiresDev_()
 {
 }
 
@@ -26,8 +26,8 @@ Qompoter::Config::Config(const Config& config)
     this->authors_ = QList<AuthorInfo>(config.authors_);
     this->license_ = config.license_;
     this->version_ = config.version_;
-    this->packages_ = QList<DependencyInfo>(config.packages_);
-    this->packagesDev_ = QList<DependencyInfo>(config.packagesDev_);
+    this->requires_ = QList<RequireInfo>(config.requires_);
+    this->requiresDev_ = QList<RequireInfo>(config.requiresDev_);
 }
 
 Qompoter::Config::Config(QVariantMap data) :
@@ -37,8 +37,8 @@ Qompoter::Config::Config(QVariantMap data) :
     authors_(),
     license_(),
     version_(),
-    packages_(),
-    packagesDev_()
+    requires_(),
+    requiresDev_()
 {
     fromData(data);
 }
@@ -62,13 +62,13 @@ void Qompoter::Config::fromData(QVariantMap data)
     if (data.contains("require")) {
         QVariantMap require = data.value("require").toMap();
         foreach(QString key, require.keys()) {
-            packages_.append(DependencyInfo(key, require.value(key).toString()));
+            requires_.append(RequireInfo(key, require.value(key).toString()));
         }
     }
-    if (data.contains("requireDev")) {
-        QVariantMap require = data.value("requireDev").toMap();
+    if (data.contains("require-dev")) {
+        QVariantMap require = data.value("require-dev").toMap();
         foreach(QString key, require.keys()) {
-            packagesDev_.append(DependencyInfo(key, require.value(key).toString()));
+            requiresDev_.append(RequireInfo(key, require.value(key).toString()));
         }
     }
     if (data.contains("repositories")) {
@@ -117,12 +117,12 @@ QString Config::toString(QString prefixe)
     }
     str.append(prefixe+"],\n");
     str.append(prefixe+"require:[\n");
-    foreach(DependencyInfo element, require()) {
+    foreach(RequireInfo element, requires()) {
         str.append(prefixe+element.toString()+",\n");
     }
     str.append(prefixe+"],\n");
     str.append(prefixe+"requireDev:[\n");
-    foreach(DependencyInfo element, requireDev()) {
+    foreach(RequireInfo element, requireDev()) {
         str.append(prefixe+element.toString()+",\n");
     }
     str.append(prefixe+"],\n");
@@ -215,39 +215,47 @@ void Qompoter::Config::setVersion(const QString& version)
     version_ = version;
 }
 
-const QList<DependencyInfo>& Qompoter::Config::require() const
+QList<PackageInfo> Qompoter::Config::packages() const
 {
-    return packages_;
-}
-const QList<DependencyInfo>& Qompoter::Config::packages() const
-{
-    return require();
-}
-void Qompoter::Config::setRequires(const QList<DependencyInfo>& require)
-{
-    packages_ = require;
+    return packages_.values();
 }
 
-void Config::addPackage(const DependencyInfo &require)
+bool Config::hasPackage(QString packageName, QString /*version*/) const
 {
-    packages_.append(require);
+    // TODO add intelligence
+    return packages_.contains(packageName);
 }
 
-const QList<DependencyInfo>& Qompoter::Config::requireDev() const
+void Config::addPackage(const PackageInfo &package)
 {
-    return packagesDev_;
+    packages_.insert(package.packageName(), package);
 }
-const QList<DependencyInfo>& Qompoter::Config::packagesDev() const
+
+void Config::setPackages(const QHash<QString, PackageInfo> &packages)
 {
-    return requireDev();
+    packages_ = packages;
 }
-void Qompoter::Config::setRequireDevs(const QList<DependencyInfo>& requireDev)
+
+const QList<RequireInfo>& Qompoter::Config::requires() const
 {
-    packagesDev_ = requireDev;
+    return requires_;
 }
-void Config::addPackageDev(const DependencyInfo &requireDev)
+void Qompoter::Config::setRequires(const QList<RequireInfo>& require)
 {
-    packagesDev_.append(requireDev);
+    requires_ = require;
+}
+
+const QList<RequireInfo>& Qompoter::Config::requireDev() const
+{
+    return requiresDev_;
+}
+void Qompoter::Config::setRequireDevs(const QList<RequireInfo>& requireDev)
+{
+    requiresDev_ = requireDev;
+}
+void Config::addRequireDev(const RequireInfo &requireDev)
+{
+    requiresDev_.append(requireDev);
 }
 
 

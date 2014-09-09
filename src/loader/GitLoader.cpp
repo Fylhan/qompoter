@@ -9,8 +9,8 @@
 #include <QDir>
 #include <QDebug>
 
-Qompoter::GitLoader::GitLoader(const Query &query) :
-    ILoader(query)
+Qompoter::GitLoader::GitLoader(const Query &query, QObject *parent) :
+    ILoader(query, parent)
 {
 }
 
@@ -19,7 +19,7 @@ QString Qompoter::GitLoader::getLoadingType() const
     return "git";
 }
 
-bool Qompoter::GitLoader::isAvailable(const Qompoter::DependencyInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const
+bool Qompoter::GitLoader::isAvailable(const Qompoter::RequireInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const
 {
     if (repositoryInfo.url().startsWith("http")) {
         QNetworkAccessManager manager;
@@ -41,14 +41,14 @@ bool Qompoter::GitLoader::isAvailable(const Qompoter::DependencyInfo &packageInf
     return QDir(repositoryInfo.url()+packageInfo.packageName()+".git").exists();
 }
 
-QList<Qompoter::DependencyInfo> Qompoter::GitLoader::loadDependencies(const Qompoter::DependencyInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const
+QList<Qompoter::RequireInfo> Qompoter::GitLoader::loadDependencies(const Qompoter::RequireInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const
 {
     // TODO
-    qCritical()<<"\tNo qompoter.json file for this dependency";
-    return QList<DependencyInfo>();
+    qCritical()<<"\t  No qompoter.json file for this dependency";
+    return QList<RequireInfo>();
 }
 
-bool Qompoter::GitLoader::load(const Qompoter::DependencyInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const
+bool Qompoter::GitLoader::load(const Qompoter::RequireInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const
 {
     QString packageDestPath = _query.getWorkingDir()+_query.getVendorDir()+packageInfo.packageName();
     QString packageSourcePath = repositoryInfo.url()+packageInfo.packageName()+".git";

@@ -4,7 +4,8 @@ INCLUDEPATH += $$PWD $$PWD/. $$PWD/..
 SOURCES += $$PWD/main.cpp \
     $$PWD/model/Config.cpp \
     $$PWD/model/AuthorInfo.cpp \
-    $$PWD/model/DependencyInfo.cpp \
+    $$PWD/model/RequireInfo.cpp \
+    $$PWD/model/PackageInfo.cpp \
     $$PWD/model/RepositoryInfo.cpp \
     $$PWD/model/Query.cpp \
     $$PWD/loader/FsLoader.cpp \
@@ -12,7 +13,8 @@ SOURCES += $$PWD/main.cpp \
 
 HEADERS += $$PWD/model/Config.h \
     $$PWD/model/AuthorInfo.h \
-    $$PWD/model/DependencyInfo.h \
+    $$PWD/model/RequireInfo.h \
+    $$PWD/model/PackageInfo.h \
     $$PWD/model/RepositoryInfo.h \
     $$PWD/model/Query.h \
     $$PWD/loader/ILoader.h \

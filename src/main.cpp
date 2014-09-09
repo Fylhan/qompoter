@@ -8,7 +8,8 @@
 #include "ConfigFileManager.h"
 #include "Config.h"
 #include "Query.h"
-#include "DependencyInfo.h"
+#include "RequireInfo.h"
+#include "PackageInfo.h"
 #include "FsLoader.h"
 #include "GitLoader.h"
 
@@ -35,6 +36,8 @@ CommandLineParseResult parseCommandLine(QCommandLineParser &parser, Query &query
     parser.addOption(verboseOption);
     QCommandLineOption globalOption(QStringList() << "g" << "global", QObject::tr("Install the dependency on the machine, instead of localy, for the current project only"));
     parser.addOption(globalOption);
+    QCommandLineOption noDevOption(QStringList() << "no-dev", QObject::tr("Skip installing packages listed in require-dev"));
+    parser.addOption(noDevOption);
     QCommandLineOption workingDirOption(QStringList() << "d" << "working-dir", QObject::tr("If specified, use the given directory as working directory"), QObject::tr("directory"));
     parser.addOption(workingDirOption);
     QCommandLineOption vendorDirOption(QStringList() << "vendor-dir", QObject::tr("If specified, use the given directory as vendor directory"), QObject::tr("directory"));
@@ -61,6 +64,7 @@ CommandLineParseResult parseCommandLine(QCommandLineParser &parser, Query &query
         query.setQompoterFile(parser.value(qompoterFileOption));
     }
     query.setVerbose(parser.isSet(verboseOption));
+    query.setDev(!parser.isSet(noDevOption));
     query.setGlobal(parser.isSet(globalOption));
 
     const QStringList positionalArguments = parser.positionalArguments();
@@ -80,55 +84,67 @@ CommandLineParseResult parseCommandLine(QCommandLineParser &parser, Query &query
     return CommandLineOk;
 }
 
-bool searchOtherDependenciesAction(Config &config, const Query &query)
+bool searchOtherDependenciesAction(Config &config, const Query &query, QHash<QString, ILoader *> loaders)
 {
-    FsLoader fsLoader(query);
-    GitLoader gitLoader(query);
-    QList<DependencyInfo> moreDependencies;
-    foreach (DependencyInfo dependency, config.packages()) {
-        if (!dependency.isDownloadRequired()) {
-            continue;
-        }
-        qDebug()<<"\t- Searching dependencies of:"<<dependency.packageName()<<" ("<<dependency.version()<<")";
-        foreach(RepositoryInfo repo, config.repositories()) {
-            if (repo.type() == "fs" && fsLoader.isAvailable(dependency, repo)) {
-                moreDependencies.append(fsLoader.loadDependencies(dependency, repo));
-                break;
-            }
-            else if (repo.type() == "git" && gitLoader.isAvailable(dependency, repo)) {
-                moreDependencies.append(gitLoader.loadDependencies(dependency, repo));
-                break;
-            }
-        }
+    QHash<QString, PackageInfo> finalDependencyList;
+    QList<RequireInfo> dependencies = config.requires();
+    if (query.isDev()) {
+        dependencies.append(config.requireDev());
     }
-    // TODO loop until there is no more dependencies to add
+    int recurency = 0;
+    do {
+        QList<RequireInfo> moreDepedencies;
+        // Search for other dependencies in the list of dependencies
+        foreach (RequireInfo dependency, dependencies) {
+            if (!dependency.isDownloadRequired()) {
+                continue;
+            }
+            qDebug()<<"\t- Searching dependencies of:"<<dependency.packageName()<<" ("<<dependency.version()<<")";
+            bool found = false;
+            foreach(RepositoryInfo repo, config.repositories()) {
+                if (!loaders.contains(repo.type())) {
+                    continue;
+                }
+                ILoader *loader = loaders.value(repo.type());
+                if (loader->isAvailable(dependency, repo)) {
+                    found = true;
+                    moreDepedencies.append(loader->loadDependencies(dependency, repo));
+                    finalDependencyList.insert(dependency.packageName(), PackageInfo(dependency, repo, loader));
+                    break;
+                }
+            }
+            if (!found) {
+                qDebug()<<"\t  Package not found";
+            }
+        }
+        QMutableListIterator<RequireInfo> it(moreDepedencies);
+        while (it.hasNext()) {
+            if (finalDependencyList.contains(it.next().packageName())) {
+                it.remove();
+            }
+        }
+        dependencies = moreDepedencies;
+        ++recurency;
+    } while(!dependencies.isEmpty() && recurency<10);
+    config.setPackages(finalDependencyList);
     qDebug()<<"";
     return true;
 }
 
-bool installAction(const Config &config, const Query &query)
+bool installAction(const Config &config, const Query &/*query*/)
 {
     bool globalResult = true;
-    FsLoader fsLoader(query);
-    GitLoader gitLoader(query);
-    foreach (DependencyInfo dependency, config.packages()) {
+    QList<PackageInfo> packages = config.packages();
+    foreach (PackageInfo dependency, packages) {
         if (!dependency.isDownloadRequired()) {
             continue;
         }
         bool found = false;
         bool updated = false;
         qDebug()<<"\t- Installing:"<<dependency.packageName()<<" ("<<dependency.version()<<")";
-        foreach(RepositoryInfo repo, config.repositories()) {
-            if (repo.type() == "fs" && fsLoader.isAvailable(dependency, repo)) {
-                found = true;
-                updated = fsLoader.load(dependency, repo);
-                break;
-            }
-            else if (repo.type() == "git" && gitLoader.isAvailable(dependency, repo)) {
-                found = true;
-                updated = gitLoader.load(dependency, repo);
-                break;
-            }
+        if (0 != dependency.loader() && dependency.loader()->isAvailable(dependency, dependency.repository())) {
+            found = true;
+            updated = dependency.loader()->load(dependency, dependency.repository());
         }
         if (updated)
             qDebug()<<"\tdone";
@@ -147,7 +163,7 @@ bool makeAction(const Config &config, const Query &query)
     bool globalResult = true;
     QFile vendorPro(query.getWorkingDir()+query.getVendorDir()+"vendor.pro");
     vendorPro.remove();
-    foreach (DependencyInfo dependency, config.packages()) {
+    foreach (RequireInfo dependency, config.packages()) {
         if (!dependency.isDownloadRequired()) {
             continue;
         }
@@ -294,20 +310,20 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     Query query;
     QString errorMessage;
     switch (parseCommandLine(parser, query, errorMessage)) {
-        case CommandLineOk:
-            break;
-        case CommandLineError:
-            fputs(qPrintable(errorMessage), stderr);
-            fputs("\n\n", stderr);
-            fputs(qPrintable(parser.helpText()), stderr);
-            return 1;
-        case CommandLineVersionRequested:
-            printf("%s %s\n", qPrintable(QCoreApplication::applicationName()),
-                   qPrintable(QCoreApplication::applicationVersion()));
-            return 0;
-        case CommandLineHelpRequested:
-            parser.showHelp();
-            Q_UNREACHABLE();
+    case CommandLineOk:
+        break;
+    case CommandLineError:
+        fputs(qPrintable(errorMessage), stderr);
+        fputs("\n\n", stderr);
+        fputs(qPrintable(parser.helpText()), stderr);
+        return 1;
+    case CommandLineVersionRequested:
+        printf("%s %s\n", qPrintable(QCoreApplication::applicationName()),
+               qPrintable(QCoreApplication::applicationVersion()));
+        return 0;
+    case CommandLineHelpRequested:
+        parser.showHelp();
+        Q_UNREACHABLE();
     }
 
 
@@ -321,12 +337,16 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
         qDebug()<<"Config:\n"<<config.toString();
     }
     //        config.addRepository("git", RepositoryInfo("git", "https://github.com/"));
-    config.addRepository(RepositoryInfo("git", "/media/Project/PlateformeVehiculeElectrique/4_workspace/"));
-    config.addRepository(RepositoryInfo("fs", "/media/Project/PlateformeVehiculeElectrique/4_workspace/"));
+    config.addRepository(RepositoryInfo("git", "P:/PlateformeVehiculeElectrique/4_workspace/"));
+    config.addRepository(RepositoryInfo("fs", "P:/PlateformeVehiculeElectrique/4_workspace/"));
+
+    QHash<QString, ILoader *> loaders;
+    loaders.insert("fs", new FsLoader(query));
+    loaders.insert("git", new GitLoader(query));
 
     bool globalResult = true;
     if ("install" == query.getAction() || "update" == query.getAction()) {
-        globalResult *= searchOtherDependenciesAction(config, query);
+        globalResult *= searchOtherDependenciesAction(config, query, loaders);
         globalResult *= installAction(config, query);
     }
     else if ("make" == query.getAction()) {
@@ -338,5 +358,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
         return 1;
     }
     qDebug()<<"OK";
+
+    qDeleteAll(loaders);// TODO don't use raw pointers
     return 0;
 }

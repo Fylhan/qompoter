@@ -4,7 +4,8 @@
 #include <QVariantMap>
 
 #include "AuthorInfo.h"
-#include "DependencyInfo.h"
+#include "PackageInfo.h"
+#include "RequireInfo.h"
 #include "RepositoryInfo.h"
 
 namespace Qompoter {
@@ -41,15 +42,17 @@ public:
     const QString& version() const;
     void setVersion(const QString& version);
 
-    const QList<DependencyInfo>& require() const;
-    const QList<DependencyInfo>& packages() const;
-    void setRequires(const QList<DependencyInfo>& require);
-    void addPackage(const DependencyInfo& require);
+    QList<PackageInfo> packages() const;
+    bool hasPackage(QString packageName, QString version="") const;
+    void addPackage(const PackageInfo& package);
+    void setPackages(const QHash<QString, PackageInfo>& packages);
 
-    const QList<DependencyInfo>& requireDev() const;
-    const QList<DependencyInfo>& packagesDev() const;
-    void setRequireDevs(const QList<DependencyInfo>& requireDev);
-    void addPackageDev(const DependencyInfo& requireDev);
+    const QList<RequireInfo>& requires() const;
+    void setRequires(const QList<RequireInfo>& requires);
+
+    const QList<RequireInfo>& requireDev() const;
+    void setRequireDevs(const QList<RequireInfo>& requireDev);
+    void addRequireDev(const RequireInfo& requireDev);
 
     const QList<RepositoryInfo>& repositories() const;
     void setRepositories(const QList<RepositoryInfo>& repositories);
@@ -62,8 +65,9 @@ private:
     QList<AuthorInfo> authors_;
     QString license_;
     QString version_;
-    QList<DependencyInfo> packages_;
-    QList<DependencyInfo> packagesDev_;
+    QHash<QString, PackageInfo> packages_;
+    QList<RequireInfo> requires_;
+    QList<RequireInfo> requiresDev_;
     QList<RepositoryInfo> repositories_;
 };
 }
