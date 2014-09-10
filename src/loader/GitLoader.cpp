@@ -9,6 +9,9 @@
 #include <QDir>
 #include <QDebug>
 
+#include "Config.h"
+#include "ConfigFileManager.h"
+
 Qompoter::GitLoader::GitLoader(const Query &query, QObject *parent) :
     ILoader(query, parent)
 {
@@ -31,6 +34,7 @@ bool Qompoter::GitLoader::isAvailable(const Qompoter::RequireInfo &packageInfo, 
         loop.exec();
         if (!reply->isFinished()) {
             qCritical()<<"Apparently can't reach the URL "<<repositoryInfo.url()+packageInfo.packageName()<<" that quickly...";
+            reply->deleteLater();
             return false;
         }
         bool res = (200 == reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt());
@@ -43,7 +47,46 @@ bool Qompoter::GitLoader::isAvailable(const Qompoter::RequireInfo &packageInfo, 
 
 QList<Qompoter::RequireInfo> Qompoter::GitLoader::loadDependencies(const Qompoter::RequireInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const
 {
-    // TODO
+    // Check qompoter.json file remotely
+    if (repositoryInfo.url().startsWith("http")) {
+        // Github
+        if (repositoryInfo.url().startsWith("https://github.com")) {
+            QNetworkAccessManager manager;
+            QUrl url("https://raw.githubusercontent.com/"+packageInfo.packageName()+"/master/qomposer.json");
+            QNetworkRequest request(url);
+            QNetworkReply *reply = manager.get(request);
+            QEventLoop loop;
+            QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+            QTimer::singleShot(3000, &loop, SLOT(quit()));
+            loop.exec();
+            if (!reply->isFinished()) {
+                qCritical()<<"Apparently can't reach the URL "<<url<<" that quickly...";
+                reply->deleteLater();
+                return QList<Qompoter::RequireInfo>();
+            }
+            // TODO manage redirections if any
+            if (200 != reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()) {
+                qCritical()<<"\t  No qompoter.json file for this dependency";
+                reply->deleteLater();
+                return QList<Qompoter::RequireInfo>();
+            }
+            QByteArray data = reply->readAll();
+            Config configFile(ConfigFileManager::parseContent(QString::fromUtf8(data)));
+            reply->deleteLater();
+            return configFile.requires();
+        }
+    }
+    // Local repo special Qompoter
+    if (QFile(repositoryInfo.url()+packageInfo.packageName()+".git/qompoter.json").exists()) {
+        Config configFile(ConfigFileManager::parseFile(repositoryInfo.url()+packageInfo.packageName()+".git/qompoter.json"));
+        return configFile.requires();
+    }
+    // No such but to load it now!
+    qDebug()<<"\t  Load package immediatly to find the qompoter.json if any";
+    if (load(packageInfo, repositoryInfo) && QFile(_query.getWorkingDir()+_query.getVendorDir()+packageInfo.packageName()+"/qompoter.json").exists()) {
+        Config configFile(ConfigFileManager::parseFile(_query.getWorkingDir()+_query.getVendorDir()+packageInfo.packageName()+"/qompoter.json"));
+        return configFile.requires();
+    }
     qCritical()<<"\t  No qompoter.json file for this dependency";
     return QList<RequireInfo>();
 }
@@ -53,10 +96,15 @@ bool Qompoter::GitLoader::load(const Qompoter::RequireInfo &packageInfo, const Q
     QString packageDestPath = _query.getWorkingDir()+_query.getVendorDir()+packageInfo.packageName();
     QString packageSourcePath = repositoryInfo.url()+packageInfo.packageName()+".git";
     if (!isAvailable(packageInfo, repositoryInfo)) {
-        qCritical()<<"\tNo such package: "<<packageSourcePath;
+        qCritical()<<"\t  No such package: "<<packageSourcePath;
         return false;
     }
-    qDebug()<<"\tDownloading from Git... ";
+    // TODO check if the same version is already there (with hash...)
+//    if (QDir(_query.getWorkingDir()+_query.getVendorDir()+packageInfo.packageName()).exists()) {
+//        qDebug()<<"\t  Already there";
+//        return true;
+//    }
+    qDebug()<<"\t  Downloading from Git... ";
     QProcess gitProcess;
     QString gitProgram = "git";
     QStringList arguments;
@@ -75,7 +123,7 @@ bool Qompoter::GitLoader::load(const Qompoter::RequireInfo &packageInfo, const Q
     gitProcess.start(gitProgram, arguments);
     bool updated = gitProcess.waitForFinished();
     if (_query.isVerbose()) {
-        qDebug()<<"\t"<<gitProcess.readAll();
+        qDebug()<<"\t  "<<gitProcess.readAll();
     }
     // If version:
     /*

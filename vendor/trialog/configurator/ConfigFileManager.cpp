@@ -1,13 +1,14 @@
 #include "ConfigFileManager.h"
 
 #include <QDebug>
+#include <QString>
 #include <QFile>
 #include <QTextStream>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonParseError>
 
-QVariantMap ConfigFileManager::parseFile(QString filepath, bool createFileFromCleanedContent)
+QVariantMap ConfigFileManager::parseFile(QString filepath)
 {
     // -- Get configuration file data (JSON formated)
     QFile file(filepath);
@@ -22,6 +23,11 @@ QVariantMap ConfigFileManager::parseFile(QString filepath, bool createFileFromCl
     QString fileData = in.readAll();
     // Close file
     file.close();
+    return parseContent(fileData);
+}
+
+QVariantMap ConfigFileManager::parseContent(QString fileData)
+{
     // Remove inline comms
     QRegExp pattern = QRegExp("(^|\\[|\\{|,|\\n|\\s)//.*($|\\n)");
     pattern.setMinimal(true); //ungreedy
@@ -43,12 +49,6 @@ QVariantMap ConfigFileManager::parseFile(QString filepath, bool createFileFromCl
     pattern.setMinimal(true); //non-greedy
     fileData.replace(pattern, "\\1");
 
-    if (createFileFromCleanedContent) {
-        QFile computedFileData("computed_"+filepath);
-        computedFileData.open(QIODevice::WriteOnly);
-        computedFileData.write(fileData.toUtf8());
-        computedFileData.close();
-    }
     // -- Parse JSON data
     QJsonParseError error;
     QJsonDocument jsonDoc = QJsonDocument::fromJson(fileData.toUtf8(), &error);
@@ -57,7 +57,7 @@ QVariantMap ConfigFileManager::parseFile(QString filepath, bool createFileFromCl
         if (0 != error.error) {
             error.errorString();
         }
-        qCritical()<<"Error during JSON parsing: "<<errorStr<<". Empty map returned.";
+        qCritical()<<"Error during JSON parsing: "<<errorStr<<". Empty map returned."<<fileData.toUtf8();
         return QVariantMap();
     }
     return jsonDoc.object().toVariantMap();

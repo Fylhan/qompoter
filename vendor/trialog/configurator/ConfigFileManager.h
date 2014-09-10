@@ -1,8 +1,9 @@
 #ifndef CONFIGFILEMANAGER_H
 #define CONFIGFILEMANAGER_H
 
-#include <QString>
 #include <QVariantMap>
+
+class QString;
 
 /**
  * Gestionnaire de fichiers de configurations.
@@ -25,7 +26,8 @@ public:
       * @param filepath Path (folder/name.extension) of the file to parse
       * @param createFileFromCleanedContent The content of the file is cleaned to avoid unwanted JSON issue
       */
-    static QVariantMap parseFile(QString filepath, bool createFileFromCleanedContent=false);
+    static QVariantMap parseFile(QString filepath);
+    static QVariantMap parseContent(QString fileData);
 };
 
 #endif // CONFIGFILEMANAGER_H

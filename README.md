@@ -16,7 +16,6 @@ The current version is still a work in progress. But still, you can:
 A lot have to be done to make it really usable:
 
 * compile packages as shared libraries (with a local and global version), or as source project
-* search for recursive packages also for Git repositories
 * manage version numbers
 * generate better vendor.pri file (from template) to use the packages in the project
 

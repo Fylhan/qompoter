@@ -147,11 +147,11 @@ bool installAction(const Config &config, const Query &/*query*/)
             updated = dependency.loader()->load(dependency, dependency.repository());
         }
         if (updated)
-            qDebug()<<"\tdone";
+            qDebug()<<"\t  done";
         else if (!found)
-            qCritical()<<"\tFAILLURE: not found package";
+            qCritical()<<"\t  FAILLURE: not found package";
         else
-            qCritical()<<"\tFAILLURE";
+            qCritical()<<"\t  FAILLURE";
         qDebug()<<"";
         globalResult *= updated;
     }
@@ -281,11 +281,11 @@ bool makeAction(const Config &config, const Query &query)
             }
         }
         if (maked)
-            qDebug()<<"\tdone";
+            qDebug()<<"\t  done";
         else if (!found)
-            qCritical()<<"\tFAILLURE: not found package";
+            qCritical()<<"\t  FAILLURE: not found package";
         else
-            qCritical()<<"\tFAILLURE";
+            qCritical()<<"\t  FAILLURE";
         qDebug()<<"";
         globalResult *= maked;
     }
@@ -301,7 +301,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName("Fylhan");
     QCoreApplication::setOrganizationDomain("fylhan");
     QCoreApplication::setApplicationName("Qompoter");
-    QCoreApplication::setApplicationVersion("0.0.1");
+    QCoreApplication::setApplicationVersion("0.0.3");
 
     /***************************
      * Start App

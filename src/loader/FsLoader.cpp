@@ -40,10 +40,10 @@ bool Qompoter::FsLoader::load(const Qompoter::RequireInfo &packageInfo, const Qo
     QString packageDestPath = _query.getWorkingDir()+_query.getVendorDir()+packageInfo.packageName();
     QString packageSourcePath = repositoryInfo.url()+packageInfo.packageName();
     if (!isAvailable(packageInfo, repositoryInfo)) {
-        qCritical()<<"\tNo such package: "<<packageSourcePath;
+        qCritical()<<"\t  No such package: "<<packageSourcePath;
         return false;
     }
-    qDebug()<<"\tDownloading...";
+    qDebug()<<"\t  Downloading...";
     return Qompoter::cpDir(packageSourcePath, packageDestPath);
 }
 
