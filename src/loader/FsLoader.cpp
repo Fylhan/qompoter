@@ -21,12 +21,12 @@ QString Qompoter::FsLoader::getLoadingType() const
 
 bool Qompoter::FsLoader::isAvailable(const Qompoter::RequireInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const
 {
-    return QDir(repositoryInfo.url()+packageInfo.packageName()).exists();
+    return QDir(repositoryInfo.url()+packageInfo.getPackageName()).exists();
 }
 
 QList<RequireInfo> Qompoter::FsLoader::loadDependencies(const Qompoter::RequireInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const
 {
-    QString qompoterFile = repositoryInfo.url()+packageInfo.packageName()+"/qompoter.json";
+    QString qompoterFile = repositoryInfo.url()+packageInfo.getPackageName()+"/qompoter.json";
     if (!QFile(qompoterFile).exists()) {
         qCritical()<<"\t  No qompoter.json file for this dependency";
         return QList<RequireInfo>();
@@ -37,8 +37,8 @@ QList<RequireInfo> Qompoter::FsLoader::loadDependencies(const Qompoter::RequireI
 
 bool Qompoter::FsLoader::load(const Qompoter::RequireInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const
 {
-    QString packageDestPath = _query.getWorkingDir()+_query.getVendorDir()+packageInfo.packageName();
-    QString packageSourcePath = repositoryInfo.url()+packageInfo.packageName();
+    QString packageDestPath = _query.getWorkingDir()+_query.getVendorDir()+packageInfo.getPackageName();
+    QString packageSourcePath = repositoryInfo.url()+packageInfo.getPackageName();
     if (!isAvailable(packageInfo, repositoryInfo)) {
         qCritical()<<"\t  No such package: "<<packageSourcePath;
         return false;

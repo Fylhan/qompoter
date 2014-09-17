@@ -27,7 +27,7 @@ CommandLineParseResult parseCommandLine(QCommandLineParser &parser, Query &query
 {
     parser.setApplicationDescription(QCoreApplication::applicationName());
     QStringList availableActions;
-    availableActions<<"install"<<"update"<<"make";
+    availableActions<<"install"<<"update"<<"build";
     parser.addPositionalArgument("action", QObject::tr("Action to execute: ")+availableActions.join(", "));
     parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
     const QCommandLineOption helpOption = parser.addHelpOption();
@@ -99,7 +99,7 @@ bool searchOtherDependenciesAction(Config &config, const Query &query, QHash<QSt
             if (!dependency.isDownloadRequired()) {
                 continue;
             }
-            qDebug()<<"\t- Searching dependencies of:"<<dependency.packageName()<<" ("<<dependency.version()<<")";
+            qDebug()<<"\t- Searching dependencies of:"<<dependency.getPackageName()<<" ("<<dependency.getVersion()<<")";
             bool found = false;
             foreach(RepositoryInfo repo, config.repositories()) {
                 if (!loaders.contains(repo.type())) {
@@ -109,7 +109,7 @@ bool searchOtherDependenciesAction(Config &config, const Query &query, QHash<QSt
                 if (loader->isAvailable(dependency, repo)) {
                     found = true;
                     moreDepedencies.append(loader->loadDependencies(dependency, repo));
-                    finalDependencyList.insert(dependency.packageName(), PackageInfo(dependency, repo, loader));
+                    finalDependencyList.insert(dependency.getPackageName(), PackageInfo(dependency, repo, loader));
                     break;
                 }
             }
@@ -119,7 +119,7 @@ bool searchOtherDependenciesAction(Config &config, const Query &query, QHash<QSt
         }
         QMutableListIterator<RequireInfo> it(moreDepedencies);
         while (it.hasNext()) {
-            if (finalDependencyList.contains(it.next().packageName())) {
+            if (finalDependencyList.contains(it.next().getPackageName())) {
                 it.remove();
             }
         }
@@ -141,7 +141,7 @@ bool installAction(const Config &config, const Query &/*query*/)
         }
         bool found = false;
         bool updated = false;
-        qDebug()<<"\t- Installing:"<<dependency.packageName()<<" ("<<dependency.version()<<")";
+        qDebug()<<"\t- Installing:"<<dependency.getPackageName()<<" ("<<dependency.getVersion()<<")";
         if (0 != dependency.loader() && dependency.loader()->isAvailable(dependency, dependency.repository())) {
             found = true;
             updated = dependency.loader()->load(dependency, dependency.repository());
@@ -158,7 +158,7 @@ bool installAction(const Config &config, const Query &/*query*/)
     return globalResult;
 }
 
-bool makeAction(const Config &config, const Query &query)
+bool buildAction(const Config &config, const Query &query)
 {
     bool globalResult = true;
     QFile vendorPro(query.getWorkingDir()+query.getVendorDir()+"vendor.pro");
@@ -167,13 +167,13 @@ bool makeAction(const Config &config, const Query &query)
         if (!dependency.isDownloadRequired()) {
             continue;
         }
-        QString packagePath(query.getWorkingDir()+query.getVendorDir()+dependency.packageName());
+        QString packagePath(query.getWorkingDir()+query.getVendorDir()+dependency.getPackageName());
         QDir packageDir(packagePath);
         bool found = false;
         bool maked = false;
-        qDebug()<<"\t- Compiling:"<<dependency.packageName()<<" ("<<dependency.version()<<")";
+        qDebug()<<"\t- Compiling:"<<dependency.getPackageName()<<" ("<<dependency.getVersion()<<")";
         if (packageDir.exists()) {
-            QString packageBuildName("build-"+dependency.projectName());
+            QString packageBuildName("build-"+dependency.getProjectName());
             QDir packageBuildDir(query.getWorkingDir()+query.getVendorDir());
             if (packageBuildDir.mkpath(packageBuildName)) {
                 found = true;
@@ -184,7 +184,7 @@ bool makeAction(const Config &config, const Query &query)
                 QStringList arguments;
                 // Qmake
                 program = "qmake";
-                QString proFile("../"+dependency.packageName()+"/"+dependency.projectName()+".pro");
+                QString proFile("../"+dependency.getPackageName()+"/"+dependency.getProjectName()+".pro");
                 QFile proFd(packageBuildDir.path()+"/"+proFile);
                 if (!proFd.exists()) {
                     qDebug()<<"\tNo .pro file, try to generate one...";
@@ -208,7 +208,7 @@ bool makeAction(const Config &config, const Query &query)
                     }
                     data.append("\n");
                     data.append("\n\n");
-                    data.append("LIBNAME = "+dependency.projectName()+"\n");
+                    data.append("LIBNAME = "+dependency.getProjectName()+"\n");
                     data.append("EXPORT_PATH = $$OUT_PWD/..\n");
                     data.append("EXPORT_INCLUDEPATH = $$EXPORT_PATH/include/$$LIBNAME\n");
                     data.append("EXPORT_LIBPATH = $$EXPORT_PATH/lib\n");
@@ -265,8 +265,8 @@ bool makeAction(const Config &config, const Query &query)
                     QFile vendorPro(query.getWorkingDir()+query.getVendorDir()+"vendor.pro");
                     vendorPro.open(QIODevice::WriteOnly | QIODevice::Append);
                     QString data;
-                    data.append(dependency.projectName()+" {\n");
-                    data.append("\tLIBNAME = "+dependency.projectName()+"\n");
+                    data.append(dependency.getProjectName()+" {\n");
+                    data.append("\tLIBNAME = "+dependency.getProjectName()+"\n");
                     data.append("\tIMPORT_INCLUDEPATH = $$PWD/include/$$LIBNAME\n");
                     data.append("\tIMPORT_LIBPATH = $$PWD/lib\n");
                     data.append("\tCONFIG(debug,debug|release) {\n");
@@ -337,8 +337,8 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
         qDebug()<<"Config:\n"<<config.toString();
     }
     //        config.addRepository("git", RepositoryInfo("git", "https://github.com/"));
-    config.addRepository(RepositoryInfo("git", "P:/PlateformeVehiculeElectrique/4_workspace/"));
-    config.addRepository(RepositoryInfo("fs", "P:/PlateformeVehiculeElectrique/4_workspace/"));
+    config.addRepository(RepositoryInfo("git", "/media/Project/PlateformeVehiculeElectrique/4_workspace/"));
+    config.addRepository(RepositoryInfo("fs", "/media/Project/PlateformeVehiculeElectrique/4_workspace/"));
 
     QHash<QString, ILoader *> loaders;
     loaders.insert("fs", new FsLoader(query));
@@ -349,8 +349,8 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
         globalResult *= searchOtherDependenciesAction(config, query, loaders);
         globalResult *= installAction(config, query);
     }
-    else if ("make" == query.getAction()) {
-        globalResult *= makeAction(config, query);
+    else if ("build" == query.getAction()) {
+        globalResult *= buildAction(config, query);
     }
 
     if (!globalResult) {

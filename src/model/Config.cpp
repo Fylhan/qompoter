@@ -62,13 +62,13 @@ void Qompoter::Config::fromData(QVariantMap data)
     if (data.contains("require")) {
         QVariantMap require = data.value("require").toMap();
         foreach(QString key, require.keys()) {
-            requires_.append(RequireInfo(key, require.value(key).toString()));
+            requires_.append(RequireInfo(key, require.value(key)));
         }
     }
     if (data.contains("require-dev")) {
         QVariantMap require = data.value("require-dev").toMap();
         foreach(QString key, require.keys()) {
-            requiresDev_.append(RequireInfo(key, require.value(key).toString()));
+            requiresDev_.append(RequireInfo(key, require.value(key)));
         }
     }
     if (data.contains("repositories")) {
@@ -228,7 +228,7 @@ bool Config::hasPackage(QString packageName, QString /*version*/) const
 
 void Config::addPackage(const PackageInfo &package)
 {
-    packages_.insert(package.packageName(), package);
+    packages_.insert(package.getPackageName(), package);
 }
 
 void Config::setPackages(const QHash<QString, PackageInfo> &packages)

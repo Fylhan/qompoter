@@ -1,76 +1,121 @@
 #include "RequireInfo.h"
 
+#include "BuildMode.h"
+#include "IncludeMode.h"
+
 using namespace Qompoter;
 
 Qompoter::RequireInfo::RequireInfo(QString name, QString version) :
-    _packageName(name),
-    _version(version),
-    _downloadRequired(true)
+    packageName_(name),
+    version_(version),
+    downloadRequired_(true)
 {
-     _downloadRequired = ("qt/qt" != _packageName);
+    downloadRequired_ = ("qt/qt" != packageName_);
 }
-Qompoter::RequireInfo::RequireInfo(QVariantMap data) :
-    _downloadRequired(true)
+Qompoter::RequireInfo::RequireInfo(QString packageName, QVariant data) :
+    downloadRequired_(true)
 {
-    fromData(data);
+    fromData(packageName, data);
 }
 
-void Qompoter::RequireInfo::fromData(QVariantMap data)
+void Qompoter::RequireInfo::fromData(QString packageName, QVariant data)
 {
-    _packageName = data.value("name", "").toString();
-    _version = data.value("version", "").toString();
-    _downloadRequired = ("qt/qt" != _packageName);
+    packageName_ = packageName;
+    if (data.canConvert(QVariant::Map)) {
+        QVariantMap dataMap = data.toMap();
+        version_ = dataMap.value("version", version_).toString();
+        buildMode_ = BuildModeEnum::fromVariant(dataMap.value("build-mode", BuildModeEnum::toString(buildMode_)));
+        includeMode_ = IncludeModeEnum::fromVariant(dataMap.value("include-mode", IncludeModeEnum::toString(includeMode_)));
+        libPath_ = dataMap.value("lib-path", libPath_).toString();
+    }
+    else {
+        version_ = data.toString();
+    }
+    downloadRequired_ = ("qt/qt" != packageName_);
 }
 
 QString Qompoter::RequireInfo::toString(QString prefixe)
 {
     QString str(prefixe+"{\n");
-    str.append(prefixe+"name: "+packageName()+"\n");
-    str.append(prefixe+"version: "+version()+"\n");
+    str.append(prefixe+"name: "+getPackageName()+"\n");
+    str.append(prefixe+"version: "+getVersion()+"\n");
+    str.append(prefixe+"build mode: "+getBuildMode()+"\n");
+    str.append(prefixe+"include mode: "+getIncludeMode()+"\n");
+    str.append(prefixe+"lib path: "+getLibPath()+"\n");
     str.append(prefixe+"}");
     return str;
 }
 
-const QString& Qompoter::RequireInfo::packageName() const
+const QString& Qompoter::RequireInfo::getPackageName() const
 {
-    return _packageName;
+    return packageName_;
 }
 void Qompoter::RequireInfo::setPackageName(const QString& name)
 {
-    _packageName = name;
+    packageName_ = name;
 }
 
-QString Qompoter::RequireInfo::projectName() const
+QString Qompoter::RequireInfo::getProjectName() const
 {
-    if (_packageName.isEmpty() || !_packageName.contains('/')) {
-        return _packageName;
+    if (packageName_.isEmpty() || !packageName_.contains('/')) {
+        return packageName_;
     }
-    return _packageName.split('/').at(1);
+    return packageName_.split('/').at(1);
 }
 
-QString Qompoter::RequireInfo::vendorName() const
+QString Qompoter::RequireInfo::getVendorName() const
 {
-    if (_packageName.isEmpty() || !_packageName.contains('/')) {
+    if (packageName_.isEmpty() || !packageName_.contains('/')) {
         return "";
     }
-    return _packageName.split('/').at(0);
+    return packageName_.split('/').at(0);
 }
 
-const QString& Qompoter::RequireInfo::version() const
+const QString& Qompoter::RequireInfo::getVersion() const
 {
-    return _version;
+    return version_;
 }
 void Qompoter::RequireInfo::setVersion(const QString& version)
 {
-    _version = version;
+    version_ = version;
+}
+
+const BuildModeEnum::BuildMode &RequireInfo::getBuildMode() const
+{
+    return buildMode_;
+}
+
+void RequireInfo::setBuildMode(const BuildModeEnum::BuildMode &buildMode)
+{
+    buildMode_ = buildMode;
+}
+
+const IncludeModeEnum::IncludeMode &RequireInfo::getIncludeMode() const
+{
+    return includeMode_;
+}
+
+void RequireInfo::setIncludeMode(const IncludeModeEnum::IncludeMode &includeMode)
+{
+    includeMode_ = includeMode;
+}
+
+const QString &RequireInfo::getLibPath() const
+{
+    return libPath_;
+}
+
+void RequireInfo::setLibPath(const QString &libPath)
+{
+    libPath_ = libPath;
 }
 
 const bool &RequireInfo::isDownloadRequired() const
 {
-    return _downloadRequired;
+    return downloadRequired_;
 }
 
 void RequireInfo::setDownloadRequired(const bool &downloadRequired)
 {
-    _downloadRequired = downloadRequired;
+    downloadRequired_ = downloadRequired;
 }

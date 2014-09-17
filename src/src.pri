@@ -9,7 +9,9 @@ SOURCES += $$PWD/main.cpp \
     $$PWD/model/RepositoryInfo.cpp \
     $$PWD/model/Query.cpp \
     $$PWD/loader/FsLoader.cpp \
-    $$PWD/loader/GitLoader.cpp
+    $$PWD/loader/GitLoader.cpp \
+    src/model/BuildMode.cpp \
+    src/model/IncludeMode.cpp
 
 HEADERS += $$PWD/model/Config.h \
     $$PWD/model/AuthorInfo.h \
@@ -19,7 +21,9 @@ HEADERS += $$PWD/model/Config.h \
     $$PWD/model/Query.h \
     $$PWD/loader/ILoader.h \
     $$PWD/loader/FsLoader.h \
-    $$PWD/loader/GitLoader.h
+    $$PWD/loader/GitLoader.h \
+    src/model/BuildMode.h \
+    src/model/IncludeMode.h
 
 OTHER_FILES += $$PWD/../qompoter.json \
     $$PWD/../README.md \
