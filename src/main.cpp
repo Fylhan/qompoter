@@ -26,7 +26,6 @@ enum CommandLineParseResult
 
 CommandLineParseResult parseCommandLine(QCommandLineParser &parser, Query &query, QString &errorMessage)
 {
-    parser.setApplicationDescription(QCoreApplication::applicationName());
     QStringList availableActions;
     availableActions<<"install"<<"update"<<"build";
     parser.addPositionalArgument("action", QObject::tr("Action to execute: ")+availableActions.join(", "));
@@ -295,19 +294,16 @@ bool buildAction(const Config &config, const Query &query)
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {
-    /***************************
-     * App Configuration
-     ***************************/
+    // App Configuration
     QCoreApplication app(argc, argv);
+    QCommandLineParser parser;
     QCoreApplication::setOrganizationName("Fylhan");
     QCoreApplication::setOrganizationDomain("fylhan");
     QCoreApplication::setApplicationName("Qompoter");
-    QCoreApplication::setApplicationVersion("0.0.3");
+    QCoreApplication::setApplicationVersion("0.1");
+    parser.setApplicationDescription("\nDependency manager for C++");
 
-    /***************************
-     * Start App
-     ***************************/
-    QCommandLineParser parser;
+    // Process
     Query query;
     QString errorMessage;
     switch (parseCommandLine(parser, query, errorMessage)) {
@@ -319,8 +315,10 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
         fputs(qPrintable(parser.helpText()), stderr);
         return 1;
     case CommandLineVersionRequested:
-        printf("%s %s\n", qPrintable(QCoreApplication::applicationName()),
-               qPrintable(QCoreApplication::applicationVersion()));
+        printf("%s %s%s by %s\n", qPrintable(QCoreApplication::applicationName()),
+               qPrintable(QCoreApplication::applicationVersion()),
+               qPrintable(parser.applicationDescription()),
+               qPrintable(QCoreApplication::organizationName()));
         return 0;
     case CommandLineHelpRequested:
         parser.showHelp();
