@@ -12,6 +12,7 @@
 #include "PackageInfo.h"
 #include "FsLoader.h"
 #include "GitLoader.h"
+#include "HttpLoader.h"
 
 using namespace Qompoter;
 
@@ -343,6 +344,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     QHash<QString, ILoader *> loaders;
     loaders.insert("fs", new FsLoader(query));
     loaders.insert("git", new GitLoader(query));
+    loaders.insert("http", new HttpLoader(query));
 
     bool globalResult = true;
     if ("install" == query.getAction() || "update" == query.getAction()) {

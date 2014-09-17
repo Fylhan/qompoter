@@ -8,11 +8,16 @@ using namespace Qompoter;
 Qompoter::RequireInfo::RequireInfo(QString name, QString version) :
     packageName_(name),
     version_(version),
+    buildMode_(BuildModeEnum::AsItIs),
+    includeMode_(IncludeModeEnum::AsItIs),
+    libPath_(""),
     downloadRequired_(true)
 {
     downloadRequired_ = ("qt/qt" != packageName_);
 }
 Qompoter::RequireInfo::RequireInfo(QString packageName, QVariant data) :
+    buildMode_(BuildModeEnum::AsItIs),
+    includeMode_(IncludeModeEnum::AsItIs),
     downloadRequired_(true)
 {
     fromData(packageName, data);
@@ -39,8 +44,8 @@ QString Qompoter::RequireInfo::toString(QString prefixe)
     QString str(prefixe+"{\n");
     str.append(prefixe+"name: "+getPackageName()+"\n");
     str.append(prefixe+"version: "+getVersion()+"\n");
-    str.append(prefixe+"build mode: "+getBuildMode()+"\n");
-    str.append(prefixe+"include mode: "+getIncludeMode()+"\n");
+    str.append(prefixe+"build mode: "+BuildModeEnum::toString(getBuildMode())+"\n");
+    str.append(prefixe+"include mode: "+IncludeModeEnum::toString(getIncludeMode())+"\n");
     str.append(prefixe+"lib path: "+getLibPath()+"\n");
     str.append(prefixe+"}");
     return str;
