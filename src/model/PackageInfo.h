@@ -11,7 +11,7 @@ namespace Qompoter {
 class PackageInfo : public RequireInfo
 {
 public:
-    PackageInfo(const RequireInfo &parent, const RepositoryInfo &repository, ILoader *loader);
+    PackageInfo(const RequireInfo &parent, const RepositoryInfo &repository, ILoader *loader, bool alreadyDownloaded=false);
 
     const RepositoryInfo &repository();
     void setRepository(const RepositoryInfo &repository);
@@ -19,9 +19,13 @@ public:
     ILoader *loader();
     void setLoader(ILoader *loader);
 
+    const bool &isAlreadyDownloaded() const;
+    void setAlreadyDownloaded(const bool &alreadyDownloaded);
+
 private:
-    ILoader *_loader;
-    RepositoryInfo _repository;
+    ILoader *loader_;
+    RepositoryInfo repository_;
+    bool alreadyDownloaded_;
 };
 }
 

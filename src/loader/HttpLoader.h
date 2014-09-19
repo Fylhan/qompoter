@@ -1,6 +1,9 @@
 #ifndef QOMPOTER_HTTPLOADER_H
 #define QOMPOTER_HTTPLOADER_H
 
+#include <QProcess>
+#include <QSharedPointer>
+
 #include "ILoader.h"
 
 namespace Qompoter {
@@ -12,8 +15,13 @@ public:
 
     QString getLoadingType() const;
     bool isAvailable(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo) const;
-    QList<RequireInfo> loadDependencies(const Qompoter::RequireInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const;
-    bool load(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo) const;
+    QList<RequireInfo> loadDependencies(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo, bool &downloaded);
+    bool load(const PackageInfo &packageInfo, const RepositoryInfo &repositoryInfo) const;
+
+private:
+    QProcess *wgetProcess_;
+
+    void addAuthentication(QStringList &targetArguments, const RepositoryInfo &repositoryInfo) const;
 };
 }
 

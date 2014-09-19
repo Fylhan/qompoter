@@ -5,7 +5,10 @@
 #include <QString>
 
 #include "Query.h"
-#include "RequireInfo.h"
+namespace Qompoter {
+    class RequireInfo;
+    class PackageInfo;
+}
 #include "RepositoryInfo.h"
 
 namespace Qompoter {
@@ -21,8 +24,8 @@ public:
     }
     virtual QString getLoadingType() const = 0;
     virtual bool isAvailable(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo) const = 0;
-    virtual QList<RequireInfo> loadDependencies(const Qompoter::RequireInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const = 0;
-    virtual bool load(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo) const = 0;
+    virtual QList<RequireInfo> loadDependencies(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo, bool &downloaded) = 0;
+    virtual bool load(const PackageInfo &packageInfo, const RepositoryInfo &repositoryInfo) const = 0;
 
 protected:
     Query _query;

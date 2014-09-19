@@ -4,7 +4,7 @@
 #include <QDir>
 
 #include "Config.h"
-#include "RequireInfo.h"
+#include "PackageInfo.h"
 #include "ConfigFileManager.h"
 
 using namespace Qompoter;
@@ -19,14 +19,14 @@ QString Qompoter::FsLoader::getLoadingType() const
     return "fs";
 }
 
-bool Qompoter::FsLoader::isAvailable(const Qompoter::RequireInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const
+bool Qompoter::FsLoader::isAvailable(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo) const
 {
-    return QDir(repositoryInfo.url()+packageInfo.getPackageName()).exists();
+    return QDir(repositoryInfo.getUrl()+packageInfo.getPackageName()).exists();
 }
 
-QList<RequireInfo> Qompoter::FsLoader::loadDependencies(const Qompoter::RequireInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const
+QList<RequireInfo> Qompoter::FsLoader::loadDependencies(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo, bool &/*downloaded*/)
 {
-    QString qompoterFile = repositoryInfo.url()+packageInfo.getPackageName()+"/qompoter.json";
+    QString qompoterFile = repositoryInfo.getUrl()+packageInfo.getPackageName()+"/qompoter.json";
     if (!QFile(qompoterFile).exists()) {
         qCritical()<<"\t  No qompoter.json file for this dependency";
         return QList<RequireInfo>();
@@ -35,10 +35,14 @@ QList<RequireInfo> Qompoter::FsLoader::loadDependencies(const Qompoter::RequireI
     return subConfig.requires();
 }
 
-bool Qompoter::FsLoader::load(const Qompoter::RequireInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const
+bool Qompoter::FsLoader::load(const PackageInfo &packageInfo, const RepositoryInfo &repositoryInfo) const
 {
     QString packageDestPath = _query.getWorkingDir()+_query.getVendorDir()+packageInfo.getPackageName();
-    QString packageSourcePath = repositoryInfo.url()+packageInfo.getPackageName();
+    QString packageSourcePath = repositoryInfo.getUrl()+packageInfo.getPackageName();
+    if (packageInfo.isAlreadyDownloaded()) {
+      qDebug() << "\t  Already there";
+      return true;
+    }
     if (!isAvailable(packageInfo, repositoryInfo)) {
         qCritical()<<"\t  No such package: "<<packageSourcePath;
         return false;

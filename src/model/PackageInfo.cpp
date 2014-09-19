@@ -2,29 +2,40 @@
 
 using namespace Qompoter;
 
-PackageInfo::PackageInfo(const RequireInfo &parent, const RepositoryInfo &repository, ILoader *loader) :
+PackageInfo::PackageInfo(const RequireInfo &parent, const RepositoryInfo &repository, ILoader *loader, bool alreadyDownloaded) :
     RequireInfo(parent),
-    _repository(repository)
+    repository_(repository),
+    alreadyDownloaded_(alreadyDownloaded)
 {
-    _loader = loader;
+    loader_ = loader;
 }
 
 const RepositoryInfo &PackageInfo::repository()
 {
-    return _repository;
+    return repository_;
 }
 
 void PackageInfo::setRepository(const RepositoryInfo &repository)
 {
-    _repository = repository;
+    repository_ = repository;
 }
 
 ILoader *PackageInfo::loader()
 {
-    return _loader;
+    return loader_;
 }
 
 void PackageInfo::setLoader(Qompoter::ILoader *loader)
 {
-    _loader = loader;
+    loader_ = loader;
+}
+
+const bool &PackageInfo::isAlreadyDownloaded() const
+{
+    return alreadyDownloaded_;
+}
+
+void PackageInfo::setAlreadyDownloaded(const bool &alreadyDownloaded)
+{
+    alreadyDownloaded_ = alreadyDownloaded;
 }

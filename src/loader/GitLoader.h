@@ -12,8 +12,8 @@ public:
 
     QString getLoadingType() const;
     bool isAvailable(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo) const;
-    QList<RequireInfo> loadDependencies(const Qompoter::RequireInfo &packageInfo, const Qompoter::RepositoryInfo &repositoryInfo) const;
-    bool load(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo) const;
+    QList<RequireInfo> loadDependencies(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo, bool &downloaded);
+    bool load(const PackageInfo &packageInfo, const RepositoryInfo &repositoryInfo) const;
 };
 }
 

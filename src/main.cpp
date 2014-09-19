@@ -8,7 +8,6 @@
 #include "ConfigFileManager.h"
 #include "Config.h"
 #include "Query.h"
-#include "RequireInfo.h"
 #include "PackageInfo.h"
 #include "FsLoader.h"
 #include "GitLoader.h"
@@ -99,22 +98,24 @@ bool searchOtherDependenciesAction(Config &config, const Query &query, QHash<QSt
             if (!dependency.isDownloadRequired()) {
                 continue;
             }
+            qDebug()<<"";
             qDebug()<<"\t- Searching dependencies of:"<<dependency.getPackageName()<<" ("<<dependency.getVersion()<<")";
             bool found = false;
             foreach(RepositoryInfo repo, config.repositories()) {
-                if (!loaders.contains(repo.type())) {
+                if (!loaders.contains(repo.getType())) {
                     continue;
                 }
-                ILoader *loader = loaders.value(repo.type());
+                ILoader *loader = loaders.value(repo.getType());
                 if (loader->isAvailable(dependency, repo)) {
                     found = true;
-                    moreDepedencies.append(loader->loadDependencies(dependency, repo));
-                    finalDependencyList.insert(dependency.getPackageName(), PackageInfo(dependency, repo, loader));
+                    bool downloaded = false;
+                    moreDepedencies.append(loader->loadDependencies(dependency, repo, downloaded));
+                    finalDependencyList.insert(dependency.getPackageName(), PackageInfo(dependency, repo, loader, downloaded));
                     break;
                 }
             }
             if (!found) {
-                qDebug()<<"\t  Package not found";
+                qCritical()<<"\t  Package not found";
             }
         }
         QMutableListIterator<RequireInfo> it(moreDepedencies);
@@ -300,7 +301,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName("Fylhan");
     QCoreApplication::setOrganizationDomain("fylhan");
     QCoreApplication::setApplicationName("Qompoter");
-    QCoreApplication::setApplicationVersion("0.1");
+    QCoreApplication::setApplicationVersion("0.2");
     parser.setApplicationDescription("\nDependency manager for C++");
 
     // Process
@@ -338,6 +339,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     //        config.addRepository("git", RepositoryInfo("git", "https://github.com/"));
     config.addRepository(RepositoryInfo("git", "/media/Project/PlateformeVehiculeElectrique/4_workspace/"));
     config.addRepository(RepositoryInfo("fs", "/media/Project/PlateformeVehiculeElectrique/4_workspace/"));
+    config.addRepository(RepositoryInfo("http", "http://fylhan.la-bnbox.fr"));
 
     QHash<QString, ILoader *> loaders;
     loaders.insert("fs", new FsLoader(query));
