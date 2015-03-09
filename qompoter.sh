@@ -5,6 +5,7 @@ usage()
   echo "usage: $0 [ --repo <repo> | --help ]"
   echo ""
   echo " --repo		Distant Repository to use."
+  echo " --no-dev	Don't retrieve dev dependencies."
   echo " --help		Display this help."
   echo ""
   echo "Example: $0 --repo /Project"
@@ -13,13 +14,11 @@ usage()
 downloadRequire()
 {
   repositoryPath=$1
-  requireVendor=$2
-  requireName=$3
-  requireVersion=$4
-  isSource=$5
-
-  vendorDir=${PWD}/vendor
-  mkdir -p ${vendorDir}
+  vendorDir=$2
+  requireVendor=$3
+  requireName=$4
+  requireVersion=$5
+  isSource=$6
 
   echo "* ${requireVendor}/${requireName} ${requireVersion}"
   requirePath=${repositoryPath}/${requireVendor}/${requireName}/${requireVersion}
@@ -52,12 +51,13 @@ downloadRequire()
   echo
 }
 
-if [ "$#" != 2 ]; then
+if [ "$#" < 2 ]; then
   echo "Not enough parameter"
   usage
   exit -1
 fi
 
+dev=(-dev)?
 while [ "$1" != "" ]; do
 case $1 in
   -r | --repo )
@@ -65,9 +65,8 @@ case $1 in
     repositoryPath=$1
     shift
     ;;
-  -d | --dest )
-    shift
-    destPath=$1
+  --no-dev )
+    dev=
     shift
     ;;
   -h | --help )
@@ -82,46 +81,21 @@ case $1 in
 esac
 done
 
-#
-# However processing JSON from untrustworthy sources still can confuse your script!
-# YOU HAVE BEEN WARNED!
- 
-# Following needs bash. Use like in:
-# eval "$(json2bash <<<"$JSONDATA")"
-# JSONDATA must be coming from a trustworthy source, else harm may arise!
-json2bash()
-{
-# This only supports a single array output, as multidimensional arrays are not supported
-# -MJSON needs libjson-perl under Debian
-# STDIN must be from a trustworthy source!
-perl -MJSON -0777 -n -E 'sub J {
-my ($p,$v) = @_; my $r = ref $v;
-if ($r eq "HASH") { J("${p}_$_", $v->{$_}) for keys %$v; }
-elsif ($r eq "ARRAY") { $n = 0; J("$p"."[".$n++."]", $_) foreach @$v; }
-else { $v =~ '"s/'/'\\\\''/g"'; $p =~ s/^([^[]*)\[([0-9]*)\](.+)$/$1$3\[$2\]/;
-$p =~ tr/-/_/; $p =~ tr/A-Za-z0-9_[]//cd; say "$p='\''$v'\'';"; }
-}; J("json", decode_json($_));'
-} 
-
 echo 'Qompoter'
 echo '========'
 echo
 
 projectPath='PlateformeVehiculeElectrique/4_workspace/qompoter'
-projectPath='Eco2Charge/Code/vendor/'
 repositoryPath=${repositoryPath}/${projectPath}
-dest='.'
-# Prepare vendor
-mkdir -p ${dest}/vendor
-echo 'include($$PWD/../common.pri)' > ${dest}/vendor/vendor.pri
-echo '$$setLibPath()' >> ${dest}/vendor/vendor.pri
+vendorDir=${PWD}/vendor
+mkdir -p ${vendorDir}
+echo 'include($$PWD/../common.pri)' > ${vendorDir}/vendor.pri
+echo '$$setLibPath()' >> ${vendorDir}/vendor.pri
 
-#awk -F';' '{ system("./downloadRequire.sh $1 $2 $3 $4") }' qompoter.csv
-#xargs -a qompoter2.csv -d ';' ./downloadRequire.sh
-#cat qompoter2.csv | xargs ./downloadRequire.sh 
-#cat qompoter.csv | awk -F';' '{ print $1 $2 $3 $4 }'
-cat qompoter.config | while read line; do
-    downloadRequire $repositoryPath $line
+#cat qompoter.config | while read line; do
+#    downloadRequire $repositoryPath $vendorDir $line
+#done
+
+cat qompoter.json | JSON.sh | egrep "\[\"require${dev}\",\".*\"\]" | sed -r "s/\"//g;s/\// /g;s/\[require${dev},//g;s/\]	/ /g;s/-lib/ 0/g" | while read line; do
+    downloadRequire $repositoryPath $vendorDir $line 1
 done
-
-#cat qompoter.json | json2bash

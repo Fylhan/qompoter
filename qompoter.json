@@ -5,16 +5,15 @@
 	"authors": [
 		{
 			"name": "Olivier Maridat",
-			"email": "olivier.maridat@trialog.com",
+			"email": "olivier.maridat@trialog.com"
 		}
 	],
 	"require": {
-		"qt/qt": "5.*",
 		"trialog/solilog": "v1.0",
-		"trialog/gpslib": "v1.0",
+		"trialog/gpslib": "v1.1",
 		"trialog/octavor": "v0.8",
-		"trialog/qextserialport-manager": "v1.2rc",
-		"trialog/tcanp": "v1.6.7"
+		"trialog/qextserialport": "v1.2rc",
+		"trialog/tcanp": "v1.6.7-lib"
 	},
 	"require-dev": {
 		"trialog/autotester": "v1.0"
