@@ -51,7 +51,7 @@ downloadRequire()
   echo
 }
 
-if [ "$#" < 2 ]; then
+if [ "$#" -lt 2 ]; then
   echo "Not enough parameter"
   usage
   exit -1
@@ -81,6 +81,12 @@ case $1 in
 esac
 done
 
+if [ "$repositoryPath" = "" ]; then
+  echo "Empty parameter"
+  usage
+  exit -1
+fi
+
 echo 'Qompoter'
 echo '========'
 echo
@@ -96,6 +102,6 @@ echo '$$setLibPath()' >> ${vendorDir}/vendor.pri
 #    downloadRequire $repositoryPath $vendorDir $line
 #done
 
-cat qompoter.json | JSON.sh | egrep "\[\"require${dev}\",\".*\"\]" | sed -r "s/\"//g;s/\// /g;s/\[require${dev},//g;s/\]	/ /g;s/-lib/ 0/g" | while read line; do
+cat qompoter.json | ./node_modules/JSON.sh/JSON.sh | egrep "\[\"require${dev}\",\".*\"\]" | sed -r "s/\"//g;s/\// /g;s/\[require${dev},//g;s/\]	/ /g;s/-lib/ 0/g" | while read line; do
     downloadRequire $repositoryPath $vendorDir $line 1
 done

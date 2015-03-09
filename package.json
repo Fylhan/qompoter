@@ -1,0 +1,18 @@
+{
+  "name": "Qompoter",
+  "version": "0.2.0",
+  "description": "Dependency manager for Qt / C++",
+  "homepage": "https://github.com/Fylhan/qompoter",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Fylhan/qompoter.git"
+  },
+  "bin": {
+    "qompoter.sh": "./qompoter.sh"
+  },
+  "dependencies": {
+	"JSON.sh": "dominictarr/JSON.sh"
+  },
+  "devDependencies": {},
+  "author": "Fylhan <fylhan@gmail.com> (http://fylhan.la-bnbox.fr)"
+}
