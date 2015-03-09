@@ -1,29 +1,28 @@
 {
 	"name": "fylhan/qompoter",
-	"description": "A dependency composer for Qt.",
-	"keywords": ["Qt", "C++", "dependency management"],
-	"license": "LGPL3+",
-	"version": "0.1.0",
+	"description": "Qompoter, a dependency manager for C++/Qt.",
+	"keywords": ["Qt", "C++"],
 	"authors": [
 		{
-			"name": "Fylhan",
-			"homepage": "http://fylhan.la-bnbox.fr"
+			"name": "Olivier Maridat",
+			"email": "olivier.maridat@trialog.com",
 		}
 	],
 	"require": {
 		"qt/qt": "5.*",
-		"trialog/solilogger": "0.1.0",
-		"trialog/configurator": "1.*",
-		"Fylhan/qompoter": "dev-master",
-		"trialog/screenshot-manager": "1.*",
+		"trialog/solilog": "v1.0",
+		"trialog/gpslib": "v1.0",
+		"trialog/octavor": "v0.8",
+		"trialog/qextserialport-manager": "v1.2rc",
+		"trialog/tcanp": "v1.6.7"
 	},
 	"require-dev": {
-		"trialog/test-engine": "1.*"
+		"trialog/autotester": "v1.0"
 	},
 	"repositories": [
 		{
-			"type" : "git",
-			"url" : "https://github.com/"
+			"type" : "qompotist",
+			"url" : "PlateformeVehiculeElectrique/4_workspace/qompoter/"
 		}
 	]
 }
