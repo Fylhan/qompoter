@@ -13,16 +13,44 @@ The current version is still a work in progress. But still, you can:
 
 A lot have to be done to make it really usable.
 
+Installation
+--------------------------------
+
+Make the script file runnable, and move it to a place accessible in the PATH:
+
+    chmod u+x qompoter.sh
+    cp qompoter.sh /usr/bin/qompoter
+
 Usage
 --------------------------------
 
-Make the script file runnable:
+In your project repository, create a qompoter.json file:
 
-    sudo chmod u+x qompoter.sh
+	{
+		"name": "fylhan/qompoter",
+		"description": "Qompoter, a dependency manager for C++/Qt.",
+		"keywords": ["Qt", "C++"],
+		"authors": [
+			{
+				"name": "Fylhan",
+				"homepage": "fylhan.la-bnbox.fr"
+			}
+		],
+		"require": {
+			"trialog/solilog": "v1.0",
+			"trialog/gpslib": "v1.1",
+			"trialog/octavor": "v0.8",
+			"trialog/qextserialport": "v1.2rc",
+			"trialog/tcanp": "v1.6.7-lib"
+		},
+		"require-dev": {
+			"trialog/autotester": "v1.0"
+		}
+	}
 
-and install and deploy your required dependencies easily with Qompoter:
+Then, download and install dependencies listed in your qompoter.json using:
 
-    ./qompoter.sh
+	qompoter
 
 That's it! You can now include vendor.pri in the .pro file of your project, and include the dependencies that you required:
 
