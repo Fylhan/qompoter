@@ -2,8 +2,7 @@
 
 using namespace Qompoter;
 
-
-Qompoter::RepositoryInfo::RepositoryInfo(QString type, QString url, QString username, QString userpwd) :
+Qompoter::RepositoryInfo::RepositoryInfo(const QString &type, const QString &url, const QString &username, const QString &userpwd) :
     type_(type),
     url_(url),
     username_(username),
@@ -11,12 +10,12 @@ Qompoter::RepositoryInfo::RepositoryInfo(QString type, QString url, QString user
 {
 }
 
-Qompoter::RepositoryInfo::RepositoryInfo(QVariantMap data)
+Qompoter::RepositoryInfo::RepositoryInfo(const QVariantMap &data)
 {
     fromData(data);
 }
 
-void Qompoter::RepositoryInfo::fromData(QVariantMap data)
+void Qompoter::RepositoryInfo::fromData(const QVariantMap &data)
 {
     type_ = data.value("type", type_).toString();
     url_ = data.value("url", url_).toString();
@@ -24,19 +23,19 @@ void Qompoter::RepositoryInfo::fromData(QVariantMap data)
     userpwd_ = data.value("userpwd", userpwd_).toString();
 }
 
-QString Qompoter::RepositoryInfo::toString(QString prefixe)
+QString Qompoter::RepositoryInfo::toString(const QString &prefixe) const
 {
     QString str;
     str.append(prefixe+"{\n");
-    str.append(prefixe+"type: "+getType()+"\n");
-    str.append(prefixe+"url: "+getUrl()+"\n");
+    str.append(prefixe+"\"type\": \""+getType()+"\"\n");
+    str.append(prefixe+"\"url\": \""+getUrl()+"\"\n");
     if (!username_.isEmpty()) {
-        str.append(prefixe+"username: "+getUsername()+"\n");
+        str.append(prefixe+"\"username\": \""+getUsername()+"\"\n");
     }
     if (!userpwd_.isEmpty()) {
-        str.append(prefixe+"userpwd: ********\n");
+        str.append(prefixe+"\"userpwd\": \""+getUserpwd()+"\"\n");
     }
-    str.append(prefixe+"}");
+    str.append(prefixe+"}\n");
     return str;
 }
 

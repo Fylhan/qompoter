@@ -1,8 +1,12 @@
 #include "Config.h"
 
+#include <QFile>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonParseError>
 #include <QDebug>
-
-#include "ConfigFileManager.h"
+#include <QRegExp>
+#include <QString>
 
 using namespace Qompoter;
 
@@ -84,7 +88,7 @@ Config Config::fromFile(QString filepath)
 {
     Config config;
     // -- Get configuration file data
-    QVariantMap data = ConfigFileManager::parseFile(filepath);
+    QVariantMap data = Config::parseFile(filepath);
     // Error or no data
     if (data.size() <= 0) {
         qCritical()<<"No data";
@@ -273,4 +277,58 @@ void Config::addRepository(const RepositoryInfo &repository)
     repositories_.append(repository);
 }
 
+QVariantMap Config::parseFile(const QString &filepath)
+{
+    // -- Get configuration file data (JSON formated)
+    QFile file(filepath);
+    // - Open the file (read only)
+    if (!file.open(QIODevice::ReadOnly)) {
+        qCritical()<<"Fichier de configuration \""<<filepath<<"\" introuvable. Les valeurs par défaut seront utilisées.";
+        return QVariantMap();
+    }
+    // - Modify file content
+    // Read content
+    QTextStream in(&file);
+    QString data = in.readAll();
+    // Close file
+    file.close();
+    return parseContent(data);
+}
+
+QVariantMap Config::parseContent(QString data)
+{
+    // Remove inline comms
+    QRegExp pattern = QRegExp("(^|\\[|\\{|,|\\n|\\s)//.*($|\\n)");
+    pattern.setMinimal(true); //ungreedy
+    data.replace(pattern, "\\1\n");
+    data.replace(pattern, "\\1\n");//2 times, I am not sure why...
+    // Remove bloc comms
+    pattern = QRegExp("/\\*.*\\*/");
+    pattern.setMinimal(true); //ungreedy
+    data.replace(pattern, "");
+    // Add first and last brace
+    if (!data.startsWith("{")) {
+        data = "{\n"+data;
+    }
+    if (!data.endsWith("}")) {
+        data += "\n}";
+    }
+    // Remove commas before } or ]
+    pattern = QRegExp(",(\\s*[}\\]])");
+    pattern.setMinimal(true); //non-greedy
+    data.replace(pattern, "\\1");
+
+    // -- Parse JSON data
+    QJsonParseError error;
+    QJsonDocument jsonDoc = QJsonDocument::fromJson(data.toUtf8(), &error);
+    if (error.error != 0 || jsonDoc.isNull() || jsonDoc.isEmpty() || !jsonDoc.isObject()) {
+        QString errorStr = "empty content";
+        if (0 != error.error) {
+            error.errorString();
+        }
+        qCritical()<<"Erreur dans la lecture du fichier de configuration : "<<errorStr<<". Les valeurs par défaut seront utilisées.";
+        return QVariantMap();
+    }
+    return jsonDoc.object().toVariantMap();
+}
 

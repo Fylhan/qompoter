@@ -58,6 +58,9 @@ public:
     void setRepositories(const QList<RepositoryInfo>& repositories);
     void addRepository(const RepositoryInfo& repository);
 
+    static QVariantMap parseFile(const QString &filepath);
+    static QVariantMap parseContent(QString data);
+
 private:
     QString packageName_;
     QString description_;

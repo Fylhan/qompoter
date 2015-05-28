@@ -11,7 +11,6 @@
 
 #include "Config.h"
 #include "PackageInfo.h"
-#include "ConfigFileManager.h"
 
 Qompoter::GitLoader::GitLoader(const Query &query, QObject *parent) :
     ILoader(query, parent)
@@ -72,21 +71,21 @@ QList<Qompoter::RequireInfo> Qompoter::GitLoader::loadDependencies(const Require
                 return QList<Qompoter::RequireInfo>();
             }
             QByteArray data = reply->readAll();
-            Config configFile(ConfigFileManager::parseContent(QString::fromUtf8(data)));
+            Config configFile(Config::parseContent(QString::fromUtf8(data)));
             reply->deleteLater();
             return configFile.requires();
         }
     }
     // Local repo special Qompoter
     if (QFile(repositoryInfo.getUrl()+packageInfo.getPackageName()+".git/qompoter.json").exists()) {
-        Config configFile(ConfigFileManager::parseFile(repositoryInfo.getUrl()+packageInfo.getPackageName()+".git/qompoter.json"));
+        Config configFile(Config::parseFile(repositoryInfo.getUrl()+packageInfo.getPackageName()+".git/qompoter.json"));
         return configFile.requires();
     }
     // No such but to load it now!
     qDebug()<<"\t  Load package immediatly to find the qompoter.json if any";
     if (load(PackageInfo(packageInfo, repositoryInfo, this), repositoryInfo) && QFile(_query.getWorkingDir()+_query.getVendorDir()+packageInfo.getPackageName()+"/qompoter.json").exists()) {
         downloaded = true;
-        Config configFile(ConfigFileManager::parseFile(_query.getWorkingDir()+_query.getVendorDir()+packageInfo.getPackageName()+"/qompoter.json"));
+        Config configFile(Config::parseFile(_query.getWorkingDir()+_query.getVendorDir()+packageInfo.getPackageName()+"/qompoter.json"));
         return configFile.requires();
     }
     qCritical()<<"\t  No qompoter.json file for this dependency";

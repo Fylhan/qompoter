@@ -5,7 +5,6 @@
 
 #include "Config.h"
 #include "RequireInfo.h"
-#include "ConfigFileManager.h"
 
 using namespace Qompoter;
 
@@ -99,7 +98,7 @@ QList<RequireInfo> HttpLoader::loadDependencies(
   wgetProcess_->close();
   if (found) {
     Config configFile(
-        ConfigFileManager::parseFile(packageDestPath + "/qompoter.json"));
+        Config::parseFile(packageDestPath + "/qompoter.json"));
     return configFile.requires();
   }
 
@@ -109,7 +108,7 @@ QList<RequireInfo> HttpLoader::loadDependencies(
       QFile(_query.getWorkingDir() + _query.getVendorDir() +
             packageInfo.getPackageName() + "/qompoter.json").exists()) {
     downloaded = true;
-    Config configFile(ConfigFileManager::parseFile(
+    Config configFile(Config::parseFile(
         _query.getWorkingDir() + _query.getVendorDir() +
         packageInfo.getPackageName() + "/qompoter.json"));
     return configFile.requires();

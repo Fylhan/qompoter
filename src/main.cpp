@@ -1,13 +1,14 @@
 #include <QCoreApplication>
-#include <QTextCodec>
-#include <QProcess>
-#include <QDir>
-#include <QDebug>
 #include <QCommandLineParser>
+#include <QDebug>
+#include <QDir>
+#include <QProcess>
+#include <QSettings>
+#include <QTextCodec>
 
-#include "ConfigFileManager.h"
 #include "Config.h"
 #include "Query.h"
+#include "QuerySettings.h"
 #include "PackageInfo.h"
 #include "FsLoader.h"
 #include "GitLoader.h"
@@ -293,19 +294,8 @@ bool buildAction(const Config &config, const Query &query)
     return globalResult;
 }
 
-Q_DECL_EXPORT int main(int argc, char *argv[])
+int launch(Query &query, QCommandLineParser &parser)
 {
-    // App Configuration
-    QCoreApplication app(argc, argv);
-    QCommandLineParser parser;
-    QCoreApplication::setOrganizationName("Fylhan");
-    QCoreApplication::setOrganizationDomain("fylhan");
-    QCoreApplication::setApplicationName("Qompoter");
-    QCoreApplication::setApplicationVersion("0.2");
-    parser.setApplicationDescription("\nDependency manager for C++");
-
-    // Process
-    Query query;
     QString errorMessage;
     switch (parseCommandLine(parser, query, errorMessage)) {
     case CommandLineOk:
@@ -337,9 +327,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
         qDebug()<<"Config:\n"<<config.toString();
     }
     //        config.addRepository("git", RepositoryInfo("git", "https://github.com/"));
-    config.addRepository(RepositoryInfo("git", "/media/Project/PlateformeVehiculeElectrique/4_workspace/"));
-    config.addRepository(RepositoryInfo("fs", "/media/Project/PlateformeVehiculeElectrique/4_workspace/"));
-    config.addRepository(RepositoryInfo("http", "http://fylhan.la-bnbox.fr"));
+    config.setRepositories(query.getRepositories());
 
     QHash<QString, ILoader *> loaders;
     loaders.insert("fs", new FsLoader(query));
@@ -363,4 +351,26 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
 
     qDeleteAll(loaders);// TODO don't use raw pointers
     return 0;
+}
+
+Q_DECL_EXPORT int main(int argc, char *argv[])
+{
+    // App Description
+    QCoreApplication app(argc, argv);
+    QCoreApplication::setOrganizationName("Fylhan");
+    QCoreApplication::setOrganizationDomain("fylhan");
+    QCoreApplication::setApplicationName("Qompoter");
+    QCoreApplication::setApplicationVersion("0.2.0");
+    
+    // Persistant Settings
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationName(), QCoreApplication::applicationName());
+    
+    // Process
+    Query query;
+    QuerySettings querySettings(settings, query);
+    querySettings.loadSettings();
+    QCommandLineParser parser;
+    parser.setApplicationDescription("\nDependency manager for C++/Qt");
+    parser.process(app);
+    return launch(query, parser);
 }

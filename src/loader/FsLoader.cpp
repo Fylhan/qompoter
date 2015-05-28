@@ -5,7 +5,6 @@
 
 #include "Config.h"
 #include "PackageInfo.h"
-#include "ConfigFileManager.h"
 
 using namespace Qompoter;
 
@@ -31,7 +30,7 @@ QList<RequireInfo> Qompoter::FsLoader::loadDependencies(const RequireInfo &packa
         qCritical()<<"\t  No qompoter.json file for this dependency";
         return QList<RequireInfo>();
     }
-    Config subConfig(ConfigFileManager::parseFile(qompoterFile));
+    Config subConfig(Config::parseFile(qompoterFile));
     return subConfig.requires();
 }
 

@@ -3,11 +3,14 @@
 
 #include <QString>
 
+#include "RepositoryInfo.h"
+
 namespace Qompoter {
 class Query
 {
 public:
     Query();
+    QString toString(const QString &prefixe="") const;
 
     const QString &getAction() const;
     void setAction(const QString &action);
@@ -30,14 +33,20 @@ public:
     const QString &getVendorDir() const;
     void setVendorDir(const QString &vendorDir);
 
+    const QList<RepositoryInfo> &getRepositories() const;
+    void setRepositories(const QList<RepositoryInfo> &repositories);
+    void setRepositories(const QStringList &repositories);
+    void addRepository(const RepositoryInfo &repository);
+
 private:
-    QString _action;
-    bool _verbose;
-    bool _dev;
-    bool _global;
-    QString _qompoterFile;
-    QString _workingDir;
-    QString _vendorDir;
+    QString action_;
+    bool verbose_;
+    bool dev_;
+    bool global_;
+    QString qompoterFile_;
+    QString workingDir_;
+    QString vendorDir_;
+    QList<RepositoryInfo> repositories_;
 };
 }
 
