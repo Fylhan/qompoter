@@ -3,7 +3,6 @@
 	"description": "A dependency composer for Qt.",
 	"keywords": ["Qt", "C++", "dependency management"],
 	"license": "LGPL3+",
-	"version": "0.1.0",
 	"authors": [
 		{
 			"name": "Fylhan",
@@ -11,19 +10,9 @@
 		}
 	],
 	"require": {
-		"qt/qt": "5.*",
-		"trialog/solilogger": "0.1.0",
-		"trialog/configurator": "1.*",
-		"Fylhan/qompoter": "dev-master",
-		"trialog/screenshot-manager": "1.*",
+		"trialog/solilogger": "v1.1",
 	},
 	"require-dev": {
-		"trialog/test-engine": "1.*"
-	},
-	"repositories": [
-		{
-			"type" : "git",
-			"url" : "https://github.com/"
-		}
-	]
+		"trialog/autotester": "v1.0"
+	}
 }
