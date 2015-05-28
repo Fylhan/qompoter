@@ -1,2 +1,4 @@
-#vendor
 *.user
+*.log
+vendor
+release*
