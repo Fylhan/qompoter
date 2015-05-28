@@ -13,42 +13,85 @@ The current version is still a work in progress. But still, you can:
 * compile and deploy theses packages as shared libraries
 * generate a vendor.pri file to include and use in your .pro file
 
-A lot have to be done to make it really usable:
+A lot have to be done to make it really usable.
 
-* compile packages as shared libraries (with a local and global version), or as source project
-* manage version numbers
-* generate better vendor.pri file (from template) to use the packages in the project
-
-Setup
+Build
 --------------------------------
 
-To build this project, Qt5 is required. And you may need to update your PATH to compile in command line:
+To build this project, Qt5 is required. You may also need to update your PATH to compile in command line:
 
-    export PATH=/opt/Qt/5.3/gcc/bin:$PATH
-    export QTDIR=/opt/Qt/5.3/gcc
+	export PATH=/opt/Qt/5.3/gcc/bin:$PATH
+	export QTDIR=/opt/Qt/5.3/gcc
 
-    mkdir build-qompoter
-    cd build-qompoter
-    qmake ../qompoter/qompoter.pro
-    make
+	mkdir build-qompoter && cd build-qompoter
+	qmake ../qompoter/qompoter.pro
+	make
+
+Installation
+--------------------------------
+
+Make Qompoter runnable, and move it to a place accessible in the PATH:
+
+	chmod u+x qompoter
+	mv qompoter /usr/bin/qompoter
 
 Usage
 --------------------------------
 
-Make the exec file runnable, copy paste the sample qomposer.json file in your build repository:
+In your project repository, create a qompoter.json file:
 
-    sudo chmod u+x qompoter
-    cp ../qompoter/qompoter.json .
+	{
+		"name": "fylhan/qompoter",
+		"description": "Qompoter, a dependency manager for C++/Qt.",
+		"keywords": ["Qt", "C++"],
+		"authors": [
+			{
+				"name": "Fylhan",
+				"homepage": "fylhan.la-bnbox.fr"
+			}
+		],
+		"require": {
+			"trialog/solilog": "v1.0",
+			"trialog/gpslib": "v1.1",
+			"trialog/octavor": "v0.8",
+			"trialog/qextserialport": "v1.2rc",
+			"trialog/tcanp": "v1.6.7-lib"
+		},
+		"require-dev": {
+			"trialog/autotester": "v1.0"
+		}
+	}
 
-and install and deploy your required dependencies easily with Qompoter:
+Then, download and install dependencies listed in your qompoter.json using:
 
-    ./qompoter install
-    ./qompoter make
+	qompoter install
+	qompoter make
 
 That's it! You can now include vendor.pri in the .pro file of your project, and include the dependencies that you required:
 
-    CONFIG += solilogger chartxy
-    include(vendor/vendor.pri)
+	CONFIG += solilog chartxy
+	include(vendor/vendor.pri)
+
+Roadmap
+--------------------------------
+
+* Compile packages as shared libraries (with a local and global version), or as source project
+* Manage version numbers
+* Generate better vendor.pri file (from template) to use the packages in the project
+* Better support and description of repositories:
+	* structure
+	* how to add package in it
+* Forget bash and go to C++/Qt
+* Better support of Git repositories
+* Manage several repositories : one in local, one on Squeak, and some online (Github, ...)
+* Clarify command line
+* Add qompoter update: using a qompoter.lock file
+* Don't copy/paste lib and headers: in vendor.pri link to existing files
+* Add qompoter install --local: which copy/paste lib and headers
+* Use QT += package instead of CONFIG which leverage the usage of include(vendor.pri)
+* Link with inqlude
+* Better support of qompoter.json
+* JSON schema for qompoter.json
 
 License
 --------------------------------
