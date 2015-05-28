@@ -19,7 +19,7 @@ Installation
 Make the script file runnable, and move it to a place accessible in the PATH:
 
     chmod u+x qompoter.sh
-    cp qompoter.sh /usr/bin/qompoter
+    mv qompoter.sh /usr/bin/qompoter
 
 Usage
 --------------------------------
@@ -54,8 +54,26 @@ Then, download and install dependencies listed in your qompoter.json using:
 
 That's it! You can now include vendor.pri in the .pro file of your project, and include the dependencies that you required:
 
-    CONFIG += solilogger chartxy
+    CONFIG += solilog chartxy
     include(vendor/vendor.pri)
+
+Roadmap
+--------------------------------
+
+* Better support and description of repositories:
+	* structure
+	* how to add package in it
+* Forget bash and go to C++/Qt
+* Better support of Git repositories
+* Manage several repositories : one in local, one on Squeak, and some online (Github, ...)
+* Clarify command line
+* Add qompoter update: using a qompoter.lock file
+* Don't copy/paste lib and headers: in vendor.pri link to existing files
+* Add qompoter install --local: which copy/paste lib and headers
+* Use QT += package instead of CONFIG which leverage the usage of include(vendor.pri)
+* Link with inqlude
+* Better support of qompoter.json
+* JSON schema for qompoter.json
 
 License
 --------------------------------
