@@ -90,8 +90,24 @@ Roadmap
 * Add qompoter install --local: which copy/paste lib and headers
 * Use QT += package instead of CONFIG which leverage the usage of include(vendor.pri)
 * Link with inqlude
+* Link with CPM (?)
+* Special cases for Qt Plugins
 * Better support of qompoter.json
 * JSON schema for qompoter.json
+
+Documentation
+--------------------------------
+
+### Two kinds of packages
+* Library: Qompoter download the library , install it locally or globally, and create an adapted vendor.pri -> you just need to use it
+	* Yes but... the library compilation shall match your project: same compilator, same Qt version, same arch (32bit / 64 bit), same OS, ...
+	* Still useful for company scenarii: someone build all required libraries and make them available in a private / online repositories
+* Source files compiled with your projects: Qompoter download the source files and create an adapted vendor.pri -> use it and the packages will be compiled with your project
+
+Related projects
+--------------------------------
+* [inqlude ](http://inqlude.org/) Listing of existing Qt libraries
+* [CPM](https://github.com/iauns/cpm) C++ Package Manager using CMake
 
 License
 --------------------------------
