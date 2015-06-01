@@ -13,6 +13,7 @@ OTHER_FILES += \
     $$PWD/README.md \
     $$PWD/qompoter.json \
     $$PWD/changelogs.md \
+    $$PWD/docs/*.md \
 
 include($$PWD/common.pri)
 $$setBuildDir()
