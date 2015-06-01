@@ -97,8 +97,12 @@ QList<Qompoter::RequireInfo> Qompoter::GitLoader::loadDependencies(const Require
 
 bool Qompoter::GitLoader::load(const PackageInfo &packageInfo, const RepositoryInfo &repositoryInfo) const
 {
-    QString packageDestPath = query_.getWorkingDir()+query_.getVendorDir()+packageInfo.getPackageName();
-    QString packageSourcePath = repositoryInfo.getUrl()+packageInfo.getPackageName()+".git";
+    QString packageSourcePath = repositoryInfo.getUrl()+"/"+packageInfo.getPackageName()+"/"+packageInfo.getProjectName()+".git";
+    QString packageDestPath = query_.getVendorPath()+packageInfo.getPackageName();
+    if (query_.isVerbose()) {
+        qDebug()<<"\t  ["<<getLoadingType()<<"] Load package source \""<<packageSourcePath<<"\"";
+        qDebug()<<"\t  ["<<getLoadingType()<<"] To package dest \""<<packageDestPath<<"\"";
+    }
     if (!isAvailable(packageInfo, repositoryInfo)) {
         qCritical()<<"\t  No such package: "<<packageSourcePath;
         return false;
@@ -141,22 +145,22 @@ bool Qompoter::GitLoader::load(const PackageInfo &packageInfo, const RepositoryI
     // Tag version
     gitProcess.start(gitProgram, QStringList()<<"tag");
     if (!gitProcess.waitForFinished()) {
-        qCritical()<<"Can't' retrieve versions: "<<gitProcess.readAll();
+        qCritical()<<"\t Can't' retrieve versions: "<<gitProcess.readAll();
     }
     else {
         //gitProcess.readLine();
-        QByteArray tags = gitProcess.readAll();
+        QString tags = gitProcess.readAll();
         if (query_.isVerbose()) {
-            qDebug()<<"\tAvailable tags: "<<tags;
+            qDebug()<<"\t Available tags: "<<tags;
         }
-        if (tags.contains(QString("v"+packageInfo.getVersion()).toLatin1())) {
+        if (tags.contains(packageInfo.getVersion(), Qt::CaseInsensitive)) {
             gitProcess.start(gitProgram, QStringList()<<"checkout"<<"v"+packageInfo.getVersion());
             if (!gitProcess.waitForFinished()) {
-                qCritical()<<"Can't' update to version "<<packageInfo.getVersion()<<": "<<gitProcess.readAll();
+                qCritical()<<"\t Can't' update to version "<<packageInfo.getVersion()<<": "<<gitProcess.readAll();
             }
         }
         else {
-            qCritical()<<"\tWarning: Version"<<packageInfo.getVersion()<<"not found. Use dev-master instead.";
+            qCritical()<<"\t Warning: Version"<<packageInfo.getVersion()<<"not found. Use dev-master instead.";
         }
     }
     // Branch version
