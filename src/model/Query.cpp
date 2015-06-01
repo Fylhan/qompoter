@@ -78,6 +78,11 @@ void Qompoter::Query::setQompoterFile(const QString &qompoterFile)
     qompoterFile_ = qompoterFile;
 }
 
+QString Qompoter::Query::getVendorPath() const
+{
+    return workingDir_+vendorDir_;
+}
+
 const QString &Qompoter::Query::getWorkingDir() const
 {
     return workingDir_;
@@ -113,7 +118,7 @@ void Qompoter::Query::setRepositories(const QList<Qompoter::RepositoryInfo> &rep
 void Qompoter::Query::setRepositories(const QStringList &repositories)
 {
     foreach(QString repository, repositories) {
-        repositories_.append(RepositoryInfo("fs", repository));
+        repositories_.append(RepositoryInfo("git", repository));
     }
 }
 

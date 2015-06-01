@@ -8,6 +8,7 @@ CONFIG += c++11 solilog
 
 include($$PWD/../common.pri)
 include($$PWD/../vendor/vendor.pri)
+$$setBuildDir()
 
 SOURCES += \
     $$PWD/model/Config.cpp \
@@ -22,6 +23,9 @@ SOURCES += \
     $$PWD/loader/FsLoader.cpp \
     $$PWD/loader/GitLoader.cpp \
     $$PWD/loader/HttpLoader.cpp \
+    $$PWD/Qompoter.cpp \
+    $$PWD/IQompoter.cpp \
+    $$PWD/commandline.cpp \
 
 HEADERS += \
     $$PWD/model/Config.h \
@@ -37,6 +41,9 @@ HEADERS += \
     $$PWD/loader/FsLoader.h \
     $$PWD/loader/GitLoader.h \
     $$PWD/loader/HttpLoader.h \
+    $$PWD/Qompoter.h \
+    $$PWD/IQompoter.h \
+    $$PWD/commandline.h \
 
 INCLUDEPATH += \
     $$PWD/model \

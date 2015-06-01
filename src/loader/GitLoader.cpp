@@ -24,16 +24,19 @@ QString Qompoter::GitLoader::getLoadingType() const
 
 bool Qompoter::GitLoader::isAvailable(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo) const
 {
+    if (query_.isVerbose()) {
+        qDebug()<<"\t  ["<<getLoadingType()<<"] Package \""<<repositoryInfo.getUrl()+"/"+packageInfo.getPackageName()+"/"+packageInfo.getProjectName()+".git"<<"\" available ?";
+    }
     if (repositoryInfo.getUrl().startsWith("http")) {
         QNetworkAccessManager manager;
-        QNetworkRequest request(QUrl(repositoryInfo.getUrl()+packageInfo.getPackageName()));
+        QNetworkRequest request(QUrl(repositoryInfo.getUrl()+"/"+packageInfo.getPackageName()));
         QNetworkReply *reply = manager.head(request);
         QEventLoop loop;
         QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
         QTimer::singleShot(2000, &loop, SLOT(quit()));
         loop.exec();
         if (!reply->isFinished()) {
-            qCritical()<<"Apparently can't reach the URL "<<repositoryInfo.getUrl()+packageInfo.getPackageName()<<" that quickly...";
+            qCritical()<<"Apparently can't reach the URL "<<repositoryInfo.getUrl()+"/"+packageInfo.getPackageName()<<" that quickly...";
             reply->deleteLater();
             return false;
         }
@@ -42,7 +45,7 @@ bool Qompoter::GitLoader::isAvailable(const RequireInfo &packageInfo, const Repo
         reply->deleteLater();
         return res;
     }
-    return QDir(repositoryInfo.getUrl()+packageInfo.getPackageName()+".git").exists();
+    return QDir(repositoryInfo.getUrl()+"/"+packageInfo.getPackageName()+"/"+packageInfo.getProjectName()+".git").exists();
 }
 
 QList<Qompoter::RequireInfo> Qompoter::GitLoader::loadDependencies(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo, bool &downloaded)
@@ -77,15 +80,15 @@ QList<Qompoter::RequireInfo> Qompoter::GitLoader::loadDependencies(const Require
         }
     }
     // Local repo special Qompoter
-    if (QFile(repositoryInfo.getUrl()+packageInfo.getPackageName()+".git/qompoter.json").exists()) {
+    if (QFile(repositoryInfo.getUrl()+"/"+packageInfo.getPackageName()+".git/qompoter.json").exists()) {
         Config configFile(Config::parseFile(repositoryInfo.getUrl()+packageInfo.getPackageName()+".git/qompoter.json"));
         return configFile.requires();
     }
     // No such but to load it now!
     qDebug()<<"\t  Load package immediatly to find the qompoter.json if any";
-    if (load(PackageInfo(packageInfo, repositoryInfo, this), repositoryInfo) && QFile(_query.getWorkingDir()+_query.getVendorDir()+packageInfo.getPackageName()+"/qompoter.json").exists()) {
+    if (load(PackageInfo(packageInfo, repositoryInfo, this), repositoryInfo) && QFile(query_.getVendorPath()+packageInfo.getPackageName()+"/qompoter.json").exists()) {
         downloaded = true;
-        Config configFile(Config::parseFile(_query.getWorkingDir()+_query.getVendorDir()+packageInfo.getPackageName()+"/qompoter.json"));
+        Config configFile(Config::parseFile(query_.getVendorPath()+packageInfo.getPackageName()+"/qompoter.json"));
         return configFile.requires();
     }
     qCritical()<<"\t  No qompoter.json file for this dependency";
@@ -94,7 +97,7 @@ QList<Qompoter::RequireInfo> Qompoter::GitLoader::loadDependencies(const Require
 
 bool Qompoter::GitLoader::load(const PackageInfo &packageInfo, const RepositoryInfo &repositoryInfo) const
 {
-    QString packageDestPath = _query.getWorkingDir()+_query.getVendorDir()+packageInfo.getPackageName();
+    QString packageDestPath = query_.getWorkingDir()+query_.getVendorDir()+packageInfo.getPackageName();
     QString packageSourcePath = repositoryInfo.getUrl()+packageInfo.getPackageName()+".git";
     if (!isAvailable(packageInfo, repositoryInfo)) {
         qCritical()<<"\t  No such package: "<<packageSourcePath;
@@ -115,8 +118,8 @@ bool Qompoter::GitLoader::load(const PackageInfo &packageInfo, const RepositoryI
     QStringList arguments;
     // Install
     if (!QDir(packageDestPath+"/.git").exists()) {
-        QDir workingDir(_query.getWorkingDir());
-        workingDir.mkpath(_query.getVendorDir()+packageInfo.getPackageName());
+        QDir workingDir(query_.getWorkingDir());
+        workingDir.mkpath(query_.getVendorDir()+packageInfo.getPackageName());
         arguments << "clone" << packageSourcePath << packageDestPath;
     }
     // Update
@@ -127,7 +130,7 @@ bool Qompoter::GitLoader::load(const PackageInfo &packageInfo, const RepositoryI
     // Do action
     gitProcess.start(gitProgram, arguments);
     bool updated = gitProcess.waitForFinished();
-    if (_query.isVerbose()) {
+    if (query_.isVerbose()) {
         qDebug()<<"\t  "<<gitProcess.readAll();
     }
     // If version:
@@ -143,7 +146,7 @@ bool Qompoter::GitLoader::load(const PackageInfo &packageInfo, const RepositoryI
     else {
         //gitProcess.readLine();
         QByteArray tags = gitProcess.readAll();
-        if (_query.isVerbose()) {
+        if (query_.isVerbose()) {
             qDebug()<<"\tAvailable tags: "<<tags;
         }
         if (tags.contains(QString("v"+packageInfo.getVersion()).toLatin1())) {

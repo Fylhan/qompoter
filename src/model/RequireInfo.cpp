@@ -51,6 +51,11 @@ QString Qompoter::RequireInfo::toString(QString prefixe)
     return str;
 }
 
+QString RequireInfo::getPackagePath() const
+{
+    return getPackageName()+"/"+getVersion();
+}
+
 const QString& Qompoter::RequireInfo::getPackageName() const
 {
     return packageName_;

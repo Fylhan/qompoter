@@ -10,7 +10,7 @@
 		}
 	],
 	"require": {
-		"trialog/solilogger": "v1.1",
+		"trialog/solilog": "v1.1",
 	},
 	"require-dev": {
 		"trialog/autotester": "v1.0"

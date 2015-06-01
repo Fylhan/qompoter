@@ -27,7 +27,7 @@ bool HttpLoader::isAvailable(
             << "-v";
   addAuthentication(arguments, repositoryInfo);
   arguments << packageSourcePath;
-  if (_query.isVerbose()) {
+  if (query_.isVerbose()) {
     qDebug() << wgetProcess_->program() << arguments.join(" ");
   }
   wgetProcess_->setArguments(arguments);
@@ -49,7 +49,7 @@ bool HttpLoader::isAvailable(
   } else {
     stdout = wgetProcess_->errorString();
   }
-  if (_query.isVerbose()) {
+  if (query_.isVerbose()) {
     qDebug() << "\t  " << stdout;
   }
   wgetProcess_->close();
@@ -62,14 +62,14 @@ QList<RequireInfo> HttpLoader::loadDependencies(
   // Check qompoter.json file remotely
   QString packageSourcePath =
       repositoryInfo.getUrl() + packageInfo.getPackageName() + "/qompoter.json";
-  QString packageDestPath = _query.getWorkingDir() + _query.getVendorDir() +
+  QString packageDestPath = query_.getWorkingDir() + query_.getVendorDir() +
                             packageInfo.getPackageName();
   ;
   QStringList arguments;
   addAuthentication(arguments, repositoryInfo);
   arguments << packageSourcePath;
   arguments << "-o" << packageDestPath + "/qompoter.json";
-  if (_query.isVerbose()) {
+  if (query_.isVerbose()) {
     qDebug() << wgetProcess_->program() << arguments.join(" ");
   }
   wgetProcess_->setWorkingDirectory(packageDestPath);
@@ -92,7 +92,7 @@ QList<RequireInfo> HttpLoader::loadDependencies(
   } else {
     stdout = wgetProcess_->errorString();
   }
-  if (_query.isVerbose()) {
+  if (query_.isVerbose()) {
     qDebug() << "\t  " << stdout;
   }
   wgetProcess_->close();
@@ -105,11 +105,11 @@ QList<RequireInfo> HttpLoader::loadDependencies(
   // No such but to load it now!
   qDebug() << "\t  Load package immediatly to find the qompoter.json if any";
   if (load(PackageInfo(packageInfo, repositoryInfo, this), repositoryInfo) &&
-      QFile(_query.getWorkingDir() + _query.getVendorDir() +
+      QFile(query_.getWorkingDir() + query_.getVendorDir() +
             packageInfo.getPackageName() + "/qompoter.json").exists()) {
     downloaded = true;
     Config configFile(Config::parseFile(
-        _query.getWorkingDir() + _query.getVendorDir() +
+        query_.getWorkingDir() + query_.getVendorDir() +
         packageInfo.getPackageName() + "/qompoter.json"));
     return configFile.requires();
   }
@@ -120,7 +120,7 @@ QList<RequireInfo> HttpLoader::loadDependencies(
 bool HttpLoader::load(const PackageInfo &packageInfo,
                                 const RepositoryInfo &repositoryInfo)
     const {
-  QString packageDestPath = _query.getWorkingDir() + _query.getVendorDir() +
+  QString packageDestPath = query_.getWorkingDir() + query_.getVendorDir() +
                             packageInfo.getPackageName();
   QString packageSourcePath =
       repositoryInfo.getUrl() + packageInfo.getPackageName() + ".zip";
@@ -143,7 +143,7 @@ bool HttpLoader::load(const PackageInfo &packageInfo,
   //    arguments
   // <<"-o"<<packageDestPath+"/"+packageInfo.getProjectName()+".zip";
   // Do action
-  if (_query.isVerbose()) {
+  if (query_.isVerbose()) {
     qDebug() << wgetProcess_->program() << arguments.join(" ");
   }
   //    wgetProcess_->setWorkingDirectory(packageDestPath);
@@ -166,7 +166,7 @@ bool HttpLoader::load(const PackageInfo &packageInfo,
   } else {
     stdout = wgetProcess_->errorString();
   }
-  if (_query.isVerbose()) {
+  if (query_.isVerbose()) {
     qDebug() << "\t  " << stdout;
   }
   wgetProcess_->close();
@@ -188,7 +188,7 @@ bool HttpLoader::load(const PackageInfo &packageInfo,
   } else {
     stdout = gzip.errorString();
   }
-  if (_query.isVerbose()) {
+  if (query_.isVerbose()) {
     qDebug() << "\t  " << stdout;
   }
   gzip.close();

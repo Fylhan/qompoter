@@ -23,10 +23,22 @@ public:
 
     const bool &isDev() const;
     void setDev(const bool &dev);
+    
+    const int &getMaxRecurency() const;
+    void setMaxRecurency(const int &maxRecurency);
 
+    /**
+     * @return qompoter file name (default qompoter.json)
+     */
     const QString &getQompoterFile() const;
     void setQompoterFile(const QString &qompoterFile);
 
+    /**
+     * @brief working dir/vendor dir
+     * @return 
+     */
+    QString getVendorPath() const;
+    
     const QString &getWorkingDir() const;
     void setWorkingDir(const QString &workingDir);
 
@@ -43,6 +55,7 @@ private:
     bool verbose_;
     bool dev_;
     bool global_;
+    bool maxRecurency_;
     QString qompoterFile_;
     QString workingDir_;
     QString vendorDir_;

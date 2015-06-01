@@ -47,7 +47,7 @@ Qompoter::Config::Config(QVariantMap data) :
     fromData(data);
 }
 
-void Qompoter::Config::fromData(QVariantMap data)
+void Qompoter::Config::fromData(QVariantMap data, bool */*ok*/)
 {
     packageName_ = data.value("name", "").toString();
     description_ = data.value("description", "").toString();
@@ -84,7 +84,7 @@ void Qompoter::Config::fromData(QVariantMap data)
     }
 }
 
-Config Config::fromFile(QString filepath)
+Config Config::fromFile(QString filepath, bool *ok)
 {
     Config config;
     // -- Get configuration file data
@@ -92,11 +92,17 @@ Config Config::fromFile(QString filepath)
     // Error or no data
     if (data.size() <= 0) {
         qCritical()<<"No data";
+        if (0 != ok) {
+            *ok = false;
+        }
         return config;
     }
 
     // -- Fill new Config element
-    config.fromData(data);
+    config.fromData(data, ok);
+    if (0 != ok) {
+        *ok = true;
+    }
     return config;
 }
 

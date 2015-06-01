@@ -16,11 +16,11 @@ class ILoader : public QObject
 {
     Q_OBJECT
 public:
-    ILoader(const Query &query, QObject *parent=0) : QObject(parent), _query(query) {}
+    ILoader(const Query &query, QObject *parent=0) : QObject(parent), query_(query) {}
     virtual ~ILoader() {}
 
     inline void setQuery(const Query &query) {
-        _query = query;
+        query_ = query;
     }
     virtual QString getLoadingType() const = 0;
     virtual bool isAvailable(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo) const = 0;
@@ -28,7 +28,7 @@ public:
     virtual bool load(const PackageInfo &packageInfo, const RepositoryInfo &repositoryInfo) const = 0;
 
 protected:
-    Query _query;
+    Query query_;
 };
 }
 

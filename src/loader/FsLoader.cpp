@@ -1,7 +1,7 @@
 #include "FsLoader.h"
 
-#include <QDebug>
 #include <QDir>
+#include <QDebug>
 
 #include "Config.h"
 #include "PackageInfo.h"
@@ -20,12 +20,18 @@ QString Qompoter::FsLoader::getLoadingType() const
 
 bool Qompoter::FsLoader::isAvailable(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo) const
 {
-    return QDir(repositoryInfo.getUrl()+packageInfo.getPackageName()).exists();
+    if (query_.isVerbose()) {
+        qDebug()<<"\t  ["<<getLoadingType()<<"] Package \""<<repositoryInfo.getUrl()+"/"+packageInfo.getPackagePath()<<"\" available ?";
+    }
+    return QDir(repositoryInfo.getUrl()+"/"+packageInfo.getPackagePath()).exists();
 }
 
 QList<RequireInfo> Qompoter::FsLoader::loadDependencies(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo, bool &/*downloaded*/)
 {
-    QString qompoterFile = repositoryInfo.getUrl()+packageInfo.getPackageName()+"/qompoter.json";
+    if (query_.isVerbose()) {
+        qDebug()<<"\t  ["<<getLoadingType()<<"] Search dependencies in package \""<<repositoryInfo.getUrl()+"/"+packageInfo.getPackagePath()<<"/qompoter.json\"";
+    }
+    QString qompoterFile = repositoryInfo.getUrl()+"/"+packageInfo.getPackagePath()+"/qompoter.json";
     if (!QFile(qompoterFile).exists()) {
         qCritical()<<"\t  No qompoter.json file for this dependency";
         return QList<RequireInfo>();
@@ -36,8 +42,12 @@ QList<RequireInfo> Qompoter::FsLoader::loadDependencies(const RequireInfo &packa
 
 bool Qompoter::FsLoader::load(const PackageInfo &packageInfo, const RepositoryInfo &repositoryInfo) const
 {
-    QString packageDestPath = _query.getWorkingDir()+_query.getVendorDir()+packageInfo.getPackageName();
-    QString packageSourcePath = repositoryInfo.getUrl()+packageInfo.getPackageName();
+    QString packageSourcePath = repositoryInfo.getUrl()+"/"+packageInfo.getPackagePath();
+    QString packageDestPath = query_.getWorkingDir()+query_.getVendorDir()+packageInfo.getPackageName();
+    if (query_.isVerbose()) {
+        qDebug()<<"\t  ["<<getLoadingType()<<"] Load package source \""<<packageSourcePath<<"\"";
+        qDebug()<<"\t  ["<<getLoadingType()<<"] To package dest \""<<packageDestPath<<"\"";
+    }
     if (packageInfo.isAlreadyDownloaded()) {
       qDebug() << "\t  Already there";
       return true;
@@ -72,8 +82,10 @@ bool Qompoter::cpDir(const QString &srcPath, const QString &dstPath)
 {
     rmDir(dstPath);
     QDir parentDstDir(QFileInfo(dstPath).path());
-    if (!parentDstDir.mkpath(QFileInfo(dstPath).fileName()))
+    if (!parentDstDir.mkpath(QFileInfo(dstPath).fileName())) {
+        qCritical()<<"Can't create dir "<<dstPath;
         return false;
+    }
 
     QDir srcDir(srcPath);
     foreach(const QFileInfo &info, srcDir.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot)) {
@@ -81,10 +93,12 @@ bool Qompoter::cpDir(const QString &srcPath, const QString &dstPath)
         QString dstItemPath = dstPath + "/" + info.fileName();
         if (info.isDir()) {
             if (!cpDir(srcItemPath, dstItemPath)) {
+                qCritical()<<"Can't copy "<<srcItemPath<<" to "<<dstItemPath;
                 return false;
             }
         } else if (info.isFile()) {
             if (!QFile::copy(srcItemPath, dstItemPath)) {
+                qCritical()<<"Can't copy "<<srcItemPath<<" to "<<dstItemPath;
                 return false;
             }
         } else {

@@ -15,8 +15,8 @@ public:
     Config();
     Config(const Config& config);
     Config(QVariantMap data);
-    void fromData(QVariantMap data);
-    static Config fromFile(QString ilepath);
+    static Config fromFile(QString filepath, bool *ok=0);
+    void fromData(QVariantMap data, bool *ok=0);
     QString toString(QString prefixe="");
 
     const QString& packageName() const;

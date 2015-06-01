@@ -16,11 +16,17 @@ public:
     QString toString(QString prefixe="\t");
 
     /**
+     * @brief Package path: vendor/project name/version
+     * @return
+     */
+    QString getPackagePath() const;
+    
+    /**
      * @brief Full package name: vendor/project name
      * @return
      */
-    const QString& getPackageName() const;
-    void setPackageName(const QString& packageName);
+    const QString &getPackageName() const;
+    void setPackageName(const QString &packageName);
 
     /**
      * @brief Vendor name of the package: first part of the package name
@@ -33,8 +39,8 @@ public:
      */
     QString getProjectName() const;
 
-    const QString& getVersion() const;
-    void setVersion(const QString& version);
+    const QString &getVersion() const;
+    void setVersion(const QString &version);
 
     const BuildModeEnum::BuildMode &getBuildMode() const;
     void setBuildMode(const BuildModeEnum::BuildMode &buildMode);
@@ -43,7 +49,7 @@ public:
     void setIncludeMode(const IncludeModeEnum::IncludeMode &includeMode);
 
     const QString &getLibPath() const;
-    void setLibPath(const QString& libPath);
+    void setLibPath(const QString &libPath);
 
     const bool &isDownloadRequired() const;
     void setDownloadRequired(const bool &downloadRequired);
