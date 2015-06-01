@@ -1,0 +1,18 @@
+{
+	"name": "fylhan/qompoter",
+	"description": "A dependency composer for Qt.",
+	"keywords": ["Qt", "C++", "dependency management"],
+	"license": "LGPL3+",
+	"authors": [
+		{
+			"name": "Fylhan",
+			"homepage": "http://fylhan.la-bnbox.fr"
+		}
+	],
+	"require": {
+		"trialog/solilog": "v1.1",
+	},
+	"require-dev": {
+		"trialog/autotester": "v1.0"
+	}
+}
