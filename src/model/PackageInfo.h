@@ -11,14 +11,20 @@ namespace Qompoter {
 class PackageInfo : public RequireInfo
 {
 public:
-    PackageInfo(const RequireInfo &parent, const RepositoryInfo &repository, ILoader *loader, bool alreadyDownloaded=false);
+    PackageInfo(const RequireInfo &parent, const RepositoryInfo &getRepository, ILoader *loader, bool alreadyDownloaded=false);
 
-    const RepositoryInfo &repository();
-    void setRepository(const RepositoryInfo &repository);
+    const RepositoryInfo &getRepository() const;
+    void setRepository(const RepositoryInfo &getRepository);
 
     ILoader *loader();
     void setLoader(ILoader *loader);
 
+    /**
+     * @brief Package path in the remote repository: repository/vendor/project name/version
+     * @return
+     */
+    QString getRepositoryPackagePath() const;
+    
     const bool &isAlreadyDownloaded() const;
     void setAlreadyDownloaded(const bool &alreadyDownloaded);
 

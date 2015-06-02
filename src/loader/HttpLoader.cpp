@@ -15,7 +15,9 @@ HttpLoader::HttpLoader(const Query &query, QObject *parent)
     wgetProcess_->setProcessChannelMode(QProcess::MergedChannels);
 }
 
-QString HttpLoader::getLoadingType() const { return "http"; }
+QString HttpLoader::getLoadingType() const {
+    return "http";
+}
 
 bool HttpLoader::isAvailable(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo) const {
     QString packageSourcePath = repositoryInfo.getUrl() + packageInfo.getPackageName() + ".zip";
@@ -52,12 +54,12 @@ bool HttpLoader::isAvailable(const RequireInfo &packageInfo, const RepositoryInf
     return found;
 }
 
-QList<RequireInfo> HttpLoader::loadDependencies(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo, bool &downloaded) {
+QList<RequireInfo> HttpLoader::loadDependencies(const PackageInfo &packageInfo, bool &downloaded) {
     // Check qompoter.json file remotely
-    QString packageSourcePath = repositoryInfo.getUrl()+"/"+packageInfo.getPackageName()+"/qompoter.json";
-    QString packageDestPath = query_.getVendorPath()+packageInfo.getPackageName();
+    QString packageSourcePath = packageInfo.getRepositoryPackagePath()+"/qompoter.json";
+    QString packageDestPath = packageInfo.getWorkingDirPackagePath(query_);
     QStringList arguments;
-    addAuthentication(arguments, repositoryInfo);
+    addAuthentication(arguments, packageInfo.getRepository());
     arguments << packageSourcePath;
     arguments << "-o" << packageDestPath + "/qompoter.json";
     if (query_.isVerbose()) {
@@ -88,35 +90,26 @@ QList<RequireInfo> HttpLoader::loadDependencies(const RequireInfo &packageInfo, 
     }
     wgetProcess_->close();
     if (found) {
-        Config configFile(
-                    Config::parseFile(packageDestPath + "/qompoter.json"));
+        Config configFile(Config::parseFile(packageDestPath + "/qompoter.json"));
         return configFile.requires();
     }
     
     // No such but to load it now!
     qDebug() << "\t  Load package immediatly to find the qompoter.json if any";
-    if (load(PackageInfo(packageInfo, repositoryInfo, this), repositoryInfo) &&
-            QFile(query_.getWorkingDir() + query_.getVendorDir() +
-                  packageInfo.getPackageName() + "/qompoter.json").exists()) {
+    if (load(packageInfo) && QFile(packageDestPath+"/qompoter.json").exists()) {
         downloaded = true;
-        Config configFile(Config::parseFile(
-                              query_.getWorkingDir() + query_.getVendorDir() +
-                              packageInfo.getPackageName() + "/qompoter.json"));
+        Config configFile(Config::parseFile(packageDestPath+"/qompoter.json"));
         return configFile.requires();
     }
     qCritical() << "\t  No qompoter.json file for this dependency";
     return QList<RequireInfo>();
 }
 
-bool HttpLoader::load(const PackageInfo &packageInfo,
-                      const RepositoryInfo &repositoryInfo)
-const {
-    QString packageDestPath = query_.getWorkingDir() + query_.getVendorDir() +
-                              packageInfo.getPackageName();
-    QString packageSourcePath =
-            repositoryInfo.getUrl() + packageInfo.getPackageName() + ".zip";
-    if (!isAvailable(packageInfo, repositoryInfo)) {
-        qCritical() << "\t  No such package: " << packageSourcePath;
+bool HttpLoader::load(const PackageInfo &packageInfo) const {
+    QString packageSourcePath = packageInfo.getRepositoryPackagePath()+".zip";
+    QString packageDestPath = packageInfo.getWorkingDirPackagePath(query_);
+    if (!isAvailable(packageInfo, packageInfo.getRepository())) {
+        qCritical()<<"\t  No such package: "<<packageSourcePath;
         return false;
     }
     // TODO check if the same version is already there (with hash...)
@@ -128,7 +121,7 @@ const {
     }
     qDebug() << "\t  Downloading from remote... ";
     QStringList arguments;
-    addAuthentication(arguments, repositoryInfo);
+    addAuthentication(arguments, packageInfo.getRepository());
     arguments << packageSourcePath;
     QDir().mkpath(packageDestPath);
     //    arguments
@@ -186,9 +179,7 @@ const {
     return done;
 }
 
-void HttpLoader::addAuthentication(
-        QStringList &targetArguments,
-        const RepositoryInfo &repositoryInfo) const {
+void HttpLoader::addAuthentication(QStringList &targetArguments, const RepositoryInfo &repositoryInfo) const {
     if (!repositoryInfo.getUsername().isEmpty()) {
         targetArguments << "--user=" + repositoryInfo.getUsername();
         if (!repositoryInfo.getUserpwd().isEmpty()) {

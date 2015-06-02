@@ -10,7 +10,7 @@ PackageInfo::PackageInfo(const RequireInfo &parent, const RepositoryInfo &reposi
     loader_ = loader;
 }
 
-const RepositoryInfo &PackageInfo::repository()
+const RepositoryInfo &PackageInfo::getRepository() const
 {
     return repository_;
 }
@@ -28,6 +28,14 @@ ILoader *PackageInfo::loader()
 void PackageInfo::setLoader(Qompoter::ILoader *loader)
 {
     loader_ = loader;
+}
+
+QString PackageInfo::getRepositoryPackagePath() const
+{
+    if (0 == loader_->getLoadingType().compare("git", Qt::CaseInsensitive)) {
+        return repository_.getUrl()+"/"+getPackageName();
+    }
+    return repository_.getUrl()+"/"+getPackagePath();
 }
 
 const bool &PackageInfo::isAlreadyDownloaded() const

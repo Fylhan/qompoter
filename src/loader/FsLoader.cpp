@@ -26,12 +26,12 @@ bool Qompoter::FsLoader::isAvailable(const RequireInfo &packageInfo, const Repos
     return QDir(repositoryInfo.getUrl()+"/"+packageInfo.getPackagePath()).exists();
 }
 
-QList<RequireInfo> Qompoter::FsLoader::loadDependencies(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo, bool &/*downloaded*/)
+QList<RequireInfo> Qompoter::FsLoader::loadDependencies(const PackageInfo &packageInfo, bool &/*downloaded*/)
 {
     if (query_.isVerbose()) {
-        qDebug()<<"\t  ["<<getLoadingType()<<"] Search dependencies in package \""<<repositoryInfo.getUrl()+"/"+packageInfo.getPackagePath()<<"/qompoter.json\"";
+        qDebug()<<"\t  ["<<getLoadingType()<<"] Search dependencies in package \""<<packageInfo.getRepositoryPackagePath()<<"/qompoter.json\"";
     }
-    QString qompoterFile = repositoryInfo.getUrl()+"/"+packageInfo.getPackagePath()+"/qompoter.json";
+    QString qompoterFile = packageInfo.getRepositoryPackagePath()+"/qompoter.json";
     if (!QFile(qompoterFile).exists()) {
         qCritical()<<"\t  No qompoter.json file for this dependency";
         return QList<RequireInfo>();
@@ -40,10 +40,10 @@ QList<RequireInfo> Qompoter::FsLoader::loadDependencies(const RequireInfo &packa
     return subConfig.requires();
 }
 
-bool Qompoter::FsLoader::load(const PackageInfo &packageInfo, const RepositoryInfo &repositoryInfo) const
+bool Qompoter::FsLoader::load(const PackageInfo &packageInfo) const
 {
-    QString packageSourcePath = repositoryInfo.getUrl()+"/"+packageInfo.getPackagePath();
-    QString packageDestPath = query_.getWorkingDir()+query_.getVendorDir()+packageInfo.getPackageName();
+    QString packageSourcePath = packageInfo.getRepositoryPackagePath();
+    QString packageDestPath = packageInfo.getWorkingDirPackagePath(query_);
     if (query_.isVerbose()) {
         qDebug()<<"\t  ["<<getLoadingType()<<"] Load package source \""<<packageSourcePath<<"\"";
         qDebug()<<"\t  ["<<getLoadingType()<<"] To package dest \""<<packageDestPath<<"\"";
@@ -52,7 +52,7 @@ bool Qompoter::FsLoader::load(const PackageInfo &packageInfo, const RepositoryIn
       qDebug() << "\t  Already there";
       return true;
     }
-    if (!isAvailable(packageInfo, repositoryInfo)) {
+    if (!isAvailable(packageInfo, packageInfo.getRepository())) {
         qCritical()<<"\t  No such package: "<<packageSourcePath;
         return false;
     }

@@ -7,19 +7,29 @@
 #include "IncludeMode.h"
 
 namespace Qompoter {
+class Query;
+}
+
+namespace Qompoter {
 class RequireInfo
 {
 public:
-    RequireInfo(QString packageName="", QString version="");
-    RequireInfo(QString packageName, QVariant data);
-    void fromData(QString packageName, QVariant data);
-    QString toString(QString prefixe="\t");
+    RequireInfo(const QString &packageName="", const QString &version="");
+    RequireInfo(const QString &packageName, const QVariant &data);
+    void fromData(const QString &packageName, const QVariant &data);
+    QString toString(const QString &prefixe="\t");
 
     /**
      * @brief Package path: vendor/project name/version
      * @return
      */
     QString getPackagePath() const;
+    
+    /**
+     * @brief Local package path: workdir dir/vendor/project name/version
+     * @return
+     */
+    QString getWorkingDirPackagePath(const Query &query) const;
     
     /**
      * @brief Full package name: vendor/project name

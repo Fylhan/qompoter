@@ -2,10 +2,11 @@
 
 #include "BuildMode.h"
 #include "IncludeMode.h"
+#include "Query.h"
 
 using namespace Qompoter;
 
-Qompoter::RequireInfo::RequireInfo(QString name, QString version) :
+Qompoter::RequireInfo::RequireInfo(const QString &name, const QString &version) :
     packageName_(name),
     version_(version),
     buildMode_(BuildModeEnum::AsItIs),
@@ -15,7 +16,7 @@ Qompoter::RequireInfo::RequireInfo(QString name, QString version) :
 {
     downloadRequired_ = ("qt/qt" != packageName_);
 }
-Qompoter::RequireInfo::RequireInfo(QString packageName, QVariant data) :
+Qompoter::RequireInfo::RequireInfo(const QString &packageName, const QVariant &data) :
     buildMode_(BuildModeEnum::AsItIs),
     includeMode_(IncludeModeEnum::AsItIs),
     downloadRequired_(true)
@@ -23,7 +24,7 @@ Qompoter::RequireInfo::RequireInfo(QString packageName, QVariant data) :
     fromData(packageName, data);
 }
 
-void Qompoter::RequireInfo::fromData(QString packageName, QVariant data)
+void Qompoter::RequireInfo::fromData(const QString &packageName, const QVariant &data)
 {
     packageName_ = packageName;
     if (data.canConvert(QVariant::Map)) {
@@ -39,21 +40,26 @@ void Qompoter::RequireInfo::fromData(QString packageName, QVariant data)
     downloadRequired_ = ("qt/qt" != packageName_);
 }
 
-QString Qompoter::RequireInfo::toString(QString prefixe)
+QString Qompoter::RequireInfo::toString(const QString &prefixe)
 {
     QString str(prefixe+"{\n");
-    str.append(prefixe+"name: "+getPackageName()+"\n");
-    str.append(prefixe+"version: "+getVersion()+"\n");
-    str.append(prefixe+"build mode: "+BuildModeEnum::toString(getBuildMode())+"\n");
-    str.append(prefixe+"include mode: "+IncludeModeEnum::toString(getIncludeMode())+"\n");
-    str.append(prefixe+"lib path: "+getLibPath()+"\n");
-    str.append(prefixe+"}");
+    str.append(prefixe+"\"name\": \""+getPackageName()+"\",\n");
+    str.append(prefixe+"\"version\": \""+getVersion()+"\",\n");
+    str.append(prefixe+"\"build-mode\": \""+BuildModeEnum::toString(getBuildMode())+"\",\n");
+    str.append(prefixe+"\"include-mode\": \""+IncludeModeEnum::toString(getIncludeMode())+"\",\n");
+    str.append(prefixe+"\"lib-path\": \""+getLibPath()+"\",\n");
+    str.append(prefixe+"},\n");
     return str;
 }
 
 QString RequireInfo::getPackagePath() const
 {
     return getPackageName()+"/"+getVersion();
+}
+
+QString RequireInfo::getWorkingDirPackagePath(const Query &query) const
+{
+    return query.getVendorDir()+getPackageName();
 }
 
 const QString& Qompoter::RequireInfo::getPackageName() const

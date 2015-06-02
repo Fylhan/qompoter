@@ -60,7 +60,7 @@ private:
     bool verbose_;
     bool dev_;
     bool global_;
-    bool maxRecurency_;
+    int maxRecurency_;
     QString qompoterFile_;
     QString workingDir_;
     QString vendorDir_;

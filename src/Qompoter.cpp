@@ -12,7 +12,6 @@
 #include "GitLoader.h"
 #include "HttpLoader.h"
 #include "PackageInfo.h"
-#include "RequireInfo.h"
 #include "Query.h"
 
 using namespace Qompoter;
@@ -21,8 +20,8 @@ Qompoter::Qompoter::Qompoter(Query &query, QObject *parent) :
     IQompoter(parent),
     query_(query)
 {
-    loaders_.insert("fs", QSharedPointer<ILoader>(new FsLoader(query)));
     loaders_.insert("git", QSharedPointer<ILoader>(new GitLoader(query)));
+    loaders_.insert("fs", QSharedPointer<ILoader>(new FsLoader(query)));
     loaders_.insert("http", QSharedPointer<ILoader>(new HttpLoader(query)));
 }
 
@@ -38,12 +37,8 @@ bool Qompoter::Qompoter::doAction(const QString &action)
         qDebug()<<"Update\n";
         return update();
     }
+    qCritical()<<"Unknown action";
     return false;
-}
-
-bool Qompoter::Qompoter::update()
-{
-    return install();
 }
 
 bool Qompoter::Qompoter::install()
@@ -66,6 +61,11 @@ bool Qompoter::Qompoter::install()
     }
     generateQompoterPri();
     return true;
+}
+
+bool Qompoter::Qompoter::update()
+{
+    return install();
 }
 
 bool Qompoter::Qompoter::loadQompoterFile()
@@ -99,7 +99,7 @@ bool Qompoter::Qompoter::searchRecursiveDependencies()
             qDebug()<<"";
             qDebug()<<"\t- Searching dependencies of:"<<dependency.getPackageName()<<" ("<<dependency.getVersion()<<")";
             bool found = false;
-            foreach(RepositoryInfo repo, config_.repositories()) {
+            foreach (RepositoryInfo repo, config_.repositories()) {
                 if (!loaders_.contains(repo.getType())) {
                     continue;
                 }
@@ -107,8 +107,9 @@ bool Qompoter::Qompoter::searchRecursiveDependencies()
                 if (loader->isAvailable(dependency, repo)) {
                     found = true;
                     bool downloaded = false;
-                    moreDepedencies.append(loader->loadDependencies(dependency, repo, downloaded));
-                    finalDependencyList.insert(dependency.getPackageName(), PackageInfo(dependency, repo, loader.data(), downloaded));
+                    PackageInfo package(dependency, repo, loader.data(), downloaded);
+                    moreDepedencies.append(loader->loadDependencies(package, downloaded));
+                    finalDependencyList.insert(dependency.getPackageName(), package);
                     break;
                 }
             }
@@ -124,7 +125,7 @@ bool Qompoter::Qompoter::searchRecursiveDependencies()
         }
         dependencies = moreDepedencies;
         ++recurency;
-    } while(!dependencies.isEmpty() && recurency<10);
+    } while(!dependencies.isEmpty() && recurency<query_.getMaxRecurency());
     config_.setPackages(finalDependencyList);
     qDebug()<<"";
     return true;
@@ -140,9 +141,9 @@ bool Qompoter::Qompoter::installDependencies()
         bool found = false;
         bool updated = false;
         qDebug()<<"\t- Installing:"<<dependency.getPackageName()<<" ("<<dependency.getVersion()<<")";
-        if (0 != dependency.loader() && dependency.loader()->isAvailable(dependency, dependency.repository())) {
+        if (0 != dependency.loader() && dependency.loader()->isAvailable(dependency, dependency.getRepository())) {
             found = true;
-            updated = dependency.loader()->load(dependency, dependency.repository());
+            updated = dependency.loader()->load(dependency);
         }
         if (updated)
             qDebug()<<"\t  done";
@@ -171,7 +172,7 @@ bool Qompoter::Qompoter::generateQompoterPri()
         QString qompoterPriPath(query_.getVendorPath()+dependency.getPackageName()+"/qompoter.pri");
         QFile qompoterPriFile(qompoterPriPath);
         if (!qompoterPriFile.exists()) {
-            qWarning()<<"\t "<<dependency.getPackageName()<<": "<<qompoterPriFile.fileName()<<" does not exist";
+            qWarning()<<"\t Warning: "<<dependency.getPackageName()<<": "<<qompoterPriFile.fileName()<<" does not exist";
             continue;
         }
         if (!qompoterPriFile.open(QFile::ReadOnly)) {

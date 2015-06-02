@@ -6,6 +6,7 @@ Qompoter::Query::Query() :
     verbose_(false),
     dev_(true),
     global_(false),
+    maxRecurency_(10),
     qompoterFile_("qompoter.json"),
     vendorDir_("vendor/")
 {
@@ -19,6 +20,7 @@ QString Qompoter::Query::toString(const QString &prefixe) const
     str.append(prefixe+"\"verbose\": "+QString::number(verbose_)+"\n");
     str.append(prefixe+"\"global\": "+QString::number(global_)+"\n");
     str.append(prefixe+"\"dev\": "+QString::number(dev_)+"\n");
+    str.append(prefixe+"\"maxRecurency\": "+QString::number(maxRecurency_)+"\n");
     str.append(prefixe+"\"qompoterFile\": \""+qompoterFile_+"\"\n");
     str.append(prefixe+"\"workingDir\": \""+workingDir_+"\"\n");
     str.append(prefixe+"\"vendorDir\": \""+vendorDir_+"\"\n");
@@ -67,6 +69,16 @@ const bool &Qompoter::Query::isDev() const
 void Qompoter::Query::setDev(const bool &dev)
 {
     dev_ = dev;
+}
+
+const int &Qompoter::Query::getMaxRecurency() const
+{
+    return maxRecurency_;
+}
+
+void Qompoter::Query::setMaxRecurency(const int &maxRecurency)
+{
+    maxRecurency_ = maxRecurency;
 }
 
 const QString &Qompoter::Query::getQompoterFile() const

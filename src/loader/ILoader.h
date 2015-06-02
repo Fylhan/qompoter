@@ -23,9 +23,15 @@ public:
         query_ = query;
     }
     virtual QString getLoadingType() const = 0;
+    /**
+     * @brief Is this dependency available in this repo?
+     * @param packageInfo Dependency info
+     * @param repositoryInfo Repository info
+     * @return 
+     */
     virtual bool isAvailable(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo) const = 0;
-    virtual QList<RequireInfo> loadDependencies(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo, bool &downloaded) = 0;
-    virtual bool load(const PackageInfo &packageInfo, const RepositoryInfo &repositoryInfo) const = 0;
+    virtual QList<RequireInfo> loadDependencies(const PackageInfo &packageInfo, bool &downloaded) = 0;
+    virtual bool load(const PackageInfo &packageInfo) const = 0;
 
 protected:
     Query query_;

@@ -15,8 +15,8 @@ public:
 
     QString getLoadingType() const;
     bool isAvailable(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo) const;
-    QList<RequireInfo> loadDependencies(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo, bool &downloaded);
-    bool load(const PackageInfo &packageInfo, const RepositoryInfo &repositoryInfo) const;
+    QList<RequireInfo> loadDependencies(const PackageInfo &packageInfo, bool &downloaded);
+    bool load(const PackageInfo &packageInfo) const;
 
 private:
     QProcess *wgetProcess_;
