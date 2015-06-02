@@ -47,7 +47,12 @@ public:
 
     const QList<RepositoryInfo> &getRepositories() const;
     void setRepositories(const QList<RepositoryInfo> &repositories);
-    void setRepositories(const QStringList &repositories);
+    /**
+     * @brief Add repositories per their URL
+     * @param repositories Repositories URL
+     * @param repositoryType Loader type of these repositories
+     */
+    void setRepositories(const QStringList &repositories, const QString &repositoryType=QStringLiteral("fs"));
     void addRepository(const RepositoryInfo &repository);
 
 private:

@@ -145,22 +145,22 @@ bool Qompoter::GitLoader::load(const PackageInfo &packageInfo, const RepositoryI
     // Tag version
     gitProcess.start(gitProgram, QStringList()<<"tag");
     if (!gitProcess.waitForFinished()) {
-        qCritical()<<"\t Can't' retrieve versions: "<<gitProcess.readAll();
+        qCritical()<<"\t  Can't' retrieve versions: "<<gitProcess.readAll();
     }
     else {
         //gitProcess.readLine();
         QString tags = gitProcess.readAll();
         if (query_.isVerbose()) {
-            qDebug()<<"\t Available tags: "<<tags;
+            qDebug()<<"\t  Available tags: "<<tags;
         }
         if (tags.contains(packageInfo.getVersion(), Qt::CaseInsensitive)) {
             gitProcess.start(gitProgram, QStringList()<<"checkout"<<"v"+packageInfo.getVersion());
             if (!gitProcess.waitForFinished()) {
-                qCritical()<<"\t Can't' update to version "<<packageInfo.getVersion()<<": "<<gitProcess.readAll();
+                qCritical()<<"\t  Can't' update to version "<<packageInfo.getVersion()<<": "<<gitProcess.readAll();
             }
         }
         else {
-            qCritical()<<"\t Warning: Version"<<packageInfo.getVersion()<<"not found. Use dev-master instead.";
+            qCritical()<<"\t  Warning: Version"<<packageInfo.getVersion()<<"not found. Use dev-master instead.";
         }
     }
     // Branch version

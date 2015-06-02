@@ -17,6 +17,8 @@ void QuerySettings::loadSettings()
     settings_.beginGroup(QStringLiteral("Query"));
     if (!settings_.contains(QStringLiteral("repositories")))
         settings_.setValue(QStringLiteral("repositories"), "/media/Project/PlateformeVehiculeElectrique/4_workspace/qompoter|/media/data/Projet/qompoter");
-    query_.setRepositories(settings_.value(QStringLiteral("repositories")).toString().split("|"));
+    query_.setRepositories(settings_.value(QStringLiteral("repositories")).toString().split("|"), "git");
+    query_.setRepositories(settings_.value(QStringLiteral("repositories")).toString().split("|"), "fs");
+    query_.setRepositories(settings_.value(QStringLiteral("repositories")).toString().split("|"), "http");
     settings_.endGroup();
 }

@@ -115,10 +115,10 @@ void Qompoter::Query::setRepositories(const QList<Qompoter::RepositoryInfo> &rep
     repositories_ = repositories;
 }
 
-void Qompoter::Query::setRepositories(const QStringList &repositories)
+void Qompoter::Query::setRepositories(const QStringList &repositories, const QString &repositoryType)
 {
     foreach(QString repository, repositories) {
-        repositories_.append(RepositoryInfo("git", repository));
+        repositories_.append(RepositoryInfo(repositoryType, repository));
     }
 }
 
