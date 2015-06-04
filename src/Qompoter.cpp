@@ -106,7 +106,8 @@ bool Qompoter::Qompoter::searchRecursiveDependencies()
                 QSharedPointer<ILoader> loader = loaders_.value(repo.getType());
                 // Prioritise lib first
                 if (dependencyInfo.isLibFirst()) {
-                    dependencyInfo.setVersion(dependencyInfo.getVersion()+"-lib");
+                    QString originalVersionNb = dependencyInfo.getVersion();
+                    dependencyInfo.setVersion(originalVersionNb+"-lib");
                     if (loader->isAvailable(dependencyInfo, repo)) {
                         found = true;
                         bool downloaded = false;
@@ -116,7 +117,7 @@ bool Qompoter::Qompoter::searchRecursiveDependencies()
                         finalDependencyList.insert(dependencyInfo.getPackageName(), package);
                         break;
                     }
-                    dependencyInfo.setVersion(dependencyInfo.getVersion().left(4));
+                    dependencyInfo.setVersion(originalVersionNb);
                 }
                 // If priority already defined, or if lib not available
                 if (loader->isAvailable(dependencyInfo, repo)) {

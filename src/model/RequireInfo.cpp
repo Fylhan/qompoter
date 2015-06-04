@@ -82,7 +82,7 @@ const QString &Qompoter::RequireInfo::getPackageName() const
 
 QString RequireInfo::getPackagePath() const
 {
-    return packageName_+"/"+getVersion();
+    return packageName_+"/"+version_;
 }
 
 QString RequireInfo::getWorkingDirPackagePath(const Query &query) const

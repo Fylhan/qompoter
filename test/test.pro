@@ -13,6 +13,9 @@ SOURCES += \
 HEADERS += \
     $$PWD/test-case/QompoterTest.h \
 
+OTHER_FILES += \
+    $$PWD/qompoter.json \
+
 VALIDATION_FILES = $$files($$PWD/qompoter.json)
 copyValidationFiles.name = Copy test validation data
 copyValidationFiles.input = VALIDATION_FILES

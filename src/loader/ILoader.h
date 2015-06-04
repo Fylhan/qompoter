@@ -41,7 +41,7 @@ protected:
 };
 
 bool rmDir(const QString &dirPath);
-bool cpDir(const QString &srcPath, const QString &dstPath, bool deleteExistingDest=false);
+bool cpDir(const QString &srcPath, const QString &dstPath, bool deleteExistingDest=true);
 }
 
 #endif // QOMPOTER_ILOADER_H
