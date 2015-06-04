@@ -8,15 +8,12 @@
 
 using namespace Qompoter;
 
-HttpLoader::HttpLoader(const Query &query, QObject *parent)
-    : ILoader(query, parent) {
+HttpLoader::HttpLoader(const Query &query, QObject *parent) :
+    ILoader(query, "http", parent)
+{
     wgetProcess_ = new QProcess(this);
     wgetProcess_->setProgram("wget");
     wgetProcess_->setProcessChannelMode(QProcess::MergedChannels);
-}
-
-QString HttpLoader::getLoadingType() const {
-    return "http";
 }
 
 bool HttpLoader::isAvailable(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo) const {
@@ -40,6 +37,8 @@ bool HttpLoader::isAvailable(const RequireInfo &packageInfo, const RepositoryInf
         stdout = wgetProcess_->readAll();
         if (!stdout.contains("Échec", Qt::CaseInsensitive) &&
                 !stdout.contains("Faillure", Qt::CaseInsensitive) &&
+                !stdout.contains("manquant", Qt::CaseInsensitive) &&
+                !stdout.contains("missing", Qt::CaseInsensitive) &&
                 !stdout.contains("Aucun", Qt::CaseInsensitive) &&
                 !stdout.contains("No", Qt::CaseInsensitive)) {
             found = true;
@@ -57,7 +56,7 @@ bool HttpLoader::isAvailable(const RequireInfo &packageInfo, const RepositoryInf
 QList<RequireInfo> HttpLoader::loadDependencies(const PackageInfo &packageInfo, bool &downloaded) {
     // Check qompoter.json file remotely
     QString packageSourcePath = packageInfo.getRepositoryPackagePath()+"/qompoter.json";
-    QString packageDestPath = packageInfo.getWorkingDirPackagePath(query_);
+    QString packageDestPath = packageInfo.getWorkingDirPackageName(query_);
     QStringList arguments;
     addAuthentication(arguments, packageInfo.getRepository());
     arguments << packageSourcePath;
@@ -78,6 +77,8 @@ QList<RequireInfo> HttpLoader::loadDependencies(const PackageInfo &packageInfo, 
         stdout = wgetProcess_->readAll();
         if (!stdout.contains("Échec", Qt::CaseInsensitive) &&
                 !stdout.contains("Faillure", Qt::CaseInsensitive) &&
+                !stdout.contains("manquant", Qt::CaseInsensitive) &&
+                !stdout.contains("missing", Qt::CaseInsensitive) &&
                 !stdout.contains("Aucun", Qt::CaseInsensitive) &&
                 !stdout.contains("No", Qt::CaseInsensitive)) {
             found = true;
@@ -107,7 +108,7 @@ QList<RequireInfo> HttpLoader::loadDependencies(const PackageInfo &packageInfo, 
 
 bool HttpLoader::load(const PackageInfo &packageInfo) const {
     QString packageSourcePath = packageInfo.getRepositoryPackagePath()+".zip";
-    QString packageDestPath = packageInfo.getWorkingDirPackagePath(query_);
+    QString packageDestPath = packageInfo.getWorkingDirPackageName(query_);
     if (!isAvailable(packageInfo, packageInfo.getRepository())) {
         qCritical()<<"\t  No such package: "<<packageSourcePath;
         return false;
@@ -176,6 +177,9 @@ bool HttpLoader::load(const PackageInfo &packageInfo) const {
         qDebug() << "\t  " << stdout;
     }
     gzip.close();
+    if (packageInfo.isLibOnly()) {
+        done *= moveLibrary(packageDestPath);
+    }
     return done;
 }
 

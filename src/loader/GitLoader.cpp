@@ -13,14 +13,8 @@
 #include "PackageInfo.h"
 
 Qompoter::GitLoader::GitLoader(const Query &query, QObject *parent) :
-    ILoader(query, parent)
-{
-}
-
-QString Qompoter::GitLoader::getLoadingType() const
-{
-    return "git";
-}
+    ILoader(query, "git", parent)
+{}
 
 bool Qompoter::GitLoader::isAvailable(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo) const
 {
@@ -86,9 +80,9 @@ QList<Qompoter::RequireInfo> Qompoter::GitLoader::loadDependencies(const Package
     }
     // No such but to load it now!
     qDebug()<<"\t  Load package immediatly to find the qompoter.json if any";
-    if (load(packageInfo) && QFile(packageInfo.getWorkingDirPackagePath(query_)+"/qompoter.json").exists()) {
+    if (load(packageInfo) && QFile(packageInfo.getWorkingDirPackageName(query_)+"/qompoter.json").exists()) {
         downloaded = true;
-        Config configFile(Config::parseFile(packageInfo.getWorkingDirPackagePath(query_)+"/qompoter.json"));
+        Config configFile(Config::parseFile(packageInfo.getWorkingDirPackageName(query_)+"/qompoter.json"));
         return configFile.requires();
     }
     qCritical()<<"\t  No qompoter.json file for this dependency";
@@ -98,7 +92,7 @@ QList<Qompoter::RequireInfo> Qompoter::GitLoader::loadDependencies(const Package
 bool Qompoter::GitLoader::load(const PackageInfo &packageInfo) const
 {
     QString packageSourcePath = packageInfo.getRepositoryPackagePath()+"/"+packageInfo.getProjectName()+".git";
-    QString packageDestPath = packageInfo.getWorkingDirPackagePath(query_);
+    QString packageDestPath = packageInfo.getWorkingDirPackageName(query_);
     if (query_.isVerbose()) {
         qDebug()<<"\t  ["<<getLoadingType()<<"] Load package source \""<<packageSourcePath<<"\"";
         qDebug()<<"\t  ["<<getLoadingType()<<"] To package dest \""<<packageDestPath<<"\"";
@@ -165,5 +159,8 @@ bool Qompoter::GitLoader::load(const PackageInfo &packageInfo) const
     }
     // Branch version
     gitProcess.close();
+    if (packageInfo.isLibOnly()) {
+        updated *= moveLibrary(packageDestPath);
+    }
     return updated;
 }

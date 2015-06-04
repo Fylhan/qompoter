@@ -18,13 +18,15 @@ SOURCES += \
     $$PWD/model/RepositoryInfo.cpp \
     $$PWD/model/Query.cpp \
     $$PWD/model/QuerySettings.cpp \
+    $$PWD/model/PriorityMode.cpp \
     $$PWD/model/BuildMode.cpp \
     $$PWD/model/IncludeMode.cpp \
+    $$PWD/loader/ILoader.cpp \
     $$PWD/loader/FsLoader.cpp \
     $$PWD/loader/GitLoader.cpp \
     $$PWD/loader/HttpLoader.cpp \
-    $$PWD/Qompoter.cpp \
     $$PWD/IQompoter.cpp \
+    $$PWD/Qompoter.cpp \
     $$PWD/commandline.cpp \
 
 HEADERS += \
@@ -35,14 +37,15 @@ HEADERS += \
     $$PWD/model/RepositoryInfo.h \
     $$PWD/model/Query.h \
     $$PWD/model/QuerySettings.h \
+    $$PWD/model/PriorityMode.h \
     $$PWD/model/BuildMode.h \
     $$PWD/model/IncludeMode.h \
     $$PWD/loader/ILoader.h \
     $$PWD/loader/FsLoader.h \
     $$PWD/loader/GitLoader.h \
     $$PWD/loader/HttpLoader.h \
-    $$PWD/Qompoter.h \
     $$PWD/IQompoter.h \
+    $$PWD/Qompoter.h \
     $$PWD/commandline.h \
 
 INCLUDEPATH += \

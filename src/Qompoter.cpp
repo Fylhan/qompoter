@@ -92,24 +92,40 @@ bool Qompoter::Qompoter::searchRecursiveDependencies()
     do {
         QList<RequireInfo> moreDepedencies;
         // Search for other dependencies in the list of dependencies
-        foreach (RequireInfo dependency, dependencies) {
-            if (!dependency.isDownloadRequired()) {
+        foreach (RequireInfo dependencyInfo, dependencies) {
+            if (!dependencyInfo.isDownloadRequired()) {
                 continue;
             }
             qDebug()<<"";
-            qDebug()<<"\t- Searching dependencies of:"<<dependency.getPackageName()<<" ("<<dependency.getVersion()<<")";
+            qDebug()<<"\t- Searching dependencies of:"<<dependencyInfo.getPackageName()<<" ("<<dependencyInfo.getVersion()<<")";
             bool found = false;
             foreach (RepositoryInfo repo, config_.repositories()) {
                 if (!loaders_.contains(repo.getType())) {
                     continue;
                 }
                 QSharedPointer<ILoader> loader = loaders_.value(repo.getType());
-                if (loader->isAvailable(dependency, repo)) {
+                // Prioritise lib first
+                if (dependencyInfo.isLibFirst()) {
+                    dependencyInfo.setVersion(dependencyInfo.getVersion()+"-lib");
+                    if (loader->isAvailable(dependencyInfo, repo)) {
+                        found = true;
+                        bool downloaded = false;
+                        PackageInfo package(dependencyInfo, repo, loader.data());
+                        moreDepedencies.append(loader->loadDependencies(package, downloaded));
+                        package.setAlreadyDownloaded(downloaded);
+                        finalDependencyList.insert(dependencyInfo.getPackageName(), package);
+                        break;
+                    }
+                    dependencyInfo.setVersion(dependencyInfo.getVersion().left(4));
+                }
+                // If priority already defined, or if lib not available
+                if (loader->isAvailable(dependencyInfo, repo)) {
                     found = true;
                     bool downloaded = false;
-                    PackageInfo package(dependency, repo, loader.data(), downloaded);
+                    PackageInfo package(dependencyInfo, repo, loader.data());
                     moreDepedencies.append(loader->loadDependencies(package, downloaded));
-                    finalDependencyList.insert(dependency.getPackageName(), package);
+                    package.setAlreadyDownloaded(downloaded);
+                    finalDependencyList.insert(dependencyInfo.getPackageName(), package);
                     break;
                 }
             }
@@ -165,18 +181,18 @@ bool Qompoter::Qompoter::generateQompoterPri()
         qCritical()<<"Can't open "<<mainQompoterPriFile.fileName()<<": "<<mainQompoterPriFile.errorString();
         return false;
     }
-    foreach (RequireInfo dependency, config_.packages()) {
-        if (!dependency.isDownloadRequired()) {
+    foreach (RequireInfo dependencyInfo, config_.packages()) {
+        if (!dependencyInfo.isDownloadRequired()) {
             continue;
         }
-        QString qompoterPriPath(query_.getVendorPath()+dependency.getPackageName()+"/qompoter.pri");
+        QString qompoterPriPath(dependencyInfo.getWorkingDirPackageName(query_)+"/qompoter.pri");
         QFile qompoterPriFile(qompoterPriPath);
         if (!qompoterPriFile.exists()) {
-            qWarning()<<"\t Warning: "<<dependency.getPackageName()<<": "<<qompoterPriFile.fileName()<<" does not exist";
+            qWarning()<<"\t Warning: "<<dependencyInfo.getPackageName()<<": "<<qompoterPriFile.fileName()<<" does not exist";
             continue;
         }
         if (!qompoterPriFile.open(QFile::ReadOnly)) {
-            qCritical()<<"\t "<<dependency.getPackageName()<<": can't open "<<qompoterPriFile.fileName();
+            qCritical()<<"\t "<<dependencyInfo.getPackageName()<<": can't open "<<qompoterPriFile.fileName();
             continue;
         }
         mainQompoterPriFile.write(qompoterPriFile.readAll());

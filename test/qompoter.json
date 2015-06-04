@@ -11,6 +11,8 @@
 	],
 	"require": {
 		"trialog/solilog": "v1.1",
+		"trialog/tcanp": "v1.6.7-lib",
+		"trialog/eci": "v1.8-lib",
 	},
 	"require-dev": {
 		"trialog/autotester": "v1.0"

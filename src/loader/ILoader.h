@@ -16,13 +16,13 @@ class ILoader : public QObject
 {
     Q_OBJECT
 public:
-    ILoader(const Query &query, QObject *parent=0) : QObject(parent), query_(query) {}
+    ILoader(const Query &query, const QString loadingType, QObject *parent=0);
     virtual ~ILoader() {}
 
     inline void setQuery(const Query &query) {
         query_ = query;
     }
-    virtual QString getLoadingType() const = 0;
+    virtual QString getLoadingType() const;
     /**
      * @brief Is this dependency available in this repo?
      * @param packageInfo Dependency info
@@ -35,7 +35,13 @@ public:
 
 protected:
     Query query_;
+    QString loadingType_;
+    
+    virtual bool moveLibrary(const QString &packageDestPath) const;
 };
+
+bool rmDir(const QString &dirPath);
+bool cpDir(const QString &srcPath, const QString &dstPath, bool deleteExistingDest=false);
 }
 
 #endif // QOMPOTER_ILOADER_H
