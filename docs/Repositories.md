@@ -66,4 +66,3 @@ The example below shows the folder structure of a repository containing 3 differ
 				qompoter.pri
 			project_C.git
 				qompoter.json (optional)
-

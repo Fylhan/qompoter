@@ -9,8 +9,7 @@ The current version is still a work in progress. But still, you can:
 
 * describe in a qomposer.json file your dependencies
 * search and retrieve the own dependencies of your selected dependencies
-* retrieve all these packages from file system, or via a Git repository
-* compile and deploy theses packages as shared libraries
+* retrieve all these packages from file system or via a Git repository
 * generate a vendor.pri file to include and use in your .pro file
 
 A lot have to be done to make it really usable.
@@ -52,9 +51,9 @@ In your project repository, create a qompoter.json file:
 		],
 		"require": {
 			"trialog/solilog": "v1.0",
-			"trialog/gpslib": "v1.1",
+			"trialog/gpslib": "v1.1.1",
 			"trialog/octavor": "v0.8",
-			"trialog/qextserialport": "v1.2rc",
+			"qextserialport/qextserialport": "v1.2rc",
 			"trialog/tcanp": "v1.6.7-lib"
 		},
 		"require-dev": {
@@ -77,11 +76,11 @@ Roadmap
 
 * [Ok] Forget bash and go to C++/Qt
 * [In progress] Add documentation
-	* Repository structure
 	* Qompoter.json format
-	* how to add package in it
+	* Repository structure
+	* How to add package in it
 * [In progress] Manage several repositories : one in local, one on Squeak, and some online (Github, ...)
-* Better support of Git repositories
+* [In progress] Better support of Git repositories (availability of the version)
 * Manage version number: >=1.0, 1.0.*
 * Describe and implement a "Packagist" like server for Qompoter
 * Clarify command line
@@ -105,7 +104,7 @@ Documentation
 
 Related projects
 --------------------------------
-* [inqlude ](http://inqlude.org/) Listing of existing Qt libraries
+* [inqlude ](http://inqlude.org/) Listing of existing Qt libraries
 * [CPM](https://github.com/iauns/cpm) C++ Package Manager using CMake
 
 License
