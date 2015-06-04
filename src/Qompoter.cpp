@@ -176,10 +176,10 @@ bool Qompoter::Qompoter::installDependencies()
 
 bool Qompoter::Qompoter::generateQompoterPri()
 {
-    QFile mainQompoterPriFile(query_.getVendorPath()+"qompoter.pri");
-    mainQompoterPriFile.remove();
-    if (!mainQompoterPriFile.open(QFile::ReadWrite | QFile::Append)) {
-        qCritical()<<"Can't open "<<mainQompoterPriFile.fileName()<<": "<<mainQompoterPriFile.errorString();
+    QFile vendorPriFile(query_.getVendorPath()+"vendor.pri");
+    vendorPriFile.remove();
+    if (!vendorPriFile.open(QFile::ReadWrite | QFile::Append)) {
+        qCritical()<<"Can't open "<<vendorPriFile.fileName()<<": "<<vendorPriFile.errorString();
         return false;
     }
     foreach (RequireInfo dependencyInfo, config_.packages()) {
@@ -196,10 +196,10 @@ bool Qompoter::Qompoter::generateQompoterPri()
             qCritical()<<"\t "<<dependencyInfo.getPackageName()<<": can't open "<<qompoterPriFile.fileName();
             continue;
         }
-        mainQompoterPriFile.write(qompoterPriFile.readAll());
+        vendorPriFile.write(qompoterPriFile.readAll());
         qompoterPriFile.close();
     }
-    mainQompoterPriFile.close();
+    vendorPriFile.close();
     return true;
 }
 
