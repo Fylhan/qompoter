@@ -75,15 +75,15 @@ That's it! You can now include vendor.pri in the .pro file of your project, and 
 Roadmap
 --------------------------------
 
-* Compile packages as shared libraries (with a local and global version), or as source project
-* Manage version numbers
-* Generate better vendor.pri file (from template) to use the packages in the project
-* Better support and description of repositories:
-	* structure
+* [Ok] Forget bash and go to C++/Qt
+* [In progress] Add documentation
+	* Repository structure
+	* Qompoter.json format
 	* how to add package in it
-* Forget bash and go to C++/Qt
+* [In progress] Manage several repositories : one in local, one on Squeak, and some online (Github, ...)
 * Better support of Git repositories
-* Manage several repositories : one in local, one on Squeak, and some online (Github, ...)
+* Manage version number: >=1.0, 1.0.*
+* Describe and implement a "Packagist" like server for Qompoter
 * Clarify command line
 * Add qompoter update: using a qompoter.lock file
 * Don't copy/paste lib and headers: in vendor.pri link to existing files
@@ -94,11 +94,13 @@ Roadmap
 * Special cases for Qt Plugins
 * Better support of qompoter.json
 * JSON schema for qompoter.json
+* Compile packages as shared libraries (with a local and global version), or as source project
 
 Documentation
 --------------------------------
 
 * [Concept of Packages](docs/Packages.md)
+* [Qompoter file](docs/Qompoter-file.md)
 * [How to manage repositories](docs/Repositories.md)
 
 Related projects

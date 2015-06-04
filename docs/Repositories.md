@@ -25,39 +25,45 @@ The example below shows the folder structure of a repository containing 3 differ
 		project_A
 			v0.9.0
 				files...
+				qompoter.json
 				qompoter.pri
 			v1.0.0
 				files...
+				qompoter.json
 				qompoter.pri
 			v1.0.0-featureX
 				files...
+				qompoter.json
 				qompoter.pri
 		project_B
 			v1.1.0
 				files...
+				qompoter.json
 				qompoter.pri
-				bin
-					include
-						header files...
-					lib_linux_32
-						.a, .so, ...
-					lib_linux_64
-						.a, .so, ...
-					lib_windows
-						.a, .dll, ...
-					qompoter.pri
+			v1.1.0-lib
+				include
+					header files...
+				lib_linux_32
+					.a, .so, ...
+				lib_linux_64
+					.a, .so, ...
+				lib_windows
+					.a, .dll, ...
+				qompoter.json
+				qompoter.pri
 	vendor_2
 		project_C
-			v1.0.0
-				bin
-					include
-						header files...
-					lib_linux_32
-						.a, .so, ...
-					lib_linux_64
-						.a, .so, ...
-					lib_windows
-						.a, .dll, ...
-					qompoter.pri
+			v1.0.0-lib
+				include
+					header files...
+				lib_linux_32
+					.a, .so, ...
+				lib_linux_64
+					.a, .so, ...
+				lib_windows
+					.a, .dll, ...
+				qompoter.json
+				qompoter.pri
 			project_C.git
+				qompoter.json (optional)
 
