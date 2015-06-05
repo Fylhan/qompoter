@@ -78,13 +78,13 @@ QList<Qompoter::RequireInfo> Qompoter::GitLoader::loadDependencies(const Package
             QByteArray data = reply->readAll();
             Config configFile(Config::parseContent(QString::fromUtf8(data)));
             reply->deleteLater();
-            return configFile.requires();
+            return configFile.getRequires();
         }
     }
     // Local repo special Qompoter
     if (QFile(packageInfo.getRepositoryPackagePath()+".git/qompoter.json").exists()) {
         Config configFile(Config::parseFile(packageInfo.getRepositoryPackagePath()+".git/qompoter.json"));
-        return configFile.requires();
+        return configFile.getRequires();
     }
     // No such but to load it now!
     qDebug()<<"\t  Load package immediatly to find the qompoter.json if any";
@@ -92,7 +92,7 @@ QList<Qompoter::RequireInfo> Qompoter::GitLoader::loadDependencies(const Package
         downloaded = true;
         if (QFile(packageInfo.getWorkingDirPackageName(query_)+"/qompoter.json").exists()) {
             Config configFile(Config::parseFile(packageInfo.getWorkingDirPackageName(query_)+"/qompoter.json"));
-            return configFile.requires();
+            return configFile.getRequires();
         }
     }
     qCritical()<<"\t  No qompoter.json file for this dependency";

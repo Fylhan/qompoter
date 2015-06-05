@@ -92,7 +92,7 @@ QList<RequireInfo> HttpLoader::loadDependencies(const PackageInfo &packageInfo, 
     wgetProcess_->close();
     if (found) {
         Config configFile(Config::parseFile(packageDestPath + "/qompoter.json"));
-        return configFile.requires();
+        return configFile.getRequires();
     }
     
     // No such but to load it now!
@@ -100,7 +100,7 @@ QList<RequireInfo> HttpLoader::loadDependencies(const PackageInfo &packageInfo, 
     if (load(packageInfo) && QFile(packageDestPath+"/qompoter.json").exists()) {
         downloaded = true;
         Config configFile(Config::parseFile(packageDestPath+"/qompoter.json"));
-        return configFile.requires();
+        return configFile.getRequires();
     }
     qCritical() << "\t  No qompoter.json file for this dependency";
     return QList<RequireInfo>();

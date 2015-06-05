@@ -32,7 +32,7 @@ QList<RequireInfo> Qompoter::FsLoader::loadDependencies(const PackageInfo &packa
         return QList<RequireInfo>();
     }
     Config subConfig(Config::parseFile(qompoterFile));
-    return subConfig.requires();
+    return subConfig.getRequires();
 }
 
 bool Qompoter::FsLoader::load(const PackageInfo &packageInfo) const

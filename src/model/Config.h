@@ -7,56 +7,60 @@
 #include "PackageInfo.h"
 #include "RequireInfo.h"
 #include "RepositoryInfo.h"
+#include "TargetInfo.h"
 
 namespace Qompoter {
 class Config
 {
 public:
     Config();
-    Config(const Config& config);
+    Config(const Config &config);
     Config(QVariantMap data);
     static Config fromFile(QString filepath, bool *ok=0);
     void fromData(QVariantMap data, bool *ok=0);
     QString toString(QString prefixe="");
 
-    const QString& packageName() const;
-    void setPackageName(const QString& packageName);
+    const QString &getPackageName() const;
+    void setPackageName(const QString &getPackageName);
 
-    QString vendorName() const;
-    QString projectName() const;
+    QString getVendorName() const;
+    QString getProjectName() const;
 
-    const QString& description() const;
-    void setDescription(const QString& description);
+    const QString &getDescription() const;
+    void setDescription(const QString &getDescription);
 
-    const QList<QString>& keywords() const;
-    void setKeywords(const QList<QString>& keywords);
-    void addKeyword(const QString& keyword);
+    const QList<QString> &getKeywords() const;
+    void setKeywords(const QList<QString> &getKeywords);
+    void addKeyword(const QString &keyword);
 
-    const QList<AuthorInfo>& authors() const;
-    void setAuthors(const QList<AuthorInfo>& authors);
-    void addAuthor(const AuthorInfo& author);
+    const QList<AuthorInfo> &getAuthors() const;
+    void setAuthors(const QList<AuthorInfo> &getAuthors);
+    void addAuthor(const AuthorInfo &author);
 
-    const QString& license() const;
-    void setLicense(const QString& license);
+    const QString &getLicense() const;
+    void setLicense(const QString &getLicense);
 
-    const QString& version() const;
-    void setVersion(const QString& version);
+    const QString &getVersion() const;
+    void setVersion(const QString &getVersion);
+    
+    const TargetInfo &getTarget() const;
+    void setTarget(const TargetInfo &target);
 
-    QList<PackageInfo> packages() const;
-    bool hasPackage(QString packageName, QString version="") const;
-    void addPackage(const PackageInfo& package);
-    void setPackages(const QHash<QString, PackageInfo>& packages);
+    QList<PackageInfo> getPackages() const;
+    bool hasPackage(QString getPackageName, QString getVersion="") const;
+    void addPackage(const PackageInfo &package);
+    void setPackages(const QHash<QString, PackageInfo> &getPackages);
 
-    const QList<RequireInfo>& requires() const;
-    void setRequires(const QList<RequireInfo>& requires);
+    const QList<RequireInfo> &getRequires() const;
+    void setRequires(const QList<RequireInfo> &getRequires);
 
-    const QList<RequireInfo>& requireDev() const;
-    void setRequireDevs(const QList<RequireInfo>& requireDev);
-    void addRequireDev(const RequireInfo& requireDev);
+    const QList<RequireInfo> &getRequireDev() const;
+    void setRequireDevs(const QList<RequireInfo> &getRequireDev);
+    void addRequireDev(const RequireInfo &getRequireDev);
 
-    const QList<RepositoryInfo>& repositories() const;
-    void setRepositories(const QList<RepositoryInfo>& repositories);
-    void addRepository(const RepositoryInfo& repository);
+    const QList<RepositoryInfo> &getRepositories() const;
+    void setRepositories(const QList<RepositoryInfo> &getRepositories);
+    void addRepository(const RepositoryInfo &repository);
 
     static QVariantMap parseFile(const QString &filepath);
     static QVariantMap parseContent(QString data);
@@ -68,6 +72,7 @@ private:
     QList<AuthorInfo> authors_;
     QString license_;
     QString version_;
+    TargetInfo target_;
     QHash<QString, PackageInfo> packages_;
     QList<RequireInfo> requires_;
     QList<RequireInfo> requiresDev_;

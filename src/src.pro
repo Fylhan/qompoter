@@ -13,11 +13,12 @@ $$setBuildDir()
 SOURCES += \
     $$PWD/model/Config.cpp \
     $$PWD/model/AuthorInfo.cpp \
-    $$PWD/model/RequireInfo.cpp \
     $$PWD/model/PackageInfo.cpp \
-    $$PWD/model/RepositoryInfo.cpp \
     $$PWD/model/Query.cpp \
     $$PWD/model/QuerySettings.cpp \
+    $$PWD/model/RepositoryInfo.cpp \
+    $$PWD/model/RequireInfo.cpp \
+    $$PWD/model/TargetInfo.cpp \
     $$PWD/model/PriorityMode.cpp \
     $$PWD/model/BuildMode.cpp \
     $$PWD/model/IncludeMode.cpp \
@@ -32,11 +33,12 @@ SOURCES += \
 HEADERS += \
     $$PWD/model/Config.h \
     $$PWD/model/AuthorInfo.h \
-    $$PWD/model/RequireInfo.h \
     $$PWD/model/PackageInfo.h \
-    $$PWD/model/RepositoryInfo.h \
     $$PWD/model/Query.h \
     $$PWD/model/QuerySettings.h \
+    $$PWD/model/RequireInfo.h \
+    $$PWD/model/RepositoryInfo.h \
+    $$PWD/model/TargetInfo.h \
     $$PWD/model/PriorityMode.h \
     $$PWD/model/BuildMode.h \
     $$PWD/model/IncludeMode.h \

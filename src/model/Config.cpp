@@ -10,17 +10,8 @@
 
 using namespace Qompoter;
 
-Qompoter::Config::Config() :
-    packageName_(),
-    description_(),
-    keywords_(),
-    authors_(),
-    license_(),
-    version_(),
-    requires_(),
-    requiresDev_()
-{
-}
+Qompoter::Config::Config() 
+{}
 
 Qompoter::Config::Config(const Config& config)
 {
@@ -32,17 +23,10 @@ Qompoter::Config::Config(const Config& config)
     this->version_ = config.version_;
     this->requires_ = QList<RequireInfo>(config.requires_);
     this->requiresDev_ = QList<RequireInfo>(config.requiresDev_);
+    this->target_ = TargetInfo(config.target_);
 }
 
-Qompoter::Config::Config(QVariantMap data) :
-    packageName_(),
-    description_(),
-    keywords_(),
-    authors_(),
-    license_(),
-    version_(),
-    requires_(),
-    requiresDev_()
+Qompoter::Config::Config(QVariantMap data)
 {
     fromData(data);
 }
@@ -62,6 +46,9 @@ void Qompoter::Config::fromData(QVariantMap data, bool */*ok*/)
         foreach(QVariant element, data.value("authors").toList()) {
             authors_.append(AuthorInfo(element.toMap()));
         }
+    }
+    if (data.contains("target")) {
+        target_ = TargetInfo(data.value("target").toMap());
     }
     if (data.contains("require")) {
         QVariantMap require = data.value("require").toMap();
@@ -97,7 +84,7 @@ Config Config::fromFile(QString filepath, bool *ok)
         }
         return config;
     }
-
+    
     // -- Fill new Config element
     config.fromData(data, ok);
     if (0 != ok) {
@@ -110,34 +97,34 @@ QString Config::toString(QString prefixe)
 {
     QString str;
     str.append(prefixe+"{\n");
-    str.append(prefixe+"packageName: "+packageName()+",\n");
-    str.append(prefixe+"vendorName: "+vendorName()+",\n");
-    str.append(prefixe+"projectName: "+projectName()+",\n");
-    str.append(prefixe+"description: "+description()+",\n");
+    str.append(prefixe+"packageName: "+getPackageName()+",\n");
+    str.append(prefixe+"vendorName: "+getVendorName()+",\n");
+    str.append(prefixe+"projectName: "+getProjectName()+",\n");
+    str.append(prefixe+"description: "+getDescription()+",\n");
     str.append(prefixe+"keywords:[\n");
-    foreach(QString element, keywords()) {
+    foreach(QString element, getKeywords()) {
         str.append(prefixe+element+",\n");
     }
     str.append(prefixe+"],\n");
-    str.append(prefixe+"license: "+license()+",\n");
-    str.append(prefixe+"version: "+version()+",\n");
+    str.append(prefixe+"license: "+getLicense()+",\n");
+    str.append(prefixe+"version: "+getVersion()+",\n");
     str.append(prefixe+"authors:[\n");
-    foreach(AuthorInfo element, authors()) {
+    foreach(AuthorInfo element, getAuthors()) {
         str.append(prefixe+element.toString()+",\n");
     }
     str.append(prefixe+"],\n");
     str.append(prefixe+"require:[\n");
-    foreach(RequireInfo element, requires()) {
+    foreach(RequireInfo element, getRequires()) {
         str.append(prefixe+element.toString()+",\n");
     }
     str.append(prefixe+"],\n");
     str.append(prefixe+"requireDev:[\n");
-    foreach(RequireInfo element, requireDev()) {
+    foreach(RequireInfo element, getRequireDev()) {
         str.append(prefixe+element.toString()+",\n");
     }
     str.append(prefixe+"],\n");
     str.append(prefixe+"repositories:[\n");
-    foreach(RepositoryInfo element, repositories()) {
+    foreach(RepositoryInfo element, getRepositories()) {
         str.append(prefixe+element.toString()+",\n");
     }
     str.append(prefixe+"],\n");
@@ -145,7 +132,7 @@ QString Config::toString(QString prefixe)
     return str;
 }
 
-const QString& Qompoter::Config::packageName() const
+const QString& Qompoter::Config::getPackageName() const
 {
     return packageName_;
 }
@@ -154,7 +141,7 @@ void Qompoter::Config::setPackageName(const QString& name)
     packageName_ = name;
 }
 
-QString Qompoter::Config::projectName() const
+QString Qompoter::Config::getProjectName() const
 {
     if (packageName_.isEmpty() || !packageName_.contains('/')) {
         return packageName_;
@@ -162,7 +149,7 @@ QString Qompoter::Config::projectName() const
     return packageName_.split('/').at(1);
 }
 
-QString Qompoter::Config::vendorName() const
+QString Qompoter::Config::getVendorName() const
 {
     if (packageName_.isEmpty() || !packageName_.contains('/')) {
         return "";
@@ -170,7 +157,7 @@ QString Qompoter::Config::vendorName() const
     return packageName_.split('/').at(0);
 }
 
-const QString& Qompoter::Config::description() const
+const QString& Qompoter::Config::getDescription() const
 {
     return description_;
 }
@@ -179,7 +166,7 @@ void Qompoter::Config::setDescription(const QString& description)
     description_ = description;
 }
 
-const QList<QString>& Qompoter::Config::keywords() const
+const QList<QString>& Qompoter::Config::getKeywords() const
 {
     return keywords_;
 }
@@ -193,7 +180,7 @@ void Config::addKeyword(const QString &keyword)
     keywords_.append(keyword);
 }
 
-const QList<AuthorInfo>& Qompoter::Config::authors() const
+const QList<AuthorInfo>& Qompoter::Config::getAuthors() const
 {
     return authors_;
 }
@@ -207,7 +194,7 @@ void Config::addAuthor(const AuthorInfo &author)
     authors_.append(author);
 }
 
-const QString& Qompoter::Config::license() const
+const QString& Qompoter::Config::getLicense() const
 {
     return license_;
 }
@@ -216,7 +203,7 @@ void Qompoter::Config::setLicense(const QString& license)
     license_ = license;
 }
 
-const QString& Qompoter::Config::version() const
+const QString& Qompoter::Config::getVersion() const
 {
     return version_;
 }
@@ -225,7 +212,17 @@ void Qompoter::Config::setVersion(const QString& version)
     version_ = version;
 }
 
-QList<PackageInfo> Qompoter::Config::packages() const
+const TargetInfo &Config::getTarget() const
+{
+    return target_;
+}
+
+void Config::setTarget(const TargetInfo &target)
+{
+    target_ = target;
+}
+
+QList<PackageInfo> Qompoter::Config::getPackages() const
 {
     return packages_.values();
 }
@@ -246,7 +243,7 @@ void Config::setPackages(const QHash<QString, PackageInfo> &packages)
     packages_ = packages;
 }
 
-const QList<RequireInfo>& Qompoter::Config::requires() const
+const QList<RequireInfo>& Qompoter::Config::getRequires() const
 {
     return requires_;
 }
@@ -255,7 +252,7 @@ void Qompoter::Config::setRequires(const QList<RequireInfo>& require)
     requires_ = require;
 }
 
-const QList<RequireInfo>& Qompoter::Config::requireDev() const
+const QList<RequireInfo>& Qompoter::Config::getRequireDev() const
 {
     return requiresDev_;
 }
@@ -269,7 +266,7 @@ void Config::addRequireDev(const RequireInfo &requireDev)
 }
 
 
-const QList<RepositoryInfo>& Qompoter::Config::repositories() const
+const QList<RepositoryInfo>& Qompoter::Config::getRepositories() const
 {
     return repositories_;
 }
@@ -323,7 +320,7 @@ QVariantMap Config::parseContent(QString data)
     pattern = QRegExp(",(\\s*[}\\]])");
     pattern.setMinimal(true); //non-greedy
     data.replace(pattern, "\\1");
-
+    
     // -- Parse JSON data
     QJsonParseError error;
     QJsonDocument jsonDoc = QJsonDocument::fromJson(data.toUtf8(), &error);

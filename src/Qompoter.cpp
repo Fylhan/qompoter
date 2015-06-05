@@ -84,9 +84,9 @@ bool Qompoter::Qompoter::loadQompoterFile()
 bool Qompoter::Qompoter::searchRecursiveDependencies()
 {
     QHash<QString, PackageInfo> finalDependencyList;
-    QList<RequireInfo> dependencies = config_.requires();
+    QList<RequireInfo> dependencies = config_.getRequires();
     if (query_.isDev()) {
-        dependencies.append(config_.requireDev());
+        dependencies.append(config_.getRequireDev());
     }
     int recurency = 0;
     do {
@@ -99,7 +99,7 @@ bool Qompoter::Qompoter::searchRecursiveDependencies()
             qDebug()<<"";
             qDebug()<<"\t- Searching dependencies of:"<<dependencyInfo.getPackageName()<<" ("<<dependencyInfo.getVersion()<<")";
             bool found = false;
-            foreach (RepositoryInfo repo, config_.repositories()) {
+            foreach (RepositoryInfo repo, config_.getRepositories()) {
                 if (!loaders_.contains(repo.getType())) {
                     continue;
                 }
@@ -151,7 +151,7 @@ bool Qompoter::Qompoter::searchRecursiveDependencies()
 bool Qompoter::Qompoter::installDependencies()
 {
     bool globalResult = true;
-    foreach (PackageInfo dependency, config_.packages()) {
+    foreach (PackageInfo dependency, config_.getPackages()) {
         if (!dependency.isDownloadRequired()) {
             continue;
         }
@@ -182,7 +182,7 @@ bool Qompoter::Qompoter::generateQompoterPri()
         qCritical()<<"Can't open "<<vendorPriFile.fileName()<<": "<<vendorPriFile.errorString();
         return false;
     }
-    foreach (RequireInfo dependencyInfo, config_.packages()) {
+    foreach (RequireInfo dependencyInfo, config_.getPackages()) {
         if (!dependencyInfo.isDownloadRequired()) {
             continue;
         }
@@ -208,7 +208,7 @@ bool Qompoter::Qompoter::buildDependencies()
     bool globalResult = true;
     QFile vendorPro(query_.getVendorPath()+"vendor.pro");
     vendorPro.remove();
-    foreach (RequireInfo dependency, config_.packages()) {
+    foreach (RequireInfo dependency, config_.getPackages()) {
         if (!dependency.isDownloadRequired()) {
             continue;
         }
