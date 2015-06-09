@@ -21,6 +21,7 @@ Qompoter::Qompoter::Qompoter(Query &query, QObject *parent) :
     query_(query)
 {
     loaders_.insert("git", QSharedPointer<ILoader>(new GitLoader(query)));
+    loaders_.insert("gits", loaders_.value("git"));
     loaders_.insert("fs", QSharedPointer<ILoader>(new FsLoader(query)));
     loaders_.insert("http", QSharedPointer<ILoader>(new HttpLoader(query)));
 }
@@ -77,7 +78,7 @@ bool Qompoter::Qompoter::loadQompoterFile()
     if (query_.isVerbose()) {
         qDebug()<<"Config:\n"<<config_.toString();
     }
-    config_.setRepositories(query_.getRepositories());
+    config_.addRepositories(query_.getRepositories());
     return ok;
 }
 
@@ -304,7 +305,7 @@ bool Qompoter::Qompoter::buildDependencies()
                         }
                     }
                 }
-
+                
                 // Add stuff to vendor.pro
                 if (maked) {
                     QFile vendorPro(query_.getVendorPath()+"vendor.pro");

@@ -60,6 +60,7 @@ public:
 
     const QList<RepositoryInfo> &getRepositories() const;
     void setRepositories(const QList<RepositoryInfo> &getRepositories);
+    void addRepositories(const QList<RepositoryInfo> &repository);
     void addRepository(const RepositoryInfo &repository);
 
     static QVariantMap parseFile(const QString &filepath);

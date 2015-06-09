@@ -13,17 +13,18 @@ using namespace Qompoter;
 Qompoter::Config::Config() 
 {}
 
-Qompoter::Config::Config(const Config& config)
+Qompoter::Config::Config(const Config &config)
 {
     this->packageName_ = config.packageName_;
     this->description_ = config.description_;
     this->keywords_ = QList<QString>(config.keywords_);
-    this->authors_ = QList<AuthorInfo>(config.authors_);
     this->license_ = config.license_;
     this->version_ = config.version_;
+    this->authors_ = QList<AuthorInfo>(config.authors_);
+    this->target_ = TargetInfo(config.target_);
     this->requires_ = QList<RequireInfo>(config.requires_);
     this->requiresDev_ = QList<RequireInfo>(config.requiresDev_);
-    this->target_ = TargetInfo(config.target_);
+    this->repositories_ = QList<RepositoryInfo>(config.repositories_);
 }
 
 Qompoter::Config::Config(QVariantMap data)
@@ -63,10 +64,10 @@ void Qompoter::Config::fromData(QVariantMap data, bool */*ok*/)
         }
     }
     if (data.contains("repositories")) {
-        QList<QVariant> repositories = data.value("repositories").toList();
-        foreach(QVariant repository, repositories) {
-            QVariantMap repositoryData = repository.toMap();
-            repositories_.append(RepositoryInfo(repositoryData.value("type", "").toString(), repositoryData.value("url", "").toString()));
+        QListIterator<QVariant> it(data.value("repositories").toList());
+        it.toBack();
+        while (it.hasPrevious()) {
+            repositories_.prepend(RepositoryInfo(it.previous().toMap()));
         }
     }
 }
@@ -132,11 +133,11 @@ QString Config::toString(QString prefixe)
     return str;
 }
 
-const QString& Qompoter::Config::getPackageName() const
+const QString &Qompoter::Config::getPackageName() const
 {
     return packageName_;
 }
-void Qompoter::Config::setPackageName(const QString& name)
+void Qompoter::Config::setPackageName(const QString &name)
 {
     packageName_ = name;
 }
@@ -157,20 +158,20 @@ QString Qompoter::Config::getVendorName() const
     return packageName_.split('/').at(0);
 }
 
-const QString& Qompoter::Config::getDescription() const
+const QString &Qompoter::Config::getDescription() const
 {
     return description_;
 }
-void Qompoter::Config::setDescription(const QString& description)
+void Qompoter::Config::setDescription(const QString &description)
 {
     description_ = description;
 }
 
-const QList<QString>& Qompoter::Config::getKeywords() const
+const QList<QString> &Qompoter::Config::getKeywords() const
 {
     return keywords_;
 }
-void Qompoter::Config::setKeywords(const QList<QString>& keywords)
+void Qompoter::Config::setKeywords(const QList<QString> &keywords)
 {
     keywords_ = keywords;
 }
@@ -180,11 +181,11 @@ void Config::addKeyword(const QString &keyword)
     keywords_.append(keyword);
 }
 
-const QList<AuthorInfo>& Qompoter::Config::getAuthors() const
+const QList<AuthorInfo> &Qompoter::Config::getAuthors() const
 {
     return authors_;
 }
-void Qompoter::Config::setAuthors(const QList<AuthorInfo>& authors)
+void Qompoter::Config::setAuthors(const QList<AuthorInfo> &authors)
 {
     authors_ = authors;
 }
@@ -194,20 +195,20 @@ void Config::addAuthor(const AuthorInfo &author)
     authors_.append(author);
 }
 
-const QString& Qompoter::Config::getLicense() const
+const QString &Qompoter::Config::getLicense() const
 {
     return license_;
 }
-void Qompoter::Config::setLicense(const QString& license)
+void Qompoter::Config::setLicense(const QString &license)
 {
     license_ = license;
 }
 
-const QString& Qompoter::Config::getVersion() const
+const QString &Qompoter::Config::getVersion() const
 {
     return version_;
 }
-void Qompoter::Config::setVersion(const QString& version)
+void Qompoter::Config::setVersion(const QString &version)
 {
     version_ = version;
 }
@@ -243,20 +244,20 @@ void Config::setPackages(const QHash<QString, PackageInfo> &packages)
     packages_ = packages;
 }
 
-const QList<RequireInfo>& Qompoter::Config::getRequires() const
+const QList<RequireInfo> &Qompoter::Config::getRequires() const
 {
     return requires_;
 }
-void Qompoter::Config::setRequires(const QList<RequireInfo>& require)
+void Qompoter::Config::setRequires(const QList<RequireInfo> &require)
 {
     requires_ = require;
 }
 
-const QList<RequireInfo>& Qompoter::Config::getRequireDev() const
+const QList<RequireInfo> &Qompoter::Config::getRequireDev() const
 {
     return requiresDev_;
 }
-void Qompoter::Config::setRequireDevs(const QList<RequireInfo>& requireDev)
+void Qompoter::Config::setRequireDevs(const QList<RequireInfo> &requireDev)
 {
     requiresDev_ = requireDev;
 }
@@ -266,13 +267,18 @@ void Config::addRequireDev(const RequireInfo &requireDev)
 }
 
 
-const QList<RepositoryInfo>& Qompoter::Config::getRepositories() const
+const QList<RepositoryInfo> &Qompoter::Config::getRepositories() const
 {
     return repositories_;
 }
-void Qompoter::Config::setRepositories(const QList<RepositoryInfo>& repositories)
+void Qompoter::Config::setRepositories(const QList<RepositoryInfo> &repositories)
 {
     repositories_ = repositories;
+}
+
+void Config::addRepositories(const QList<RepositoryInfo> &repositories)
+{
+    repositories_.append(repositories);
 }
 
 void Config::addRepository(const RepositoryInfo &repository)

@@ -17,5 +17,11 @@
 	},
 	"require-dev": {
 		"trialog/autotester": "v1.0"
-	}
+	},
+	"repositories": [
+		{
+			"type": "fs",
+			"url": "/media/Project/PlateformeVehiculeElectrique/4_workspace/qompoter/qextserialport/qextserialport"
+		}
+	]
 }

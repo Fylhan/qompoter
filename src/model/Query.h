@@ -46,13 +46,14 @@ public:
     void setVendorDir(const QString &vendorDir);
 
     const QList<RepositoryInfo> &getRepositories() const;
-    void setRepositories(const QList<RepositoryInfo> &repositories);
+    void addRepositories(const QList<RepositoryInfo> &repositories);
     /**
      * @brief Add repositories per their URL
      * @param repositories Repositories URL
      * @param repositoryType Loader type of these repositories
      */
-    void setRepositories(const QStringList &repositories, const QString &repositoryType=QStringLiteral("fs"));
+    void addRepositories(const QStringList &repositories, const QString &repositoryType=QStringLiteral("fs"));
+    void addRepository(const QString &repository, const QString &repositoryType);
     void addRepository(const RepositoryInfo &repository);
 
 private:

@@ -4,6 +4,7 @@
 
 #include "BuildMode.h"
 #include "IncludeMode.h"
+#include "RepositoryInfo.h"
 #include "Query.h"
 
 using namespace Qompoter;
@@ -14,7 +15,6 @@ Qompoter::RequireInfo::RequireInfo(const QString &name, const QString &version) 
     priorityMode_(PriorityModeEnum::LibFirst),
     buildMode_(BuildModeEnum::AsItIs),
     includeMode_(IncludeModeEnum::AsItIs),
-    libPath_(""),
     downloadRequired_(true)
 {
     downloadRequired_ = ("qt/qt" != packageName_);
@@ -35,10 +35,9 @@ void Qompoter::RequireInfo::fromData(const QString &packageName, const QVariant 
     if (data.canConvert(QVariant::Map)) {
         QVariantMap dataMap = data.toMap();
         setVersion(dataMap.value("version", version_).toString());
-        libPath_ = dataMap.value("lib", priorityMode_).toBool();
+        priorityMode_ = PriorityModeEnum::fromVariant(dataMap.value("priority", PriorityModeEnum::toString(priorityMode_)));
         buildMode_ = BuildModeEnum::fromVariant(dataMap.value("build-mode", BuildModeEnum::toString(buildMode_)));
         includeMode_ = IncludeModeEnum::fromVariant(dataMap.value("include-mode", IncludeModeEnum::toString(includeMode_)));
-        libPath_ = dataMap.value("lib-path", libPath_).toString();
     }
     else {
         setVersion(data.toString());
@@ -46,15 +45,15 @@ void Qompoter::RequireInfo::fromData(const QString &packageName, const QVariant 
     downloadRequired_ = ("qt/qt" != packageName_);
 }
 
-QString Qompoter::RequireInfo::toString(const QString &prefixe)
+QString Qompoter::RequireInfo::toString(const QString &prefixe) const
 {
     QString str(prefixe+"{\n");
-    str.append(prefixe+"\"name\": \""+getPackageName()+"\",\n");
-    str.append(prefixe+"\"version\": \""+getVersion()+"\",\n");
-    str.append(prefixe+"\"build-mode\": \""+BuildModeEnum::toString(getBuildMode())+"\",\n");
-    str.append(prefixe+"\"include-mode\": \""+IncludeModeEnum::toString(getIncludeMode())+"\",\n");
-    str.append(prefixe+"\"lib-path\": \""+getLibPath()+"\",\n");
-    str.append(prefixe+"},\n");
+    str.append(prefixe+"\"name\": \""+packageName_+"\",\n");
+    str.append(prefixe+"\"version\": \""+version_+"\",\n");
+    str.append(prefixe+"\"priority-mode\": \""+PriorityModeEnum::toString(priorityMode_)+"\",\n");
+    str.append(prefixe+"\"build-mode\": \""+BuildModeEnum::toString(buildMode_)+"\",\n");
+    str.append(prefixe+"\"include-mode\": \""+IncludeModeEnum::toString(includeMode_)+"\",\n");
+    str.append(prefixe+"}\n");
     return str;
 }
 
@@ -93,6 +92,31 @@ QString RequireInfo::getWorkingDirPackagePath(const Query &query) const
 QString RequireInfo::getWorkingDirPackageName(const Query &query) const
 {
     return query.getVendorDir()+getProjectName();
+}
+
+QString RequireInfo::getWorkingDirQompoterFilePath(const Query &query) const
+{
+    return getWorkingDirPackagePath(query)+"/qompoter.json";
+}
+
+QString RequireInfo::getRepositoryPackagePath(const RepositoryInfo &repo) const
+{
+    if ("gits" == repo.getType()) {
+        if (repo.getUrl().startsWith("http")) {
+            return repo.getUrl()+"/"+getPackageName();
+        }
+        return repo.getUrl()+"/"+getPackageName()+"/"+getProjectName()+".git";
+    }
+    if (repo.getUrl().endsWith(getPackagePath())) {
+        return repo.getUrl();
+    }
+    if (repo.getUrl().endsWith(getPackageName())) {
+        return repo.getUrl()+"/"+getVersion();
+    }
+    if (repo.isVcsType()) {
+        return repo.getUrl();
+    }
+    return repo.getUrl()+"/"+getPackagePath();
 }
 
 void Qompoter::RequireInfo::setPackageName(const QString &name)
@@ -173,16 +197,6 @@ const IncludeModeEnum::IncludeMode &RequireInfo::getIncludeMode() const
 void RequireInfo::setIncludeMode(const IncludeModeEnum::IncludeMode &includeMode)
 {
     includeMode_ = includeMode;
-}
-
-const QString &RequireInfo::getLibPath() const
-{
-    return libPath_;
-}
-
-void RequireInfo::setLibPath(const QString &libPath)
-{
-    libPath_ = libPath;
 }
 
 const bool &RequireInfo::isDownloadRequired() const

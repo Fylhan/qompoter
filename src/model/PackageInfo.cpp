@@ -32,10 +32,17 @@ void PackageInfo::setLoader(Qompoter::ILoader *loader)
 
 QString PackageInfo::getRepositoryPackagePath() const
 {
-    if (0 == loader_->getLoadingType().compare("git", Qt::CaseInsensitive)) {
-        return repository_.getUrl()+"/"+getPackageName();
+    return RequireInfo::getRepositoryPackagePath(repository_);
+}
+
+QString PackageInfo::getRepositoryQompoterFilePath() const
+{
+    if (repository_.isVcsType()) {
+        if (repository_.getUrl().startsWith("https://github.com")) {
+            return "https://raw.githubusercontent.com/"+getPackageName()+"/master/qomposer.json";
+        }
     }
-    return repository_.getUrl()+"/"+getPackagePath();
+    return RequireInfo::getRepositoryPackagePath(repository_)+"/qompoter.json";
 }
 
 const bool &PackageInfo::isAlreadyDownloaded() const

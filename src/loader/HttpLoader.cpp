@@ -17,7 +17,7 @@ HttpLoader::HttpLoader(const Query &query, QObject *parent) :
 }
 
 bool HttpLoader::isAvailable(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo) const {
-    QString packageSourcePath = repositoryInfo.getUrl() + packageInfo.getPackageName() + ".zip";
+    QString packageSourcePath = packageInfo.getRepositoryPackagePath(repositoryInfo);
     QStringList arguments;
     arguments<<"--spider"<<"-v";
     addAuthentication(arguments, repositoryInfo);
@@ -55,12 +55,12 @@ bool HttpLoader::isAvailable(const RequireInfo &packageInfo, const RepositoryInf
 
 QList<RequireInfo> HttpLoader::loadDependencies(const PackageInfo &packageInfo, bool &downloaded) {
     // Check qompoter.json file remotely
-    QString packageSourcePath = packageInfo.getRepositoryPackagePath()+"/qompoter.json";
+    QString packageSourcePath = packageInfo.getRepositoryQompoterFilePath();
     QString packageDestPath = packageInfo.getWorkingDirPackageName(query_);
     QStringList arguments;
     addAuthentication(arguments, packageInfo.getRepository());
     arguments << packageSourcePath;
-    arguments << "-o" << packageDestPath + "/qompoter.json";
+    arguments << "-o" << packageInfo.getWorkingDirQompoterFilePath(query_);
     if (query_.isVerbose()) {
         qDebug() << wgetProcess_->program() << arguments.join(" ");
     }
@@ -107,7 +107,7 @@ QList<RequireInfo> HttpLoader::loadDependencies(const PackageInfo &packageInfo, 
 }
 
 bool HttpLoader::load(const PackageInfo &packageInfo) const {
-    QString packageSourcePath = packageInfo.getRepositoryPackagePath()+".zip";
+    QString packageSourcePath = packageInfo.getRepositoryPackagePath();
     QString packageDestPath = packageInfo.getWorkingDirPackageName(query_);
     if (packageInfo.isAlreadyDownloaded()) {
         qDebug() << "\t  Already there";

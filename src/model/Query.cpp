@@ -122,16 +122,21 @@ const QList<Qompoter::RepositoryInfo> &Qompoter::Query::getRepositories() const
     return repositories_;
 }
 
-void Qompoter::Query::setRepositories(const QList<Qompoter::RepositoryInfo> &repositories)
+void Qompoter::Query::addRepositories(const QList<Qompoter::RepositoryInfo> &repositories)
 {
     repositories_ = repositories;
 }
 
-void Qompoter::Query::setRepositories(const QStringList &repositories, const QString &repositoryType)
+void Qompoter::Query::addRepositories(const QStringList &repositories, const QString &repositoryType)
 {
     foreach(QString repository, repositories) {
         repositories_.append(RepositoryInfo(repositoryType, repository));
     }
+}
+
+void Qompoter::Query::addRepository(const QString &repository, const QString &repositoryType)
+{
+    repositories_.append(RepositoryInfo(repositoryType, repository));
 }
 
 void Qompoter::Query::addRepository(const Qompoter::RepositoryInfo &repository)

@@ -21,9 +21,12 @@ public:
 
     /**
      * @brief Package path in the remote repository: repository/vendor/project name/version
-     * @return
      */
     QString getRepositoryPackagePath() const;
+    /**
+     * @brief Path to the qompoter.json file in the remote repository: repository/vendor/project name/version
+     */
+    QString getRepositoryQompoterFilePath() const;
     
     const bool &isAlreadyDownloaded() const;
     void setAlreadyDownloaded(const bool &alreadyDownloaded);

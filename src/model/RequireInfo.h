@@ -8,6 +8,7 @@
 #include "PriorityMode.h"
 
 namespace Qompoter {
+class RepositoryInfo;
 class Query;
 }
 
@@ -18,7 +19,7 @@ public:
     RequireInfo(const QString &packageName="", const QString &version="");
     RequireInfo(const QString &packageName, const QVariant &data);
     void fromData(const QString &packageName, const QVariant &data);
-    QString toString(const QString &prefixe="\t");
+    QString toString(const QString &prefixe="\t") const;
 
     /**
      * @brief Vendor name of the package: first part of the package name
@@ -52,6 +53,18 @@ public:
      * @return
      */
     QString getWorkingDirPackageName(const Query &query) const;
+    
+    /**
+     * @brief Local path to qompoter.json file: workdir dir/vendor/project name/qompoter.json
+     */
+    QString getWorkingDirQompoterFilePath(const Query &query) const;
+    
+    /**
+     * @brief Package path in the remote repository
+     * e.g. repository/vendor/project name/version
+     * @return Package path in the remote repository
+     */
+    QString getRepositoryPackagePath(const RepositoryInfo &repo) const;
     
     void setPackageName(const QString &packageName);
 
@@ -89,9 +102,6 @@ public:
     const IncludeModeEnum::IncludeMode &getIncludeMode() const;
     void setIncludeMode(const IncludeModeEnum::IncludeMode &includeMode);
 
-    const QString &getLibPath() const;
-    void setLibPath(const QString &libPath);
-
     const bool &isDownloadRequired() const;
     void setDownloadRequired(const bool &downloadRequired);
 
@@ -102,7 +112,6 @@ private:
     PriorityModeEnum::PriorityMode priorityMode_;
     BuildModeEnum::BuildMode buildMode_;
     IncludeModeEnum::IncludeMode includeMode_;
-    QString libPath_;
     bool downloadRequired_;
 };
 }
