@@ -61,10 +61,9 @@ In your project repository, create a qompoter.json file:
 		}
 	}
 
-Then, download and install dependencies listed in your qompoter.json using:
+Then download dependencies listed in your qompoter.json using:
 
 	qompoter install
-	qompoter make
 
 That's it! You can now include vendor.pri in the .pro file of your project, and include the dependencies that you required:
 
@@ -79,7 +78,7 @@ Roadmap
 	* Qompoter.json format
 	* Repository structure
 	* How to add package in it
-* [In progress] Manage several repositories : one in local, one on Squeak, and some online (Github, ...)
+* [In progress] Manage several repositories : using a structured filesystem, custom repo, and some online (Github, ...)
 * [In progress] Better support of Git repositories (availability of the version)
 * Manage version number: >=1.0, 1.0.*
 * Describe and implement a "Packagist" like server for Qompoter
@@ -91,8 +90,8 @@ Roadmap
 * Link with inqlude
 * Link with CPM (?)
 * Special cases for Qt Plugins
-* Better support of qompoter.json
-* JSON schema for qompoter.json
+* [In progress] Better support of qompoter.json
+* [In progress] JSON schema for qompoter.json
 * Compile packages as shared libraries (with a local and global version), or as source project
 
 Documentation

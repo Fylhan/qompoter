@@ -7,8 +7,10 @@ Select Repositories
 Update the Qompoter.ini file in you $HOME folder: ~/.config/qompoter/Qompoter.ini
 
 	[Query]
-	repositories=Path to repository A|Path to repostory B|...
-
+	gits-repo=Path to repository A|Path to repostory B|...
+	fs-repo=Path to repository A|Path to repostory B|...
+	no-github=0
+	
 Repository Structure
 ---------------------
 
