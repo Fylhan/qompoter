@@ -106,20 +106,10 @@ QList<RequireInfo> HttpLoader::loadDependencies(const PackageInfo &packageInfo, 
     return QList<RequireInfo>();
 }
 
-bool HttpLoader::load(const PackageInfo &packageInfo) const {
+bool HttpLoader::load(const PackageInfo &packageInfo)
+{
     QString packageSourcePath = packageInfo.getRepositoryPackagePath();
     QString packageDestPath = packageInfo.getWorkingDirPackageName(query_);
-    if (packageInfo.isAlreadyDownloaded()) {
-        qDebug() << "\t  Already there";
-        return true;
-    }
-    //    if (!isAvailable(packageInfo, packageInfo.getRepository())) {
-    //        qCritical()<<"\t  No such package: "<<packageSourcePath;
-    //        return false;
-    //    }
-    // TODO check if the same version is already there (with hash...)
-    // if (QDir(_query.getWorkingDir()+_query.getVendorDir()+packageInfo.packageName()).exists())
-    // {}
     qDebug() << "\t  Downloading from remote... ";
     QStringList arguments;
     addAuthentication(arguments, packageInfo.getRepository());

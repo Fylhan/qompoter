@@ -2,6 +2,7 @@
 #define QOMPOTER_GITLOADER_H
 
 #include "ILoader.h"
+#include "GitWrapper.h"
 
 namespace Qompoter {
 class GitLoader : public ILoader
@@ -12,7 +13,10 @@ public:
 
     bool isAvailable(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo) const;
     QList<RequireInfo> loadDependencies(const PackageInfo &packageInfo, bool &downloaded);
-    bool load(const PackageInfo &packageInfo) const;
+    bool load(const PackageInfo &packageInfo);
+
+private:
+    GitWrapper git_;
 };
 }
 

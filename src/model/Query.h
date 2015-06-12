@@ -56,6 +56,9 @@ public:
     void addRepository(const QString &repository, const QString &repositoryType);
     void addRepository(const RepositoryInfo &repository);
 
+    const QString &getGitBin() const;
+    void setGitBin(const QString &gitBin);
+
 private:
     QString action_;
     bool verbose_;
@@ -66,6 +69,7 @@ private:
     QString workingDir_;
     QString vendorDir_;
     QList<RepositoryInfo> repositories_;
+    QString gitBin_;
 };
 }
 

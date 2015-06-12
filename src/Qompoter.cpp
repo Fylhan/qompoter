@@ -152,19 +152,25 @@ bool Qompoter::Qompoter::searchRecursiveDependencies()
 bool Qompoter::Qompoter::installDependencies()
 {
     bool globalResult = true;
-    foreach (PackageInfo dependency, config_.getPackages()) {
-        if (!dependency.isDownloadRequired()) {
+    foreach (PackageInfo packageInfo, config_.getPackages()) {
+        if (!packageInfo.isDownloadRequired()) {
             continue;
         }
         bool found = false;
         bool updated = false;
-        qDebug()<<"\t- Installing:"<<dependency.getPackageName()<<" ("<<dependency.getVersion()<<")";
-        if (0 != dependency.loader() && dependency.loader()->isAvailable(dependency, dependency.getRepository())) {
+        qDebug()<<"\t- Installing:"<<packageInfo.getPackageName()<<" ("<<packageInfo.getVersion()<<")";
+        if (packageInfo.isAlreadyDownloaded()) {
+            qDebug() << "\t  Already there";
             found = true;
-            updated = dependency.loader()->load(dependency);
+            updated = true;
         }
-        if (updated)
+        if (!found && 0 != packageInfo.loader() && packageInfo.loader()->isAvailable(packageInfo, packageInfo.getRepository())) {
+            found = true;
+            updated = packageInfo.loader()->load(packageInfo);
+        }
+        if (updated) {
             qDebug()<<"\t  done";
+        }
         else if (!found)
             qCritical()<<"\t  FAILLURE: not found package";
         else

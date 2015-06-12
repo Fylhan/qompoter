@@ -26,6 +26,7 @@ SOURCES += \
     $$PWD/loader/FsLoader.cpp \
     $$PWD/loader/GitLoader.cpp \
     $$PWD/loader/HttpLoader.cpp \
+    $$PWD/accessor/GitWrapper.cpp \
     $$PWD/IQompoter.cpp \
     $$PWD/Qompoter.cpp \
     $$PWD/commandline.cpp \
@@ -46,6 +47,7 @@ HEADERS += \
     $$PWD/loader/FsLoader.h \
     $$PWD/loader/GitLoader.h \
     $$PWD/loader/HttpLoader.h \
+    $$PWD/accessor/GitWrapper.h \
     $$PWD/IQompoter.h \
     $$PWD/Qompoter.h \
     $$PWD/commandline.h \
@@ -53,7 +55,9 @@ HEADERS += \
 INCLUDEPATH += \
     $$PWD/model \
     $$PWD/loader \
+    $$PWD/accessor \
 
 !autotester {
     SOURCES += $$PWD/main.cpp
 }
+

@@ -8,7 +8,8 @@ Qompoter::Query::Query() :
     global_(false),
     maxRecurency_(10),
     qompoterFile_("qompoter.json"),
-    vendorDir_("vendor/")
+    vendorDir_("vendor/"),
+    gitBin_("git")
 {
 }
 
@@ -16,20 +17,21 @@ QString Qompoter::Query::toString(const QString &prefixe) const
 {
     QString str;
     str.append(prefixe+"{\n");
-    str.append(prefixe+"\"action\": \""+action_+"\"\n");
-    str.append(prefixe+"\"verbose\": "+QString::number(verbose_)+"\n");
-    str.append(prefixe+"\"global\": "+QString::number(global_)+"\n");
-    str.append(prefixe+"\"dev\": "+QString::number(dev_)+"\n");
-    str.append(prefixe+"\"maxRecurency\": "+QString::number(maxRecurency_)+"\n");
-    str.append(prefixe+"\"qompoterFile\": \""+qompoterFile_+"\"\n");
-    str.append(prefixe+"\"workingDir\": \""+workingDir_+"\"\n");
-    str.append(prefixe+"\"vendorDir\": \""+vendorDir_+"\"\n");
+    str.append(prefixe+"\"action\": \""+action_+"\",\n");
+    str.append(prefixe+"\"verbose\": "+QString::number(verbose_)+",\n");
+    str.append(prefixe+"\"global\": "+QString::number(global_)+",\n");
+    str.append(prefixe+"\"dev\": "+QString::number(dev_)+",\n");
+    str.append(prefixe+"\"maxRecurency\": "+QString::number(maxRecurency_)+",\n");
+    str.append(prefixe+"\"qompoterFile\": \""+qompoterFile_+"\",\n");
+    str.append(prefixe+"\"workingDir\": \""+workingDir_+"\",\n");
+    str.append(prefixe+"\"vendorDir\": \""+vendorDir_+"\",\n");
     str.append(prefixe+"\"repositories\": [\n");
     foreach(RepositoryInfo repository, repositories_) {
-        str.append(repository.toString());
+        str.append(repository.toString()+",\n");
     }
-    str.append(prefixe+"]\n");
-    str.append(prefixe+"}\n");
+    str.append(prefixe+"],\n");
+    str.append(prefixe+"\"gitBin\": \""+gitBin_+"\"\n");
+    str.append(prefixe+"}");
     return str;
 }
 
@@ -142,5 +144,15 @@ void Qompoter::Query::addRepository(const QString &repository, const QString &re
 void Qompoter::Query::addRepository(const Qompoter::RepositoryInfo &repository)
 {
     repositories_.append(repository);
+}
+
+const QString &Qompoter::Query::getGitBin() const
+{
+    return gitBin_;
+}
+
+void Qompoter::Query::setGitBin(const QString &gitBin)
+{
+    gitBin_ = gitBin;
 }
 

@@ -53,6 +53,10 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     bool globalResult = true;
     Qompoter::Qompoter qompoter(query);
     globalResult *= qompoter.loadQompoterFile();
+    if (!globalResult) {
+        qCritical()<<"FAILLURE";
+        return globalResult;
+    }
     globalResult *= qompoter.doAction(query.getAction());
     if (!globalResult) {
         qCritical()<<"FAILLURE";

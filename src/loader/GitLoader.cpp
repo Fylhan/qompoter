@@ -13,7 +13,8 @@
 #include "PackageInfo.h"
 
 Qompoter::GitLoader::GitLoader(const Query &query, QObject *parent) :
-    ILoader(query, "git", parent)
+    ILoader(query, "git", parent),
+    git_(query_)
 {}
 
 bool Qompoter::GitLoader::isAvailable(const RequireInfo &dependencyInfo, const RepositoryInfo &repositoryInfo) const
@@ -96,81 +97,25 @@ QList<Qompoter::RequireInfo> Qompoter::GitLoader::loadDependencies(const Package
     return QList<RequireInfo>();
 }
 
-bool Qompoter::GitLoader::load(const PackageInfo &packageInfo) const
+bool Qompoter::GitLoader::load(const PackageInfo &packageInfo)
 {
     QString packageSourcePath = packageInfo.getRepositoryPackagePath();
     QString packageDestPath = packageInfo.getWorkingDirPackageName(query_);
     if (query_.isVerbose()) {
-        qDebug()<<"\t  ["<<loadingType_<<"] Load package source "<<packageSourcePath<<" to "<<packageDestPath<<"";
-    }
-    //    if (!isAvailable(packageInfo, packageInfo.getRepository())) {
-    //        qCritical()<<"\t  No such package: "<<packageSourcePath;
-    //        return false;
-    //    }
-    // TODO check if the same version is already there (with hash...)
-    //    if (QDir(_query.getWorkingDir()+_query.getVendorDir()+packageInfo.packageName()).exists()) {
-    //        qDebug()<<"\t  Already there";
-    //        return true;
-    //    }
-    if (packageInfo.isAlreadyDownloaded()) {
-        qDebug() << "\t  Already there";
-        return true;
+        qDebug()<<"\t  ["<<loadingType_<<"] Load package source "<<packageSourcePath<<" to "<<packageDestPath;
     }
     qDebug()<<"\t  Downloading from Git... ";
-    QProcess gitProcess;
-    QString gitProgram = "git";
-    QStringList arguments;
-    // Install
-    //    if (!QDir(packageDestPath+"/.git").exists()) {
-    //        QDir workingDir(query_.getWorkingDir());
-    //        workingDir.mkpath(packageDestPath);
-    arguments<<"clone"<<packageSourcePath<<"-b"<<packageInfo.getVersion()<<packageDestPath;
-    //    }
-    //    // Update
-    //    else {
-    //        gitProcess.setWorkingDirectory(packageDestPath);
-    //        arguments << "pull";
-    //    }
-    // Do action
-    gitProcess.setWorkingDirectory(query_.getWorkingDir());
-    gitProcess.start(gitProgram, arguments);
-    bool updated = gitProcess.waitForFinished();
-    updated *= QProcess::NormalExit == gitProcess.exitStatus();
-    if (query_.isVerbose()) {
-        qDebug()<<"\t  "<<gitProcess.program()<<" "<<arguments;
-        qDebug()<<"\t  "<<gitProcess.readAll();
-        qDebug()<<"\t  Exit code: "<<gitProcess.exitCode();
-    }
-    // If version:
-    /*
-     * git tag -> is tag ? git checkout tag
-     * git branch -> is branch "master" ? git checkout master (more precisely git checkout <commit> quand on aura qompoter.lock)
-     */
-    /*// Tag version
-    gitProcess.start(gitProgram, QStringList()<<"tag");
-    if (!gitProcess.waitForFinished()) {
-        qCritical()<<"\t  Can't' retrieve versions: "<<gitProcess.readAll();
+    bool done = false;
+    if (!QFile(packageDestPath).exists()) {
+        git_.cd(query_.getWorkingDir());
+        done = git_.clone(packageSourcePath, packageDestPath, packageInfo.getVersion());
     }
     else {
-        //gitProcess.readLine();
-        QString tags = gitProcess.readAll();
-        if (query_.isVerbose()) {
-            qDebug()<<"\t  Available tags: "<<tags;
-        }
-        if (tags.contains(packageInfo.getVersion(), Qt::CaseInsensitive)) {
-            gitProcess.start(gitProgram, QStringList()<<"checkout"<<"v"+packageInfo.getVersion());
-            if (!gitProcess.waitForFinished()) {
-                qCritical()<<"\t  Can't' update to version "<<packageInfo.getVersion()<<": "<<gitProcess.readAll();
-            }
-        }
-        else {
-            qCritical()<<"\t  Warning: Version "<<packageInfo.getVersion()<<" not found. Use dev-master instead.";
-        }
-    }*/
-    // Branch version
-    gitProcess.close();
-    if (packageInfo.isLibOnly()) {
-        updated *= moveLibrary(packageDestPath);
+        git_.cd(packageDestPath);
+        done = git_.checkout(packageInfo.getVersion(), true);
     }
-    return updated;
+    if (packageInfo.isLibOnly()) {
+        done *= moveLibrary(packageDestPath);
+    }
+    return done;
 }

@@ -31,7 +31,7 @@ public:
      */
     virtual bool isAvailable(const RequireInfo &packageInfo, const RepositoryInfo &repositoryInfo) const = 0;
     virtual QList<RequireInfo> loadDependencies(const PackageInfo &packageInfo, bool &downloaded) = 0;
-    virtual bool load(const PackageInfo &packageInfo) const = 0;
+    virtual bool load(const PackageInfo &packageInfo) = 0;
 
 protected:
     Query query_;

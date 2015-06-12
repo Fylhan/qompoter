@@ -34,21 +34,13 @@ QList<RequireInfo> Qompoter::FsLoader::loadDependencies(const PackageInfo &packa
     return subConfig.getRequires();
 }
 
-bool Qompoter::FsLoader::load(const PackageInfo &packageInfo) const
+bool Qompoter::FsLoader::load(const PackageInfo &packageInfo)
 {
     QString packageSourcePath = packageInfo.getRepositoryPackagePath();
     QString packageDestPath = packageInfo.getWorkingDirPackageName(query_);
     if (query_.isVerbose()) {
         qDebug()<<"\t  ["<<loadingType_<<"] Load package source "<<packageSourcePath<<" to "<<packageDestPath<<"";
     }
-    if (packageInfo.isAlreadyDownloaded()) {
-        qDebug() << "\t  Already there";
-        return true;
-    }
-//    if (!isAvailable(packageInfo, packageInfo.getRepository())) {
-//        qCritical()<<"\t  No such package: "<<packageSourcePath;
-//        return false;
-//    }
     qDebug()<<"\t  Downloading...";
     bool res = cpDir(packageSourcePath, packageDestPath);
     if (packageInfo.isLibOnly()) {
