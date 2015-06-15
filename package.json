@@ -1,8 +1,8 @@
 {
-  "name": "Qompoter",
-  "version": "0.2.0",
+  "name": "qompoter",
+  "version": "0.1.0",
   "description": "Dependency manager for Qt / C++",
-  "homepage": "https://github.com/Fylhan/qompoter",
+  "homepage": "https://fylhan.github.com/qompoter",
   "repository": {
     "type": "git",
     "url": "https://github.com/Fylhan/qompoter.git"
