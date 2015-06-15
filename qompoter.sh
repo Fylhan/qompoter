@@ -208,11 +208,149 @@ usage()
 {
   echo "usage: qompoter [ --repo <repo> | --help ]"
   echo ""
-  echo " --repo		Distant Repository to use."
-  echo " --no-dev	Don't retrieve dev dependencies."
-  echo " --help		Display this help."
+  echo " -r, --repo	Select a repository path as a location for dependency"
+  echo "		research. It is used in addition of the \"repositories\""
+  echo "		field in qompoter.json."
+  echo "		E.g. \"repo/repositories/vendor name/project name\""
+  echo " --vendor-dir	Pick another vendor directory as \"vendor\""
+  echo " --no-dev	Don't retrieve dev dependencies listed in \"require-dev\""
+  echo " -h, --help	Display this help"
+  echo " -v, --version	Display the Qompoter version"
   echo ""
   echo "Example: qompoter --repo /Project"
+}
+
+version()
+{
+  echo "Qompoter 0.1.0"
+  echo "Dependency manager for C++/Qt by Fylhan"
+}
+
+createQompotePri()
+{
+	qompotePri=$1
+	echo '# $$setLibPath()' > $qompotePri
+	echo '# Generate a lib path name depending of the OS and the arch' >> $qompotePri
+	echo '# Export and return LIBPATH' >> $qompotePri
+	echo 'defineReplace(setLibPath){' >> $qompotePri
+	echo '    LIBPATH = lib' >> $qompotePri
+	echo '    win32|win32-cross-mingw {' >> $qompotePri
+	echo '        LIBPATH = $${LIBPATH}_windows' >> $qompotePri
+	echo '    }' >> $qompotePri
+	echo '    else:unix {' >> $qompotePri
+	echo '        LIBPATH = $${LIBPATH}_linux' >> $qompotePri
+	echo '    }' >> $qompotePri
+	echo '' >> $qompotePri
+	echo '    linux-g++-32 {' >> $qompotePri
+	echo '        LIBPATH = $${LIBPATH}_32' >> $qompotePri
+	echo '    }' >> $qompotePri
+	echo '    else:linux-g++-64 {' >> $qompotePri
+	echo '        LIBPATH = $${LIBPATH}_64' >> $qompotePri
+	echo '    }' >> $qompotePri
+	echo '    else {' >> $qompotePri
+	echo '        contains(QMAKE_HOST.arch, x86_64) {' >> $qompotePri
+	echo '            LIBPATH = $${LIBPATH}_64' >> $qompotePri
+	echo '        }' >> $qompotePri
+	echo '        else {' >> $qompotePri
+	echo '            LIBPATH = $${LIBPATH}_32' >> $qompotePri
+	echo '        }' >> $qompotePri
+	echo '    }' >> $qompotePri
+	echo '' >> $qompotePri
+	echo '    export(LIBPATH)' >> $qompotePri
+	echo '    return($${LIBPATH})' >> $qompotePri
+	echo '}' >> $qompotePri
+	echo '' >> $qompotePri
+	echo '# $$setLibName(lib name[, lib version])' >> $qompotePri
+	echo '# Will add a "d" at the end of lib name in case of debug compilation, and "-version" if provided' >> $qompotePri
+	echo '# Export VERSION, export and return LIBNAME' >> $qompotePri
+	echo 'defineReplace(setLibName){' >> $qompotePri
+	echo '    unset(LIBNAME)' >> $qompotePri
+	echo '    LIBNAME = $$1' >> $qompotePri
+	echo '    VERSION = $$2' >> $qompotePri
+	echo '    CONFIG(debug,debug|release){' >> $qompotePri
+	echo '        LIBNAME = $${LIBNAME}d' >> $qompotePri
+	echo '    }' >> $qompotePri
+	echo '' >> $qompotePri
+	echo '    export(VERSION)' >> $qompotePri
+	echo '    export(LIBNAME)' >> $qompotePri
+	echo '    return($${LIBNAME})' >> $qompotePri
+	echo '}' >> $qompotePri
+	echo '' >> $qompotePri
+	echo '# $$getLibName(lib name)' >> $qompotePri
+	echo '# Will add a "d" at the end of lib name in case of debug compilation, and "-version" if provided' >> $qompotePri
+	echo '# Return lib name' >> $qompotePri
+	echo 'defineReplace(getLibName){' >> $qompotePri
+	echo '    ExtLibName = $$1' >> $qompotePri
+	echo '    CONFIG(debug,debug|release){' >> $qompotePri
+	echo '        ExtLibName = $${ExtLibName}d' >> $qompotePri
+	echo '    }' >> $qompotePri
+	echo '' >> $qompotePri
+	echo '    return($${ExtLibName})' >> $qompotePri
+	echo '}' >> $qompotePri
+	echo '' >> $qompotePri
+	echo '# $$setBuildDir()' >> $qompotePri
+	echo '# Generate a build dir depending of OS and arch' >> $qompotePri
+	echo '# Export MOC_DIR, OBJECTS_DIR, UI_DIR, TARGET, LIBS' >> $qompotePri
+	echo 'defineReplace(setBuildDir){' >> $qompotePri
+	echo '    CONFIG(debug,debug|release){' >> $qompotePri
+	echo '        MOC_DIR = debug' >> $qompotePri
+	echo '        OBJECTS_DIR = debug' >> $qompotePri
+	echo '        UI_DIR      = debug' >> $qompotePri
+	echo '    }' >> $qompotePri
+	echo '    else {' >> $qompotePri
+	echo '        MOC_DIR = release' >> $qompotePri
+	echo '        OBJECTS_DIR = release' >> $qompotePri
+	echo '        UI_DIR      = release' >> $qompotePri
+	echo '    }' >> $qompotePri
+	echo '' >> $qompotePri
+	echo '    win32|win32-cross-mingw{' >> $qompotePri
+	echo '        MOC_DIR     = $${MOC_DIR}/build_windows' >> $qompotePri
+	echo '        OBJECTS_DIR = $${OBJECTS_DIR}/build_windows' >> $qompotePri
+	echo '        UI_DIR      = $${UI_DIR}/build_windows' >> $qompotePri
+	echo '    }' >> $qompotePri
+	echo '    else:linux-g++-32{' >> $qompotePri
+	echo '        MOC_DIR     = $${MOC_DIR}/build_linux_32' >> $qompotePri
+	echo '        OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_32' >> $qompotePri
+	echo '        UI_DIR      = $${UI_DIR}/build_linux_32' >> $qompotePri
+	echo '        LIBS       += -L/usr/lib/gcc/i586-linux-gnu/4.9' >> $qompotePri
+	echo '    }' >> $qompotePri
+	echo '    else:linux-g++-64{' >> $qompotePri
+	echo '        MOC_DIR     = $${MOC_DIR}/build_linux_64' >> $qompotePri
+	echo '        OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_64' >> $qompotePri
+	echo '        UI_DIR      = $${UI_DIR}/build_linux_64' >> $qompotePri
+	echo '        LIBS       += -L/usr/lib/gcc/x86_64-linux-gnu/4.9' >> $qompotePri
+	echo '    }' >> $qompotePri
+	echo '    else:unix{' >> $qompotePri
+	echo '        contains(QMAKE_HOST.arch, x86_64){' >> $qompotePri
+	echo '            MOC_DIR     = $${MOC_DIR}/build_linux_64' >> $qompotePri
+	echo '            OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_64' >> $qompotePri
+	echo '            UI_DIR      = $${UI_DIR}/build_linux_64' >> $qompotePri
+	echo '        }' >> $qompotePri
+	echo '        else{' >> $qompotePri
+	echo '            MOC_DIR     = $${MOC_DIR}/build_linux_32' >> $qompotePri
+	echo '            OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_32' >> $qompotePri
+	echo '            UI_DIR      = $${UI_DIR}/build_linux_32' >> $qompotePri
+	echo '        }' >> $qompotePri
+	echo '    }' >> $qompotePri
+	echo '    DESTDIR = $$OUT_PWD/$$OBJECTS_DIR' >> $qompotePri
+	echo '' >> $qompotePri
+	echo '    export(DESTDIR)' >> $qompotePri
+	echo '    export(MOC_DIR)' >> $qompotePri
+	echo '    export(OBJECTS_DIR)' >> $qompotePri
+	echo '    export(UI_DIR)' >> $qompotePri
+	echo '    export(LIBS)' >> $qompotePri
+	echo '    return($TARGET)' >> $qompotePri
+	echo '}' >> $qompotePri
+	echo '' >> $qompotePri
+}
+
+prepareVendorDir()
+{
+	vendorDir=$1
+	mkdir -p ${vendorDir}
+	createQompotePri ${vendorDir}/qompote.pri
+	echo 'include($$PWD/qompote.pri)' > ${vendorDir}/vendor.pri
+	echo '$$setLibPath()' >> ${vendorDir}/vendor.pri
 }
 
 downloadRequire()
@@ -243,7 +381,9 @@ downloadRequire()
       if [ -d "${requireLocalPath}/.git" ]; then
 	currentPath=`pwd`
 	cd ${requireLocalPath}
+	git fetch --all
 	git checkout -f ${requireVersion}
+	git reset --hard origin/${requireVersion}
 	cd $currentPath
       # Else: clone
       else
@@ -253,7 +393,6 @@ downloadRequire()
 	fi
 	git clone -b ${requireVersion} ${gitPath} ${requireLocalPath}
       fi
-echo 'test'
       if [ ! -d "${requireLocalPath}/.git" ]; then
         gitError=1
       fi
@@ -290,6 +429,7 @@ echo 'test'
 }
 
 dev=(-dev)?
+vendorDir=${PWD}/vendor
 repositoryPath=
 while [ "$1" != "" ]; do
 case $1 in
@@ -298,12 +438,21 @@ case $1 in
     repositoryPath=$1
     shift
     ;;
-  --no-dev )
+  -vd | --vendor-dir )
+    shift
+    vendorDir=$1
+    shift
+    ;;
+  -nd | --no-dev )
     dev=
     shift
     ;;
   -h | --help )
     usage
+    exit 0
+    ;;
+  -v | --version )
+    version
     exit 0
     ;;
   *)
@@ -318,10 +467,7 @@ echo 'Qompoter'
 echo '========'
 echo
 
-vendorDir=${PWD}/vendor
-mkdir -p ${vendorDir}
-echo 'include($$PWD/../common.pri)' > ${vendorDir}/vendor.pri
-echo '$$setLibPath()' >> ${vendorDir}/vendor.pri
+prepareVendorDir $vendorDir
 
 cat qompoter.json \
  | jsonh \
