@@ -4,24 +4,17 @@
 	"keywords": ["Qt", "C++"],
 	"authors": [
 		{
-			"name": "Olivier Maridat",
-			"email": "olivier.maridat@trialog.com"
+			"name": "Fylhan",
+			"homepage": "http://fylhan.la-bnbox.fr"
 		}
 	],
 	"require": {
-		"trialog/solilog": "v1.0",
-		"trialog/gpslib": "v1.1",
-		"trialog/octavor": "v0.8",
-		"trialog/qextserialport": "v1.2rc",
-		"trialog/tcanp": "v1.6.7-lib"
+		"qextserialport/qextserialport": "1.2rc"
 	},
 	"require-dev": {
-		"trialog/autotester": "v1.0"
+		"anyother/test": "v1.0"
 	},
-	"repositories": [
-		{
-			"type" : "qompotist",
-			"url" : "PlateformeVehiculeElectrique/4_workspace/qompoter/"
-		}
-	]
+	"repositories": {
+		"qompotist" : "https://github.com"
+	}
 }

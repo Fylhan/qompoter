@@ -7,8 +7,8 @@ Inspired by the well-known Composer PHP dependency manager.
 
 The current version is still a work in progress. But still, you can:
 
-* describe in a qomposer.config file your dependencies
-* retrieve all these packages from file system
+* describe your dependencies in qomposer.json
+* retrieve all these packages from a Git repository or a structured file system
 * generate a vendor.pri file to include and use in your .pro file
 
 A lot have to be done to make it really usable.
@@ -37,14 +37,13 @@ In your project repository, create a qompoter.json file:
 			}
 		],
 		"require": {
-			"trialog/solilog": "v1.0",
-			"trialog/gpslib": "v1.1",
-			"trialog/octavor": "v0.8",
-			"trialog/qextserialport": "v1.2rc",
-			"trialog/tcanp": "v1.6.7-lib"
+			"qextserialport/qextserialport": "1.2rc"
 		},
 		"require-dev": {
-			"trialog/autotester": "v1.0"
+			"anyother/test": "v1.0"
+		},
+		"repositories": {
+			"qompotist" : "https://github.com"
 		}
 	}
 
@@ -56,24 +55,6 @@ That's it! You can now include vendor.pri in the .pro file of your project, and 
 
     CONFIG += solilog chartxy
     include(vendor/vendor.pri)
-
-Roadmap
---------------------------------
-
-* Better support and description of repositories:
-	* structure
-	* how to add package in it
-* Forget bash and go to C++/Qt
-* Better support of Git repositories
-* Manage several repositories : one in local, one on Squeak, and some online (Github, ...)
-* Clarify command line
-* Add qompoter update: using a qompoter.lock file
-* Don't copy/paste lib and headers: in vendor.pri link to existing files
-* Add qompoter install --local: which copy/paste lib and headers
-* Use QT += package instead of CONFIG which leverage the usage of include(vendor.pri)
-* Link with inqlude
-* Better support of qompoter.json
-* JSON schema for qompoter.json
 
 License
 --------------------------------

@@ -221,41 +221,76 @@ downloadRequire()
   vendorDir=$2
   requireName=$3
   requireVersion=$4
-  isSource=$5
+  isSource=1
+  if [[ "$requireVersion" == *"-lib" ]]; then
+	isSource=0
+  fi
 
   echo "* ${requireName} ${requireVersion}"
+  projectName=`echo $requireName | cut -d'/' -f2`
   requireBasePath=${repositoryPath}/${requireName}
   requirePath=${requireBasePath}/${requireVersion}
-  requireLocalPath=${vendorDir}/${requireName}
+  requireLocalPath=${vendorDir}/${projectName}
   mkdir -p ${requireLocalPath}
-  # Git
-  # cp or wget with a structure
-  # cp or wget without structure
+
+  # Sources
   if [ "${isSource}" -eq 1 ]; then
-    if [ -d "${requireBasePath}.git" ]; then
-      # TODO remove dev- in requireVersion
-      git clone -b ${requireVersion} ${requireBasePath}.git
-    else
-      cp -rf ${requirePath}/src/* ${requireLocalPath}
+    gitError=0
+    # Git
+    if [ -d "${requireBasePath}/${projectName}.git" ] || [[ "$repositoryPath" == *"github"* ]]; then
+      echo "  Downloading sources from Git..."
+      # Already exist: update
+      if [ -d "${requireLocalPath}/.git" ]; then
+	currentPath=`pwd`
+	cd ${requireLocalPath}
+	git checkout -f ${requireVersion}
+	cd $currentPath
+      # Else: clone
+      else
+        gitPath=${requireBasePath}/${projectName}.git
+	if [[ "$repositoryPath" == *"github"* ]]; then
+		gitPath=${requireBasePath}
+	fi
+	git clone -b ${requireVersion} ${gitPath} ${requireLocalPath}
+      fi
+echo 'test'
+      if [ ! -d "${requireLocalPath}/.git" ]; then
+        gitError=1
+      fi
+    fi
+    # FS (or Git failed)
+    if [ ! -d "${requireLocalPath}/.git" ]; then
+      if [ "$gitError" -eq 1 ]; then
+        echo "  Error with Git. Downloading sources from scratch..."
+        mkdir -p ${requireLocalPath}
+      else
+        echo "  Downloading sources..."
+      fi
+      cp -rf ${requirePath}/* ${requireLocalPath}
     fi
     qompoterPriFile=${requireLocalPath}/qompoter.pri
+  # Lib
   else
+    echo "  Downloading lib..."
     cp -rf ${requirePath}/lib_* ${vendorDir}
     cp -rf ${requirePath}/include ${requireLocalPath}
-    qompoterPriFile=${requireLocalPath}/include/qompoter.pri
+    cp -rf ${requirePath}/qompoter.* ${requireLocalPath}
+    qompoterPriFile=${requireLocalPath}/qompoter.pri
   fi
-  cat ${qompoterPriFile} >> ${vendorDir}/vendor.pri
+  
+  # Qompoter.pri
+  if [ -f "${qompoterPriFile}" ]; then
+	cat ${qompoterPriFile} >> ${vendorDir}/vendor.pri
+  else
+	echo "  Warning: there is no qompoter.pri file"
+  fi
+  
   echo "  done"
   echo
 }
 
-if [ "$#" -lt 2 ]; then
-  echo "Not enough parameter"
-  usage
-  exit -1
-fi
-
 dev=(-dev)?
+repositoryPath=
 while [ "$1" != "" ]; do
 case $1 in
   -r | --repo )
@@ -279,12 +314,6 @@ case $1 in
 esac
 done
 
-if [ "$repositoryPath" = "" ]; then
-  echo "Empty parameter"
-  usage
-  exit -1
-fi
-
 echo 'Qompoter'
 echo '========'
 echo
@@ -294,14 +323,21 @@ mkdir -p ${vendorDir}
 echo 'include($$PWD/../common.pri)' > ${vendorDir}/vendor.pri
 echo '$$setLibPath()' >> ${vendorDir}/vendor.pri
 
-#cat qompoter.config | while read line; do
-#    downloadRequire $repositoryPath $vendorDir $line
-#done
-
 cat qompoter.json \
  | jsonh \
- | egrep "\[\"require${dev}\",\".*\"\]" \
- | sed -r "s/\"//g;s/\[require${dev},//g;s/\]	/ /g;s/-lib/ 0/g" \
- | while read line; do
-    downloadRequire $repositoryPath $vendorDir $line 1
-done
+ | egrep "\[\"repositories\",\".*\"\]" \
+ | sed -r "s/\"//g;s/\[repositories,.*\]//g" \
+ |
+{
+	while read repo; do
+		repositoryPath=${repositoryPath}${repo}
+	done
+
+	cat qompoter.json \
+	 | jsonh \
+	 | egrep "\[\"require${dev}\",\".*\"\]" \
+	 | sed -r "s/\"//g;s/\[require${dev},//g;s/\]	/ /g;s/dev-//g" \
+	 | while read line; do
+	    downloadRequire $repositoryPath $vendorDir $line
+	done
+}
