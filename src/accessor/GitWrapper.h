@@ -31,6 +31,12 @@ public:
      */
     bool clone(const QString &source, const QString &dest="", const QString &branch="");
     /**
+     * @brief Call "git fetch [branch]"
+     * @param branch Branch/tag/commit to fetch
+     * @return Success of the operation
+     */
+    bool fetch(const QString &branch="");
+    /**
      * @brief Call "git checkout branch"
      * @param branch Branch/tag/commit to checkout
      * @param force Force the checkout: erase local changes

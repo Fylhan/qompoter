@@ -27,6 +27,15 @@ bool GitWrapper::clone(const QString &source, const QString &dest, const QString
     
 }
 
+bool GitWrapper::fetch(const QString &branch)
+{
+    QStringList args;
+    if (!branch.isEmpty()) {
+        args<<branch;
+    }
+    return command(QStringLiteral("fetch"), args);
+}
+
 bool GitWrapper::checkout(const QString &branch, bool force, bool createBranch)
 {
     QStringList args;

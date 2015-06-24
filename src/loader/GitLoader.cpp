@@ -112,7 +112,9 @@ bool Qompoter::GitLoader::load(const PackageInfo &packageInfo)
     }
     else {
         git_.cd(packageDestPath);
-        done = git_.checkout(packageInfo.getVersion(), true);
+        done = git_.fetch();
+        done *= git_.checkout(packageInfo.getVersion(), true);
+        done *= git_.reset(packageInfo.getVersion(), true);
     }
     if (packageInfo.isLibOnly()) {
         done *= moveLibrary(packageDestPath);
