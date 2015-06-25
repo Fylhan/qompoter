@@ -60,7 +60,8 @@ bool Qompoter::Qompoter::install()
     if (query_.isVerbose()) {
         qDebug()<<"Generate qompoter.pri\n";
     }
-    generateQompoterPri();
+    generateQompotePri();
+    generateVendorPri();
     return true;
 }
 
@@ -181,7 +182,12 @@ bool Qompoter::Qompoter::installDependencies()
     return globalResult;
 }
 
-bool Qompoter::Qompoter::generateQompoterPri()
+bool Qompoter::Qompoter::generateQompotePri()
+{
+    return QFile(":pri/qompote.pri").copy(query_.getVendorPath()+"qompote.pri");
+}
+
+bool Qompoter::Qompoter::generateVendorPri()
 {
     QFile vendorPriFile(query_.getVendorPath()+"vendor.pri");
     vendorPriFile.remove();
@@ -189,6 +195,10 @@ bool Qompoter::Qompoter::generateQompoterPri()
         qCritical()<<"Can't open "<<vendorPriFile.fileName()<<": "<<vendorPriFile.errorString();
         return false;
     }
+    QString vendorPriHeader("include($$PWD/qompote.pri)\n");
+    vendorPriHeader.append("$$setLibPath()\n");
+    vendorPriHeader.append("OTHER_FILES += $$PWD/qompote.pri\n\n");
+    vendorPriFile.write(vendorPriHeader.toUtf8());
     foreach (RequireInfo dependencyInfo, config_.getPackages()) {
         if (!dependencyInfo.isDownloadRequired()) {
             continue;

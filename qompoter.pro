@@ -15,7 +15,7 @@ OTHER_FILES += \
     $$PWD/changelogs.md \
     $$PWD/docs/*.md \
 
-include($$PWD/common.pri)
+include($$PWD/vendor/qompote.pri)
 $$setBuildDir()
 message(Qompoter build folder is $$OBJECTS_DIR)
 

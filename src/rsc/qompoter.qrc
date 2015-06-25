@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/pri">
+        <file>qompote.pri</file>
+    </qresource>
+</RCC>

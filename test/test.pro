@@ -3,7 +3,6 @@ INCLUDEPATH += $$PWD $$PWD/. $$PWD/..
 
 CONFIG += autotester
 include(../src/src.pro)
-include(../common.pri)
 $$setBuildDir()
 
 SOURCES += \

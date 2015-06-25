@@ -6,7 +6,7 @@ TEMPLATE = app
 QT += network widgets
 CONFIG += c++11 solilog
 
-include($$PWD/../common.pri)
+include($$PWD/../vendor/qompote.pri)
 include($$PWD/../vendor/vendor.pri)
 $$setBuildDir()
 
@@ -52,6 +52,9 @@ HEADERS += \
     $$PWD/Qompoter.h \
     $$PWD/commandline.h \
 
+RESOURCES += \
+    $$PWD/rsc/qompoter.qrc \
+
 INCLUDEPATH += \
     $$PWD/model \
     $$PWD/loader \
@@ -60,4 +63,3 @@ INCLUDEPATH += \
 !autotester {
     SOURCES += $$PWD/main.cpp
 }
-

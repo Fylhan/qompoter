@@ -23,7 +23,8 @@ public:
 protected:
     bool searchRecursiveDependencies();
     bool installDependencies();
-    bool generateQompoterPri();
+    bool generateQompotePri();
+    bool generateVendorPri();
     bool buildDependencies();
     
 private:

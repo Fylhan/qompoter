@@ -23,7 +23,8 @@ public:
 protected:
     virtual bool searchRecursiveDependencies() = 0;
     virtual bool installDependencies() = 0;
-    virtual bool generateQompoterPri() = 0;
+    virtual bool generateQompotePri() = 0;
+    virtual bool generateVendorPri() = 0;
     virtual bool buildDependencies() = 0;
 };
 }
