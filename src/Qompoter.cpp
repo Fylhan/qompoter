@@ -45,9 +45,7 @@ bool Qompoter::Qompoter::doAction(const QString &action)
 bool Qompoter::Qompoter::install()
 {
     bool res = true;
-    if (query_.isVerbose()) {
-        qDebug()<<"Search recursive dependencies...\n";
-    }
+    qDebug()<<"Search recursive dependencies...\n";
     res = searchRecursiveDependencies();
     if (!res) {
         return false;
