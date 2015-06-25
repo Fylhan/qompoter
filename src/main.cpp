@@ -18,7 +18,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName   ("qompoter");
     QCoreApplication::setOrganizationDomain ("qompoter");
     QCoreApplication::setApplicationName    ("Qompoter");
-    QCoreApplication::setApplicationVersion ("0.3.0");
+    QCoreApplication::setApplicationVersion ("0.7.0");
     
     // Persistant Settings
     QSettings settings(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationName(), QCoreApplication::applicationName());

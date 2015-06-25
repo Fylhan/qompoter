@@ -1,83 +1,86 @@
 Qompoter
 ================================
 
-An attempt of dependency manager for Qt / C++. Because I am sick of managing each C++ piece of code separately!
+An attempt of dependency manager for Qt / C++, because I am sick of managing each C++ piece of code separately!
 
-Inspired by the well-known Composer PHP dependency manager.
+*Inspired by the well-known Composer PHP dependency manager.*
 
-The current version is still a work in progress. But still, you can:
+The current version is still a work in progress, a lot have to be done to make it really usable. Still, you can:
 
 * describe in a qomposer.json file your dependencies
 * search and retrieve the own dependencies of your selected dependencies
 * retrieve all these packages from file system or via a Git repository
-* generate a vendor.pri file to include and use in your .pro file
+* generate a vendor.pri file to be included and used in your .pro file
 
-A lot have to be done to make it really usable.
+Requirements
+--------------------------------
+
+* Git
+* Linux, should also work on Mac or Windows (Cygwin or Msys command line)
 
 Build
 --------------------------------
 
 To build this project, Qt5 is required. You may also need to update your PATH to compile in command line:
 
-	export PATH=/opt/Qt/5.3/gcc/bin:$PATH
-	export QTDIR=/opt/Qt/5.3/gcc
-
-	mkdir build-qompoter && cd build-qompoter
-	qmake ../qompoter/qompoter.pro
-	make
+    export PATH=/opt/Qt/5.3/gcc/bin:$PATH
+    export QTDIR=/opt/Qt/5.3/gcc
+    
+    mkdir build-qompoter && cd build-qompoter
+    qmake ../qompoter/qompoter.pro
+    make
 
 Installation
 --------------------------------
 
 Make Qompoter runnable, and move it to a place accessible in the PATH:
 
-	chmod u+x qompoter
-	mv qompoter /usr/bin/qompoter
+    chmod u+x qompoter
+    mv qompoter /usr/bin/qompoter
 
 Usage
 --------------------------------
 
 In your project repository, create a qompoter.json file:
 
-	{
-		"name": "fylhan/qompoter",
-		"description": "Qompoter, a dependency manager for C++/Qt.",
-		"keywords": ["Qt", "C++"],
-		"authors": [
-			{
-				"name": "Fylhan",
-				"homepage": "fylhan.la-bnbox.fr"
-			}
-		],
-		"require": {
-			"trialog/solilog": "v1.0",
-			"trialog/gpslib": "v1.1.1",
-			"trialog/octavor": "v0.8",
-			"qextserialport/qextserialport": "v1.2rc",
-			"trialog/tcanp": "v1.6.7-lib"
-		},
-		"require-dev": {
-			"trialog/autotester": "v1.0"
-		}
-	}
+    {
+        "name": "fylhan/qompoter",
+        "description": "Qompoter, a dependency manager for C++/Qt.",
+        "keywords": ["Qt", "C++"],
+        "authors": [
+            {
+                "name": "Fylhan",
+                "homepage": "fylhan.la-bnbox.fr"
+            }
+        ],
+        "require": {
+            "qextserialport/qextserialport": "1.2rc"
+        },
+        "require-dev": {
+            "another/package": "v1.0"
+        },
+        "repositories": [
+            {
+                "type": "gits",
+                "url": "https://github.com"
+            }
+        ]
+    }
 
 Then download dependencies listed in your qompoter.json using:
 
-	qompoter install
+    qompoter install
 
 That's it! You can now include vendor.pri in the .pro file of your project, and include the dependencies that you required:
 
-	CONFIG += solilog chartxy
-	include(vendor/vendor.pri)
+    CONFIG += qextserialport package
+    include($$PWD/vendor/vendor.pri)
 
 Roadmap
 --------------------------------
 
-* [Ok] Forget bash and go to C++/Qt
+* [Ok] Forget Bash and go to C++/Qt
 * [In progress] Add documentation
-	* Qompoter.json format
-	* Repository structure
-	* How to add package in it
 * [In progress] Manage several repositories : using a structured filesystem, custom repo, and some online (Github, ...)
 * [In progress] Better support of Git repositories (availability of the version)
 * Manage version number: >=1.0, 1.0.*
@@ -97,18 +100,31 @@ Roadmap
 Documentation
 --------------------------------
 
-* [Concept of Packages](docs/Packages.md)
-* [Qompoter file](docs/Qompoter-file.md)
-* [How to manage repositories](docs/Repositories.md)
+* [Concept of packages](docs/Packages.md)
+* [How to create a Qompoter file?](docs/Qompoter-file.md)
+* [How to create a Qompoter repository?](docs/Repositories.md)
+* [Command line interface](docs/Command-line.md)
+
+Releases
+--------------------------------
+Qompoter is released under 2 versions:
+
+* The current version, called "qompoter", aims to be a complete implementation in C++/Qt.
+* A proof-of-concept, called "qompoter-bash", a simple Bash implementation fitted for basic usage, is developed in the meantime. Useful to kickoff the project without involving big development, this version targets basic usage and its development may end once a stable enough version is released.
+
+In order to simplify numerotation, v0.1 to v0.6 are reserved for "qompoter-bash". Therefore, the first "qompoter" version is v0.7.
 
 Related projects
 --------------------------------
+
 * [inqlude ](http://inqlude.org/) Listing of existing Qt libraries
 * [CPM](https://github.com/iauns/cpm) C++ Package Manager using CMake
 
 License
 --------------------------------
 
-Distributed under the LGPL3+ license.
+* Qompoter is distributed under the LGPL3+ license.
 
-If you have any ideas, critiques, suggestions or whatever you want to call it, please open an issue. I'll be happy to hear from you what you'd see in this lib. I think about all suggestions, and I try to add those that make sense.
+Please feel free to contribute.
+
+If you have any ideas, critiques, suggestions or whatever you want to call it, please open an issue. I'll be happy to hear from you what you'd see in this tool. I think about all suggestions, and I try to add those that make sense.

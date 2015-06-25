@@ -18,3 +18,4 @@ OTHER_FILES += \
 include($$PWD/common.pri)
 $$setBuildDir()
 message(Qompoter build folder is $$OBJECTS_DIR)
+

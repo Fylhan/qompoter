@@ -9,10 +9,8 @@
 			"homepage": "http://fylhan.la-bnbox.fr"
 		}
 	],
-	"require": {
-		"trialog/solilog": "v1.1",
-	},
 	"require-dev": {
+		"trialog/solilog": "v1.1",
 		"trialog/autotester": "v1.0"
 	}
 }
