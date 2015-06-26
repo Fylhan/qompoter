@@ -90,9 +90,11 @@ Roadmap
 * Don't copy/paste lib and headers: in vendor.pri link to existing files
 * Add qompoter install --local: which copy/paste lib and headers
 * Use QT += package instead of CONFIG which leverage the usage of include(vendor.pri)
-* Link with inqlude
+* [In progress] Link with inqlude
 * Link with CPM (?)
 * Special cases for Qt Plugins
+* Support CMake
+* Check Windows support
 * [In progress] Better support of qompoter.json
 * [In progress] JSON schema for qompoter.json
 * Compile packages as shared libraries (with a local and global version), or as source project
