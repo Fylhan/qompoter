@@ -21,14 +21,17 @@ Requirements
 Build
 --------------------------------
 
-To build this project, Qt5 is required. You may also need to update your PATH to compile in command line:
+To build this project, C++11 and Qt5 are required. Please run, something like:
+
+    ./qompoter.sh
+    mkdir build-qompoter-qmake && cd build-qompoter-qmake
+    qmake ../qompoter/qompoter.pro
+    make
+
+You may need to update your PATH to compile in command line, for example:
 
     export PATH=/opt/Qt/5.3/gcc/bin:$PATH
     export QTDIR=/opt/Qt/5.3/gcc
-    
-    mkdir build-qompoter && cd build-qompoter
-    qmake ../qompoter/qompoter.pro
-    make
 
 Installation
 --------------------------------
@@ -74,6 +77,7 @@ Then download dependencies listed in your qompoter.json using:
 That's it! You can now include vendor.pri in the .pro file of your project, and include the dependencies that you required:
 
     CONFIG += qextserialport package
+    include($$PWD/vendor/qompote.pri)
     include($$PWD/vendor/vendor.pri)
 
 Roadmap
@@ -93,7 +97,7 @@ Roadmap
 * [In progress] Link with inqlude
 * Link with CPM (?)
 * Special cases for Qt Plugins
-* Support CMake
+* [In progress] Support CMake
 * Check Windows support
 * [In progress] Better support of qompoter.json
 * [In progress] JSON schema for qompoter.json

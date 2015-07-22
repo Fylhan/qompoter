@@ -3,8 +3,8 @@ INCLUDEPATH += $$PWD $$PWD/. $$PWD/..
 
 TARGET = qompoter
 TEMPLATE = app
-QT += network widgets
-CONFIG += c++11 solilog
+QT += network
+CONFIG += c++11
 
 include($$PWD/../vendor/qompote.pri)
 include($$PWD/../vendor/vendor.pri)

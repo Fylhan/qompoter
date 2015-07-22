@@ -1,6 +1,6 @@
 TEMPLATE = subdirs
 CONFIG += ordered
-CONFIG += runtest # Uncomment to build also tests and to run them
+#CONFIG += runtest # Uncomment to build also tests and to run them
 
 SUBDIRS += src
 runtest{

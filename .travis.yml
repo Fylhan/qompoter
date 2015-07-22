@@ -1,15 +1,14 @@
 language: cpp
 compiler:
+  - clang
   - gcc
 before_install:
   - sudo add-apt-repository --yes ppa:beineri/opt-qt541
   - sudo apt-get update -qq
   - sudo apt-get install qt54base qt54tools
   - source /opt/qt54/bin/qt54-env.sh
-  - pwd
   - source qompoter.sh
 script:
-  - pwd
   - cd .. && mkdir build-qompoter-qmake && cd build-qompoter-qmake
   - qmake ../qompoter/qompoter.pro
   - make -j2
