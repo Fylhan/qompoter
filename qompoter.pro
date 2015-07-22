@@ -10,6 +10,7 @@ runtest{
 }
 
 OTHER_FILES += \
+    $$PWD/.travis.yml \
     $$PWD/CMakeLists.txt \
     $$PWD/README.md \
     $$PWD/qompoter.json \

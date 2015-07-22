@@ -26,12 +26,12 @@ SOURCES += \
     $$PWD/loader/FsLoader.cpp \
     $$PWD/loader/GitLoader.cpp \
     $$PWD/loader/HttpLoader.cpp \
+    $$PWD/loader/InqludeLoader.cpp \
     $$PWD/accessor/GitWrapper.cpp \
+    $$PWD/accessor/HttpWrapper.cpp \
     $$PWD/IQompoter.cpp \
     $$PWD/Qompoter.cpp \
     $$PWD/commandline.cpp \
-    loader/InqludeLoader.cpp \
-    accessor/HttpWrapper.cpp
 
 HEADERS += \
     $$PWD/model/Config.h \
@@ -49,12 +49,12 @@ HEADERS += \
     $$PWD/loader/FsLoader.h \
     $$PWD/loader/GitLoader.h \
     $$PWD/loader/HttpLoader.h \
+    $$PWD/loader/InqludeLoader.h \
     $$PWD/accessor/GitWrapper.h \
+    $$PWD/accessor/HttpWrapper.h \
     $$PWD/IQompoter.h \
     $$PWD/Qompoter.h \
     $$PWD/commandline.h \
-    loader/InqludeLoader.h \
-    accessor/HttpWrapper.h
 
 RESOURCES += \
     $$PWD/rsc/qompoter.qrc \

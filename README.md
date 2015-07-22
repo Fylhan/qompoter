@@ -3,7 +3,7 @@ Qompoter
 
 An attempt of dependency manager for Qt / C++, because I am sick of managing each C++ piece of code separately!
 
-*Inspired by the well-known Composer PHP dependency manager.*
+[![Build Status](https://travis-ci.org/Fylhan/qompoter.svg)](https://travis-ci.org/Fylhan/qompoter)
 
 The current version is still a work in progress, a lot have to be done to make it really usable. Still, you can:
 
