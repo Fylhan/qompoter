@@ -16,6 +16,7 @@ OTHER_FILES += \
     $$PWD/qompoter.json \
     $$PWD/changelogs.md \
     $$PWD/docs/*.md \
+    $$PWD/Doxyfile \
 
 include($$PWD/vendor/qompote.pri)
 $$setBuildDir()

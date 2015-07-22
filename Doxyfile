@@ -26,19 +26,19 @@ DOXYFILE_ENCODING      = UTF-8
 # identify the project. Note that if you do not use Doxywizard you need 
 # to put quotes around the project name if it contains spaces.
 
-PROJECT_NAME           = "ISO 15118 Platform: EVCC of the vehicle"
+PROJECT_NAME           = "Qompoter"
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. 
 # This could be handy for archiving the generated documentation or 
 # if some version control system is used.
 
-PROJECT_NUMBER         = 1.0
+PROJECT_NUMBER         = 0.7
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description 
 # for a project that appears at the top of each page and should give viewer 
 # a quick idea about the purpose of the project. Keep the description short.
 
-PROJECT_BRIEF          = "This generated technical documentation aims to help the understanding of the EVCC system of the ISO 15118 platform."
+PROJECT_BRIEF          = "A dependency Manager for C++."
 
 # With the PROJECT_LOGO tag one can specify an logo or icon that is 
 # included in the documentation. The maximum height of the logo should not 
@@ -52,7 +52,7 @@ PROJECT_LOGO           =
 # If a relative path is entered, it will be relative to the location 
 # where doxygen was started. If left blank the current directory will be used.
 
-OUTPUT_DIRECTORY       = ../Release/doc/EVCC
+OUTPUT_DIRECTORY       = docs/generated
 
 # If the CREATE_SUBDIRS tag is set to YES, then doxygen will create 
 # 4096 sub-directories (in 2 levels) under the output directory of each output 
@@ -329,22 +329,6 @@ INLINE_SIMPLE_STRUCTS  = NO
 
 TYPEDEF_HIDES_STRUCT   = NO
 
-# The SYMBOL_CACHE_SIZE determines the size of the internal cache use to 
-# determine which symbols to keep in memory and which to flush to disk. 
-# When the cache is full, less often used symbols will be written to disk. 
-# For small to medium size projects (<1000 input files) the default value is 
-# probably good enough. For larger projects a too small cache size can cause 
-# doxygen to be busy swapping symbols to and from disk most of the time 
-# causing a significant performance penalty. 
-# If the system has enough physical memory increasing the cache will improve the 
-# performance by keeping more symbols in memory. Note that the value works on 
-# a logarithmic scale so increasing the size by one will roughly double the 
-# memory usage. The cache size is given by this formula: 
-# 2^(16+SYMBOL_CACHE_SIZE). The valid range is 0..9, the default is 0, 
-# corresponding to a cache size of 2^16 = 65536 symbols.
-
-SYMBOL_CACHE_SIZE      = 0
-
 # Similar to the SYMBOL_CACHE_SIZE the size of the symbol lookup cache can be 
 # set using LOOKUP_CACHE_SIZE. This cache is used to resolve symbols given 
 # their name and scope. Since this can be an expensive process and often the 
@@ -564,12 +548,6 @@ MAX_INITIALIZER_LINES  = 48
 
 SHOW_USED_FILES        = YES
 
-# If the sources in your project are distributed over multiple directories 
-# then setting the SHOW_DIRECTORIES tag to YES will show the directory hierarchy 
-# in the documentation. The default is NO.
-
-SHOW_DIRECTORIES       = NO
-
 # Set the SHOW_FILES tag to NO to disable the generation of the Files page. 
 # This will remove the Files entry from the Quick Index and from the 
 # Folder Tree View (if specified). The default is YES.
@@ -734,7 +712,7 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is 
 # run.
 
-EXCLUDE                = 
+EXCLUDE                = test vendor docs
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or 
 # directories that are symbolic links (a Unix file system feature) are excluded 
@@ -984,12 +962,6 @@ HTML_COLORSTYLE_GAMMA  = 80
 
 HTML_TIMESTAMP         = YES
 
-# If the HTML_ALIGN_MEMBERS tag is set to YES, the members of classes, 
-# files or namespaces will be aligned in HTML using tables. If set to 
-# NO a bullet list will be used.
-
-HTML_ALIGN_MEMBERS     = YES
-
 # If the HTML_DYNAMIC_SECTIONS tag is set to YES then the generated HTML 
 # documentation will contain sections that can be hidden and shown after the 
 # page has loaded. For this to work a browser that supports 
@@ -1084,25 +1056,25 @@ TOC_EXPAND             = NO
 # that can be used as input for Qt's qhelpgenerator to generate a 
 # Qt Compressed Help (.qch) of the generated HTML documentation.
 
-GENERATE_QHP           = NO
+GENERATE_QHP           = YES
 
 # If the QHG_LOCATION tag is specified, the QCH_FILE tag can 
 # be used to specify the file name of the resulting .qch file. 
 # The path specified is relative to the HTML output folder.
 
-QCH_FILE               = 
+QCH_FILE               = ../qompoter-help.qch
 
 # The QHP_NAMESPACE tag specifies the namespace to use when generating 
 # Qt Help Project output. For more information please see 
 # http://doc.trolltech.com/qthelpproject.html#namespace
 
-QHP_NAMESPACE          = org.doxygen.Project
+QHP_NAMESPACE          = fylhan.qompoter
 
 # The QHP_VIRTUAL_FOLDER tag specifies the namespace to use when generating 
 # Qt Help Project output. For more information please see 
 # http://doc.trolltech.com/qthelpproject.html#virtual-folders
 
-QHP_VIRTUAL_FOLDER     = doc
+QHP_VIRTUAL_FOLDER     = qompoter
 
 # If QHP_CUST_FILTER_NAME is set, it specifies the name of a custom filter to 
 # add. For more information please see 
@@ -1130,7 +1102,7 @@ QHP_SECT_FILTER_ATTRS  =
 # If non-empty doxygen will try to run qhelpgenerator on the generated 
 # .qhp file.
 
-QHG_LOCATION           = 
+QHG_LOCATION           = /opt/Qt/5.4/gcc_64/bin/qhelpgenerator
 
 # If the GENERATE_ECLIPSEHELP tag is set to YES, additional index files  
 # will be generated, which together with the HTML files, form an Eclipse help 
@@ -1175,11 +1147,6 @@ GENERATE_TREEVIEW      = NO
 # values from appearing in the overview section.
 
 ENUM_VALUES_PER_LINE   = 4
-
-# By enabling USE_INLINE_TREES, doxygen will generate the Groups, Directories, 
-# and Class Hierarchy pages using a tree view instead of an ordered list.
-
-USE_INLINE_TREES       = NO
 
 # If the treeview is enabled (see GENERATE_TREEVIEW) then this tag can be 
 # used to set the initial width (in pixels) of the frame in which the tree 
@@ -1437,18 +1404,6 @@ GENERATE_XML           = NO
 # put in front of it. If left blank `xml' will be used as the default path.
 
 XML_OUTPUT             = xml
-
-# The XML_SCHEMA tag can be used to specify an XML schema, 
-# which can be used by a validating XML parser to check the 
-# syntax of the XML files.
-
-XML_SCHEMA             = 
-
-# The XML_DTD tag can be used to specify an XML DTD, 
-# which can be used by a validating XML parser to check the 
-# syntax of the XML files.
-
-XML_DTD                = 
 
 # If the XML_PROGRAMLISTING tag is set to YES Doxygen will 
 # dump the program listings (including syntax highlighting 
@@ -1770,7 +1725,7 @@ INTERACTIVE_SVG        = NO
 # The tag DOT_PATH can be used to specify the path where the dot tool can be 
 # found. If left blank, it is assumed the dot tool can be found in the path.
 
-DOT_PATH               = "C:/Program Files/Programmation/Graphviz/bin"
+DOT_PATH               = dot
 
 # The DOTFILE_DIRS tag can be used to specify one or more directories that 
 # contain dot files that are included in the documentation (see the 
