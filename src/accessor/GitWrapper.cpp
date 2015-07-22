@@ -6,7 +6,8 @@
 
 using namespace Qompoter;
 
-GitWrapper::GitWrapper(const Query &settings) :
+GitWrapper::GitWrapper(const Query &settings, QObject *parent) :
+    QObject(parent),
     git_(settings.getGitBin()),
     verbose_(settings.isVerbose())
 {

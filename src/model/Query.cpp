@@ -9,7 +9,8 @@ Qompoter::Query::Query() :
     maxRecurency_(10),
     qompoterFile_("qompoter.json"),
     vendorDir_("vendor/"),
-    gitBin_("git")
+    gitBin_("git"),
+    wgetBin_("wget")
 {
 }
 
@@ -30,7 +31,8 @@ QString Qompoter::Query::toString(const QString &prefixe) const
         str.append(repository.toString()+",\n");
     }
     str.append(prefixe+"],\n");
-    str.append(prefixe+"\"gitBin\": \""+gitBin_+"\"\n");
+    str.append(prefixe+"\"gitBin\": \""+gitBin_+"\",\n");
+    str.append(prefixe+"\"wgetBin\": \""+wgetBin_+"\"\n");
     str.append(prefixe+"}");
     return str;
 }
@@ -154,5 +156,15 @@ const QString &Qompoter::Query::getGitBin() const
 void Qompoter::Query::setGitBin(const QString &gitBin)
 {
     gitBin_ = gitBin;
+}
+
+const QString &Qompoter::Query::getWgetBin() const
+{
+    return wgetBin_;
+}
+
+void Qompoter::Query::setWgetBin(const QString &wgetBin)
+{
+    wgetBin_ = wgetBin;
 }
 

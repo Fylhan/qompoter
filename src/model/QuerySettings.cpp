@@ -10,6 +10,7 @@ const QString GitsRepo = QStringLiteral("gits-repo");
 const QString FsRepo = QStringLiteral("fs-repo");
 const QString HttpRepo = QStringLiteral("http-repo");
 const QString NoGithub = QStringLiteral("no-github");
+const QString NoInqlude = QStringLiteral("no-inqlude");
 const QString MaxRecurency = QStringLiteral("max-recurency");
 const QString GitBin = QStringLiteral("bin-git");
 
@@ -31,6 +32,9 @@ void QuerySettings::loadSettings()
     query_.addRepositories(settings_.value(FsRepo).toString().split("|"), "fs");
     if (!settings_.contains(NoGithub) || !settings_.value(NoGithub).toBool()) {
         query_.addRepository("https://github.com", "git");
+    }
+    if (!settings_.contains(NoInqlude) || !settings_.value(NoInqlude).toBool()) {
+        query_.addRepository("/media/data/Projet/Test/inqlude-data", "inqlude");
     }
     query_.setMaxRecurency(settings_.value(MaxRecurency).toInt());
     if (!settings_.value(GitBin).isNull()) {

@@ -58,6 +58,9 @@ public:
 
     const QString &getGitBin() const;
     void setGitBin(const QString &gitBin);
+    
+    const QString &getWgetBin() const;
+    void setWgetBin(const QString &wgetBin);
 
 private:
     QString action_;
@@ -70,6 +73,7 @@ private:
     QString vendorDir_;
     QList<RepositoryInfo> repositories_;
     QString gitBin_;
+    QString wgetBin_;
 };
 }
 

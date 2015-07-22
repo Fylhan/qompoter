@@ -1,6 +1,7 @@
 #ifndef QOMPOTER_GITWRAPPER_H
 #define QOMPOTER_GITWRAPPER_H
 
+#include <QObject>
 #include <QProcess>
 
 namespace Qompoter {
@@ -11,10 +12,11 @@ namespace Qompoter {
 /**
  * Basic wrapper for Git command line
  */
-class GitWrapper
+class GitWrapper : public QObject
 {
+    Q_OBJECT
 public:
-    GitWrapper(const Query &settings);
+    GitWrapper(const Query &settings, QObject *parent=0);
 
 /**
  * @defgroup Git Git Commands
