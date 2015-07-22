@@ -10,6 +10,7 @@ runtest{
 }
 
 OTHER_FILES += \
+    $$PWD/CMakeLists.txt \
     $$PWD/README.md \
     $$PWD/qompoter.json \
     $$PWD/changelogs.md \
