@@ -18,7 +18,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName   ("qompoter");
     QCoreApplication::setOrganizationDomain ("qompoter");
     QCoreApplication::setApplicationName    ("Qompoter");
-    QCoreApplication::setApplicationVersion ("0.7.0");
+    QCoreApplication::setApplicationVersion ("0.7.1");
     
     // Persistant Settings
     QSettings settings(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationName(), QCoreApplication::applicationName());
@@ -50,19 +50,13 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     }
     
     
-    bool globalResult = true;
     Qompoter::Qompoter qompoter(query);
-    globalResult *= qompoter.loadQompoterFile();
-    if (!globalResult) {
-        qCritical()<<"FAILLURE";
-        return globalResult;
-    }
-    globalResult *= qompoter.doAction(query.getAction());
-    if (!globalResult) {
+    bool res = qompoter.doAction(query.getAction());
+    if (!res) {
         qCritical()<<"FAILLURE";
     }
     else {
         qDebug()<<"OK";
     }
-    return globalResult;
+    return res;
 }

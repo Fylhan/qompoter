@@ -4,6 +4,8 @@
 #include <QObject>
 
 namespace Qompoter {
+class Config;
+class PackageInfo;
 class Query;
 }
 
@@ -18,10 +20,11 @@ public:
     virtual bool doAction(const QString &action) = 0;
     virtual bool update() = 0;
     virtual bool install() = 0;
-    virtual bool loadQompoterFile() = 0;
+    virtual Config loadQompoterFile(const QString &qompoterFilePath, bool *ok=0) = 0;
     
 protected:
-    virtual bool searchRecursiveDependencies() = 0;
+    virtual bool searchAndLoadPackages(Config &config, bool dev=false) = 0;
+    virtual bool load(PackageInfo &packageInfo) = 0;
     virtual bool installDependencies() = 0;
     virtual bool generateQompotePri() = 0;
     virtual bool generateVendorPri() = 0;

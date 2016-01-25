@@ -26,7 +26,10 @@ SOURCES += \
     $$PWD/loader/FsLoader.cpp \
     $$PWD/loader/GitLoader.cpp \
     $$PWD/loader/HttpLoader.cpp \
-    $$PWD/loader/InqludeLoader.cpp \
+    $$PWD/loader/IRepository.cpp \
+    $$PWD/loader/GitsRepository.cpp \
+    $$PWD/loader/InqludeRepository.cpp \
+    $$PWD/loader/RawFsRepository.cpp \
     $$PWD/accessor/GitWrapper.cpp \
     $$PWD/accessor/HttpWrapper.cpp \
     $$PWD/IQompoter.cpp \
@@ -49,7 +52,10 @@ HEADERS += \
     $$PWD/loader/FsLoader.h \
     $$PWD/loader/GitLoader.h \
     $$PWD/loader/HttpLoader.h \
-    $$PWD/loader/InqludeLoader.h \
+    $$PWD/loader/IRepository.h \
+    $$PWD/loader/GitsRepository.h \
+    $$PWD/loader/InqludeRepository.h \
+    $$PWD/loader/RawFsRepository.h \
     $$PWD/accessor/GitWrapper.h \
     $$PWD/accessor/HttpWrapper.h \
     $$PWD/IQompoter.h \

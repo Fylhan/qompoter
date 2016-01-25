@@ -41,15 +41,22 @@ bool HttpWrapper::isAvailable(const QUrl &url)
     return res;
 }
 
-bool HttpWrapper::addCredentials(const QString &host, const QString &login, const QString &pwd)
+bool HttpWrapper::addCredentials(const QString &/*host*/, const QString &login, const QString &pwd)
 {
+    QStringList args;
+    args<<"--user="+login;
+    if (!pwd.isEmpty()) {
+        args<<"--password="+pwd;
+    } else {
+        args<<"--ask-password";
+    }
     return false;
 }
 
-bool HttpWrapper::load(const QUrl &url, const QString &dest)
+bool HttpWrapper::load(const QUrl &url, const QString &dest, bool unzip)
 {
     QStringList args;
-    args<<url.toString();
+    args<<url.toString()<<"-O"<<dest;
     process_.start(wget_, args);
     bool done = process_.waitForFinished();
     done *= QProcess::NormalExit == process_.exitStatus();
@@ -62,7 +69,7 @@ bool HttpWrapper::load(const QUrl &url, const QString &dest)
     }
     process_.close();
     
-    if (done) {
+    if (done && unzip) {
         args.clear();
         args<<"-C"<<dest+".zip";
         process_.start("unzip", args);

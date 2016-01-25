@@ -1,5 +1,7 @@
 <RCC>
     <qresource prefix="/pri">
         <file>qompote.pri</file>
+        <file>inqlude-all.json</file>
+        <file>qompoter-schema.json</file>
     </qresource>
 </RCC>

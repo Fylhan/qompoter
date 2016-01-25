@@ -1,6 +1,6 @@
 {
-	"name": "fylhan/qompoter",
-	"description": "A dependency composer for Qt.",
+	"name": "fylhan/qompoter-test",
+	"description": "Test qompoter file",
 	"keywords": ["Qt", "C++", "dependency management"],
 	"license": "LGPL3+",
 	"authors": [
@@ -12,7 +12,7 @@
 	"require": {
 		"trialog/solilog": "v1.0",
 		"trialog/gpslib": "v1.1.1",
-    "trialog/tcanp": "v1.6.7-lib",
+		"trialog/tcanp": "v1.6.7-lib",
 		"ixxat/eci": "v1.8-lib"
 	},
 	"require-dev": {
@@ -21,7 +21,7 @@
 	"repositories": [
 		{
 			"type": "fs",
-			"url": "/media/Project/PlateformeVehiculeElectrique/4_workspace/qompoter/qextserialport/qextserialport"
+			"url": "/media/data/Project/qompoter"
 		}
 	]
 }

@@ -1,13 +1,10 @@
 TEMPLATE = subdirs
 CONFIG += ordered
-#CONFIG += runtest # Uncomment to build also tests and to run them
 
-SUBDIRS += src
-runtest{
-    message(Compile unit tests)
-    SUBDIRS += test
-    test.depends = src
-}
+SUBDIRS += src \
+    test
+
+test.depends = src
 
 OTHER_FILES += \
     $$PWD/.travis.yml \
@@ -20,5 +17,4 @@ OTHER_FILES += \
 
 include($$PWD/vendor/qompote.pri)
 $$setBuildDir()
-message(Qompoter build folder is $$OBJECTS_DIR)
 

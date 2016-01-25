@@ -94,6 +94,11 @@ void Qompoter::Query::setQompoterFile(const QString &qompoterFile)
     qompoterFile_ = qompoterFile;
 }
 
+QString Qompoter::Query::getQompoterFilePath() const
+{
+    return workingDir_+qompoterFile_;
+}
+
 QString Qompoter::Query::getVendorPath() const
 {
     return workingDir_+vendorDir_;

@@ -50,11 +50,33 @@ defineReplace(setLibName){
 # Return lib name
 defineReplace(getLibName){
     ExtLibName = $$1
+    QtVersion = $$2
+    equals(QtVersion, "Qt"){
+        ExtLibName = $${ExtLibName}-Qt$$QT_VERSION
+    }
     CONFIG(debug,debug|release){
         ExtLibName = $${ExtLibName}d
     }
 
     return($${ExtLibName})
+}
+
+# $$getCompleteLibName(lib name)
+# Will add a "d" at the end of lib name in case of debug compilation, and "-version" if provided
+# Return lib name
+defineReplace(getCompleteLibName){
+    ExtLibName = $$1
+    QtVersion = $$2
+    LIBSUFIX = a
+    contains(CONFIG,"dll"){
+        win32|win32-cross-mingw {
+            LIBSUFIX = dll
+        }
+        else:unix {
+            LIBSUFIX = so
+        }
+    }
+    return(lib$$getLibName($$ExtLibName,$$QtVersion).$$LIBSUFIX)
 }
 
 # $$setBuildDir()

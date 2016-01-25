@@ -17,7 +17,7 @@ public:
     HttpWrapper(const Query &settings, QObject *parent=0);
     
     bool isAvailable(const QUrl &url);
-    bool load(const QUrl &url, const QString &dest);
+    bool load(const QUrl &url, const QString &dest, bool unzip=false);
     
 public slots:
     bool addCredentials(const QString &host, const QString &login, const QString &pwd);

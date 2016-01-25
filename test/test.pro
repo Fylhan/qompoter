@@ -1,16 +1,19 @@
 DEPENDPATH += $$PWD
 INCLUDEPATH += $$PWD $$PWD/. $$PWD/..
 
-CONFIG += autotester
+QT += widgets
+CONFIG += solilog autotester
 include(../src/src.pro)
 $$setBuildDir()
 
 SOURCES += \
     $$PWD/TestRunner.cpp \
     $$PWD/test-case/QompoterTest.cpp \
+    test-case/RawFsRepositoryTest.cpp
 
 HEADERS += \
     $$PWD/test-case/QompoterTest.h \
+    test-case/RawFsRepositoryTest.h
 
 OTHER_FILES += \
     $$PWD/qompoter.json \

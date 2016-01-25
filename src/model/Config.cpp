@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonArray>
 #include <QJsonParseError>
 #include <QDebug>
 #include <QRegExp>
@@ -27,12 +28,12 @@ Qompoter::Config::Config(const Config &config)
     this->repositories_ = QList<RepositoryInfo>(config.repositories_);
 }
 
-Qompoter::Config::Config(QVariantMap data)
+Qompoter::Config::Config(const QVariantMap &data)
 {
     fromData(data);
 }
 
-void Qompoter::Config::fromData(QVariantMap data, bool */*ok*/)
+void Qompoter::Config::fromData(const QVariantMap &data)
 {
     packageName_ = data.value("name", "").toString();
     description_ = data.value("description", "").toString();
@@ -72,7 +73,7 @@ void Qompoter::Config::fromData(QVariantMap data, bool */*ok*/)
     }
 }
 
-Config Config::fromFile(QString filepath, bool *ok)
+Config Config::fromFile(const QString &filepath, bool *ok)
 {
     Config config;
     // -- Get configuration file data
@@ -87,14 +88,14 @@ Config Config::fromFile(QString filepath, bool *ok)
     }
     
     // -- Fill new Config element
-    config.fromData(data, ok);
+    config.fromData(data);
     if (0 != ok) {
         *ok = true;
     }
     return config;
 }
 
-QString Config::toString(QString prefixe)
+QString Config::toString(const QString &prefixe) const
 {
     QString str;
     str.append(prefixe+"{\n");
@@ -223,9 +224,9 @@ void Config::setTarget(const TargetInfo &target)
     target_ = target;
 }
 
-QList<PackageInfo> Qompoter::Config::getPackages() const
+const QHash<QString, PackageInfo> &Qompoter::Config::getPackages() const
 {
-    return packages_.values();
+    return packages_;
 }
 
 bool Config::hasPackage(QString packageName, QString /*version*/) const
@@ -292,7 +293,7 @@ QVariantMap Config::parseFile(const QString &filepath)
     QFile file(filepath);
     // - Open the file (read only)
     if (!file.open(QIODevice::ReadOnly)) {
-        qCritical()<<"Fichier de configuration \""<<filepath<<"\" introuvable. Les valeurs par défaut seront utilisées.";
+        qCritical()<<QObject::tr("Config file not found: %1.").arg(file.errorString());
         return QVariantMap();
     }
     // - Modify file content
@@ -306,6 +307,7 @@ QVariantMap Config::parseFile(const QString &filepath)
 
 QVariantMap Config::parseContent(QString data)
 {
+    data = data.trimmed();
     // Remove inline comms
     QRegExp pattern = QRegExp("(^|\\[|\\{|,|\\n|\\s)//.*($|\\n)");
     pattern.setMinimal(true); //ungreedy
@@ -316,10 +318,10 @@ QVariantMap Config::parseContent(QString data)
     pattern.setMinimal(true); //ungreedy
     data.replace(pattern, "");
     // Add first and last brace
-    if (!data.startsWith("{")) {
+    if (!data.startsWith("{") && !data.startsWith("[")) {
         data = "{\n"+data;
     }
-    if (!data.endsWith("}")) {
+    if (!data.endsWith("}") && !data.endsWith("]")) {
         data += "\n}";
     }
     // Remove commas before } or ]
@@ -330,14 +332,21 @@ QVariantMap Config::parseContent(QString data)
     // -- Parse JSON data
     QJsonParseError error;
     QJsonDocument jsonDoc = QJsonDocument::fromJson(data.toUtf8(), &error);
-    if (error.error != 0 || jsonDoc.isNull() || jsonDoc.isEmpty() || !jsonDoc.isObject()) {
-        QString errorStr = "empty content";
+    if (0 != error.error || jsonDoc.isNull() || jsonDoc.isEmpty()) {
+        QString errorStr(QObject::tr("empty content"));
         if (0 != error.error) {
-            error.errorString();
+            errorStr = error.errorString();
         }
-        qCritical()<<"Erreur dans la lecture du fichier de configuration : "<<errorStr<<". Les valeurs par défaut seront utilisées.";
+        qCritical()<<QObject::tr("Error when reading config file: %1.").arg(errorStr);
         return QVariantMap();
     }
-    return jsonDoc.object().toVariantMap();
+    if (jsonDoc.isObject())
+        return jsonDoc.object().toVariantMap();
+    QVariantMap map;
+    for(QJsonValue element : jsonDoc.array()) {
+        QVariantMap elementMap = element.toVariant().toMap();
+        map.insert(elementMap.value("name", "noname").toString()+"/"+elementMap.value("version", "*").toString(), elementMap);
+    }
+    return map;
 }
 

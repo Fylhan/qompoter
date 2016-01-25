@@ -21,7 +21,7 @@ Requirements
 Build
 --------------------------------
 
-To build this project, C++11 and Qt5 are required. Please run, something like:
+To build this project, >= C++11 and >= Qt 5.4 are required. Please run, something like:
 
     ./qompoter.sh
     mkdir build-qompoter-qmake && cd build-qompoter-qmake
@@ -101,6 +101,7 @@ Roadmap
 * Check Windows support
 * [In progress] Better support of qompoter.json
 * [In progress] JSON schema for qompoter.json
+* Add security by verifying hash keys
 * Compile packages as shared libraries (with a local and global version), or as source project
 
 Documentation
