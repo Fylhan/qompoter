@@ -8,7 +8,7 @@ An attempt of dependency manager for Qt / C++, because I am sick of managing eac
 The current version is still a work in progress, a lot have to be done to make it really usable. Still, you can:
 
 * describe in a qomposer.json file your dependencies
-* search and retrieve the own dependencies of your selected dependencies
+* search and retrieve the *nested* dependencies of your selected dependencies
 * retrieve all these packages from file system or via a Git repository
 * generate a vendor.pri file to be included and used in your .pro file
 
@@ -21,7 +21,7 @@ Requirements
 Build
 --------------------------------
 
-To build this project, C++11 and Qt5 are required. Please run, something like:
+To build this project, >= C++11 and >= Qt 5.4 are required. Please run, something like:
 
     ./qompoter.sh
     mkdir build-qompoter-qmake && cd build-qompoter-qmake
@@ -95,12 +95,12 @@ Roadmap
 * Add qompoter install --local: which copy/paste lib and headers
 * Use QT += package instead of CONFIG which leverage the usage of include(vendor.pri)
 * [In progress] Link with inqlude
-* Link with CPM (?)
 * Special cases for Qt Plugins
 * [In progress] Support CMake
 * Check Windows support
 * [In progress] Better support of qompoter.json
 * [In progress] JSON schema for qompoter.json
+* Add security by verifying hash keys
 * Compile packages as shared libraries (with a local and global version), or as source project
 
 Documentation
@@ -120,11 +120,14 @@ Qompoter is released under 2 versions:
 
 In order to simplify numerotation, v0.1 to v0.6 are reserved for "qompoter-bash". Therefore, the first "qompoter" version is v0.7.
 
-Related projects
+Similar projects
 --------------------------------
 
-* [inqlude ](http://inqlude.org/) Listing of existing Qt libraries
-* [CPM](https://github.com/iauns/cpm) C++ Package Manager using CMake
+* [inqlude](http://inqlude.org/) Listing existing Qt libraries
+* [QPM](https://github.com/Cutehacks/qpm) Qt package manager
+* [CPM](https://github.com/iauns/cpm) C++ package manager using CMake
+* [Conan](https://github.com/conan-io/conan) C/C++ distributed package manager
+* [QtPods](https://github.com/qt-pods/qt-pods) Unify packaging of fragment of Qt codes
 
 License
 --------------------------------

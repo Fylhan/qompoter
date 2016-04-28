@@ -15,10 +15,10 @@ class Config
 public:
     Config();
     Config(const Config &config);
-    Config(QVariantMap data);
-    static Config fromFile(QString filepath, bool *ok=0);
-    void fromData(QVariantMap data, bool *ok=0);
-    QString toString(QString prefixe="");
+    Config(const QVariantMap &data);
+    static Config fromFile(const QString &filepath, bool *ok=0);
+    void fromData(const QVariantMap &data);
+    QString toString(const QString &prefixe="") const;
 
     const QString &getPackageName() const;
     void setPackageName(const QString &getPackageName);
@@ -46,10 +46,10 @@ public:
     const TargetInfo &getTarget() const;
     void setTarget(const TargetInfo &target);
 
-    QList<PackageInfo> getPackages() const;
-    bool hasPackage(QString getPackageName, QString getVersion="") const;
+    const QHash<QString, PackageInfo> &getPackages() const;
+    bool hasPackage(QString packageName, QString version="") const;
     void addPackage(const PackageInfo &package);
-    void setPackages(const QHash<QString, PackageInfo> &getPackages);
+    void setPackages(const QHash<QString, PackageInfo> &packages);
 
     const QList<RequireInfo> &getRequires() const;
     void setRequires(const QList<RequireInfo> &getRequires);

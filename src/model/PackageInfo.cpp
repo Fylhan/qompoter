@@ -2,6 +2,13 @@
 
 using namespace Qompoter;
 
+PackageInfo::PackageInfo() :
+    RequireInfo(),
+    alreadyDownloaded_(true)
+{
+    loader_ = 0;
+}
+
 PackageInfo::PackageInfo(const RequireInfo &parent, const RepositoryInfo &repository, ILoader *loader, bool alreadyDownloaded) :
     RequireInfo(parent),
     repository_(repository),

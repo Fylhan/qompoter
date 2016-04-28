@@ -16,13 +16,11 @@ class ILoader : public QObject
 {
     Q_OBJECT
 public:
-    ILoader(const Query &query, const QString loadingType, QObject *parent=0);
+    ILoader(const Query &query, const QString &loadingType, QObject *parent=0);
     virtual ~ILoader() {}
 
-    inline void setQuery(const Query &query) {
-        query_ = query;
-    }
-    virtual QString getLoadingType() const;
+    virtual void setQuery(const Query &query);
+    virtual const QString &getLoadingType() const;
     /**
      * @brief Is this dependency available in this repo?
      * @param packageInfo Dependency info
@@ -45,3 +43,5 @@ bool cpDir(const QString &srcPath, const QString &dstPath, bool deleteExistingDe
 }
 
 #endif // QOMPOTER_ILOADER_H
+
+

@@ -3,13 +3,18 @@
 #include <QDebug>
 #include <QDir>
 
-Qompoter::ILoader::ILoader(const Qompoter::Query &query, const QString loadingType, QObject *parent) :
+Qompoter::ILoader::ILoader(const Qompoter::Query &query, const QString &loadingType, QObject *parent) :
     QObject(parent),
     query_(query),
     loadingType_(loadingType)
 {}
 
-QString Qompoter::ILoader::getLoadingType() const
+void Qompoter::ILoader::setQuery(const Qompoter::Query &query)
+{
+    query_ = query;
+}
+
+const QString &Qompoter::ILoader::getLoadingType() const
 {
     return loadingType_;
 }

@@ -32,6 +32,7 @@ public:
      */
     const QString &getQompoterFile() const;
     void setQompoterFile(const QString &qompoterFile);
+    QString getQompoterFilePath() const;
 
     /**
      * @brief working dir/vendor dir

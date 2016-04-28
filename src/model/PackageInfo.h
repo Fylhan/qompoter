@@ -11,6 +11,7 @@ namespace Qompoter {
 class PackageInfo : public RequireInfo
 {
 public:
+    PackageInfo();
     PackageInfo(const RequireInfo &parent, const RepositoryInfo &getRepository, ILoader *loader, bool alreadyDownloaded=false);
 
     const RepositoryInfo &getRepository() const;

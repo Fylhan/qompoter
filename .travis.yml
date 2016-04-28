@@ -10,7 +10,7 @@ before_install:
   - source qompoter.sh
 script:
   - cd .. && mkdir build-qompoter-qmake && cd build-qompoter-qmake
-  - qmake ../qompoter/qompoter.pro
+  - qmake ../qompoter/qompoter.pro SUBDIRS-=test
   - make -j2
 branches:
   only:
