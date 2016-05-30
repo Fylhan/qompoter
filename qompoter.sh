@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+readonly PROGNAME=$(basename $0)
+readonly PROGDIR=$(readlink -m $(dirname $0))
+readonly ARGS="$@"
+
 #######################
 # JSON.H              #
 #######################
@@ -206,29 +210,47 @@ jsonh()
 
 usage()
 {
-  echo "usage: qompoter [ --repo <repo> | --help ]"
-  echo ""
-  echo " -r, --repo	Select a repository path as a location for dependency"
-  echo "		research. It is used in addition of the \"repositories\""
-  echo "		field in qompoter.json."
-  echo "		E.g. \"repo/repositories/vendor name/project name\""
-  echo " --vendor-dir	Pick another vendor directory as \"vendor\""
-  echo " --no-dev	Don't retrieve dev dependencies listed in \"require-dev\""
-  echo " -h, --help	Display this help"
-  echo " -v, --version	Display the Qompoter version"
-  echo ""
-  echo "Example: qompoter --repo /Project"
+	cat <<- EOF	
+	Usage: $PROGNAME [action] [ --repo <repo> | other options ]
+	
+	    action		Select an action: install, update, export, repo-export
+	
+	Options:
+	    -r, --repo		Select a repository path as a location for dependency
+	    			research. It is used in addition of the "repositories"
+	    			filled in qompoter.json."
+	    			E.g. "repo/repositories/vendor name/project name"
+	        --vendor-dir	Pick another vendor directory as "vendor"
+	    -f, --file		Pick another file as "qompoter.json"
+	        --no-dev	Don't retrieve dev dependencies listed in "require-dev"
+	    -V, --verbose	Enable more verbosity
+	    -h, --help		Display this help
+	    -v, --version	Display the version
+	
+	Examples:
+	    Install all dependencies:
+	    $PROGNAME install --repo /Project
+	    
+	    Install only nominal dependencies:
+	    $PROGNAME install --no-dev --repo /Project
+	    
+	    Export existing dependencies:
+	    $PROGNAME export
+	
+	EOF
 }
 
 version()
 {
-  echo "Qompoter 0.1.0"
-  echo "Dependency manager for C++/Qt by Fylhan"
+	cat <<- EOF
+	Qompoter 0.2.0
+	Dependency manager for C++/Qt by Fylhan
+	EOF
 }
 
 createQompotePri()
 {
-	qompotePri=$1
+	local qompotePri=$1
 	echo '# $$setLibPath()' > $qompotePri
 	echo '# Generate a lib path name depending of the OS and the arch' >> $qompotePri
 	echo '# Export and return LIBPATH' >> $qompotePri
@@ -346,144 +368,314 @@ createQompotePri()
 
 prepareVendorDir()
 {
-	vendorDir=$1
-	mkdir -p ${vendorDir}
-	createQompotePri ${vendorDir}/qompote.pri
-	echo 'include($$PWD/qompote.pri)' > ${vendorDir}/vendor.pri
-	echo '$$setLibPath()' >> ${vendorDir}/vendor.pri
+  local vendorDir=$1
+  mkdir -p ${vendorDir}
+  createQompotePri ${vendorDir}/qompote.pri
+  echo 'include($$PWD/qompote.pri)' > ${vendorDir}/vendor.pri
+  echo '$$setLibPath()' >> ${vendorDir}/vendor.pri
 }
 
-downloadRequire()
+downloadPackage()
 {
-  repositoryPath=$1
-  vendorDir=$2
-  requireName=$3
-  requireVersion=$4
-  isSource=1
+  local repositoryPath=$1
+  local vendorDir=$2
+  local requireName=$3
+  local requireVersion=$4
+  local result=0
+  local isSource=1
   if [[ "$requireVersion" == *"-lib" ]]; then
 	isSource=0
   fi
+  local projectName=`echo $requireName | cut -d'/' -f2`
+  local requireBasePath=${repositoryPath}/${requireName}
+  local requirePath=${requireBasePath}/${requireVersion}
+  local requireLocalPath=${vendorDir}/${projectName}
+  local qompoterPriFile=${requireLocalPath}/qompoter.pri
+
 
   echo "* ${requireName} ${requireVersion}"
-  projectName=`echo $requireName | cut -d'/' -f2`
-  requireBasePath=${repositoryPath}/${requireName}
-  requirePath=${requireBasePath}/${requireVersion}
-  requireLocalPath=${vendorDir}/${projectName}
+  
   mkdir -p ${requireLocalPath}
 
   # Sources
   if [ "${isSource}" -eq 1 ]; then
-    gitError=0
     # Git
-    if [ -d "${requireBasePath}/${projectName}.git" ] || [[ "$repositoryPath" == *"github"* ]]; then
-      echo "  Downloading sources from Git..."
-      # Already exist: update
-      if [ -d "${requireLocalPath}/.git" ]; then
-	currentPath=`pwd`
-	cd ${requireLocalPath}
-	git fetch --all
-	git checkout -f ${requireVersion}
-	git reset --hard origin/${requireVersion}
-	cd $currentPath
-      # Else: clone
-      else
-        gitPath=${requireBasePath}/${projectName}.git
-	if [[ "$repositoryPath" == *"github"* ]]; then
-		gitPath=${requireBasePath}
-	fi
-	git clone -b ${requireVersion} ${gitPath} ${requireLocalPath}
-      fi
-      if [ ! -d "${requireLocalPath}/.git" ]; then
-        gitError=1
-      fi
+    if [ -d "${requireBasePath}/${projectName}.git" ] || [[ "$REPO_PATH" == *"github"* ]] || [[ "$REPO_PATH" == *"gitlab"* ]]; then
+      downloadPackageFromGit $repositoryPath $vendorDir $requireName $requireVersion \
+	|| result=-1
     fi
-    # FS (or Git failed)
+    # Copy (also done if Git failed)
     if [ ! -d "${requireLocalPath}/.git" ]; then
-      if [ "$gitError" -eq 1 ]; then
+      if [ "$result" == "-1" ]; then
         echo "  Error with Git. Downloading sources from scratch..."
         mkdir -p ${requireLocalPath}
       else
         echo "  Downloading sources..."
       fi
-      cp -rf ${requirePath}/* ${requireLocalPath}
+      downloadPackageFromCp ${requirePath} ${requireLocalPath} \
+	&& result=0 \
+	|| result=-1
     fi
-    qompoterPriFile=${requireLocalPath}/qompoter.pri
   # Lib
   else
     echo "  Downloading lib..."
-    cp -rf ${requirePath}/lib_* ${vendorDir}
-    cp -rf ${requirePath}/include ${requireLocalPath}
-    cp -rf ${requirePath}/qompoter.* ${requireLocalPath}
-    qompoterPriFile=${requireLocalPath}/qompoter.pri
+    downloadLibFromCp ${vendorDir} ${requirePath} ${requireLocalPath} \
+      || result=-1
   fi
   
-  # Qompoter.pri
-  if [ -f "${qompoterPriFile}" ]; then
-	cat ${qompoterPriFile} >> ${vendorDir}/vendor.pri
+   if [ "$result" == "-1" ]; then
+    echo -e "\e[1;31m  FAILLURE\e[0m"
+    echo
+    return -1
   else
-	echo "  Warning: there is no qompoter.pri file"
+    # Qompoter.pri
+    if [ -f "${qompoterPriFile}" ]; then
+	  cat ${qompoterPriFile} >> ${vendorDir}/vendor.pri
+    else
+	  echo "  Warning: no 'qompoter.pri' found for this package"
+    fi
+    echo -e "\e[1;32m  done\e[0m"
+    echo
   fi
-  
-  echo "  done"
-  echo
+  return 0
 }
 
-dev=(-dev)?
-vendorDir=${PWD}/vendor
-repositoryPath=
-while [ "$1" != "" ]; do
-case $1 in
-  -r | --repo )
-    shift
-    repositoryPath=$1
-    shift
-    ;;
-  -vd | --vendor-dir )
-    shift
-    vendorDir=$1
-    shift
-    ;;
-  -nd | --no-dev )
-    dev=
-    shift
-    ;;
-  -h | --help )
-    usage
-    exit 0
-    ;;
-  -v | --version )
-    version
-    exit 0
-    ;;
-  *)
-    echo "Unknown parameter $1"
+downloadPackageFromCp()
+{
+  local source=$1
+  local target=$2
+  
+  if [ -d "${source}" ]; then
+    cp -rf ${source}/* ${target} \
+      >> ${LOG_FILENAME} 2>&1 \
+      && return 0 \
+      || return -1
+  fi
+  echo "  Error: no package found '${source}'"
+  return -1
+}
+
+downloadLibFromCp()
+{
+  local vendorDir=$1
+  local source=$2
+  local target=$3
+  
+  cp -rf ${source}/lib_* ${vendorDir} \
+      >> ${LOG_FILENAME} 2>&1
+  cp -rf ${source}/include ${target} \
+      >> ${LOG_FILENAME} 2>&1
+  cp -rf ${source}/qompoter.* ${target} \
+      >> ${LOG_FILENAME} 2>&1
+  return 0
+}
+
+downloadPackageFromGit()
+{
+  local repositoryPath=$1
+  local vendorDir=$2
+  local requireName=$3
+  local requireVersion=$4
+  local requireLocalPath=${vendorDir}/${projectName}
+  local isSource=1
+  local gitError=0
+  echo "  Downloading sources from Git..."
+  # Already exist: update
+  if [ -d "${requireLocalPath}/.git" ]; then
+    currentPath=`pwd`
+    cd ${requireLocalPath}
+    git fetch --all \
+      >> ${LOG_FILENAME} 2>&1
+    git checkout -f ${requireVersion} \
+      >> ${LOG_FILENAME} 2>&1
+    git reset --hard origin/${requireVersion} \
+      >> ${LOG_FILENAME} 2>&1
+    cd $currentPath
+  # Else: clone
+  else
+    gitPath=${requireBasePath}/${projectName}.git
+    if [[ "${repositoryPath}" == *"github"* ]] || [[ "${repositoryPath}" == *"gitlab"* ]]; then
+	    gitPath=${requireBasePath}
+    fi
+    git clone -b ${requireVersion} ${gitPath} ${requireLocalPath} \
+      >> ${LOG_FILENAME} 2>&1
+  fi
+  if [ ! -d "${requireLocalPath}/.git" ]; then
+    gitError=-1
+  fi
+  return $gitError
+}
+
+exportAction()
+{
+  local vendorBackup=`date +"%Y-%m-%d"`_${VENDOR_DIR}.zip
+  if [ -f "${vendorBackup}" ]; then
+    rm ${vendorBackup}
+  fi
+  
+  if [ -d "${VENDOR_DIR}" ]; then
+    zip ${vendorBackup} -r ${VENDOR_DIR} \
+      >> ${LOG_FILENAME} 2>&1
+  else
+    echo "Nothing to do: no '${VENDOR_DIR}' dir"
+    return -1
+  fi
+}
+
+installAction()
+{
+  local qomoterFiler=$1
+  local vendorDir=$2
+  if [ ! -f "${qomoterFiler}" ]; then
+    echo "Qompoter could not find a '${qomoterFiler}' file in '${PWD}'"
+    echo "To initialize a project, please create a '${qomoterFiler}' file as described in the https://github.com/Fylhan/qompoter/blob/master/docs/Qompoter-file.md"
+    return -1
+  fi
+  
+  prepareVendorDir ${vendorDir}
+  
+  cat ${qomoterFiler} \
+   | jsonh \
+   | egrep "\[\"repositories\",\".*\"\]" \
+   | sed -r "s/\"//g;s/\[repositories,.*\]//g" \
+   |
+  {
+	  while read repo; do
+		  repositoryPath=${REPO_PATH}${repo}
+	  done
+
+	  cat ${qomoterFiler} \
+	   | jsonh \
+	   | egrep "\[\"require${INCLUDE_DEV}\",\".*\"\]" \
+	   | sed -r "s/\"//g;s/\[require${INCLUDE_DEV},//g;s/\]	/ /g;s/dev-//g" \
+	   | while read line; do
+	      downloadPackage ${REPO_PATH} ${vendorDir} $line \
+		|| return -1
+	  done
+  }
+}
+
+jsonhAction()
+{
+  local qompoterFile=$1
+  cat ${qompoterFile} | jsonh
+}
+
+updateAction()
+{
+  echo "Not implemented yet"; 
+  return -1
+}
+
+repoExportAction()
+{
+  echo "Not implemented yet"; 
+  return -1
+}
+
+
+cmdline()
+{
+  ACTION=
+  LOG_FILENAME=qompoter.log
+  QOMPOTER_FILENAME=qompoter.json
+  VENDOR_DIR=vendor
+  REPO_PATH=
+  INCLUDE_DEV=(-dev)?
+  IS_VERBOSE=0
+
+  if [ "$#" -lt "1" ]; then
+    echo -e "\e[1;31mFAILLURE\e[0m missing arguments"
     usage
     exit -1
-    ;;
-esac
-done
+  fi
+  while [ "$1" != "" ]; do
+  case $1 in
+    -f | --file )
+      shift
+      QOMPOTER_FILENAME=$1
+      shift
+      ;;
+    -r | --repo )
+      shift
+      REPO_PATH=$1
+      shift
+      ;;
+    -vd | --vendor-dir )
+      shift
+      VENDOR_DIR=$1
+      shift
+      ;;
+    -nd | --no-dev )
+      INCLUDE_DEV=
+      shift
+      ;;
+    -V | --verbose )
+      IS_VERBOSE=1
+      shift
+      ;;
+    -h | --help )
+      usage
+      exit 0
+      ;;
+    -v | --version )
+      version
+      exit 0
+      ;;
+    *)
+      if [ "${ACTION}" == ""  ]; then
+        ACTION=$1
+        shift
+	else
+        echo -e "\e[1;31mFAILLURE\e[0m unknwon argument '$1'"
+        usage
+        exit -1
+      fi
+      ;;
+  esac
+  done
+  
+  if [ "${ACTION}" == ""  ]; then
+    echo -e "\e[1;31mFAILLURE\e[0m missing action"
+    usage
+    exit -1
+  fi
 
-echo 'Qompoter'
-echo '========'
-echo
-
-prepareVendorDir $vendorDir
-
-cat qompoter.json \
- | jsonh \
- | egrep "\[\"repositories\",\".*\"\]" \
- | sed -r "s/\"//g;s/\[repositories,.*\]//g" \
- |
-{
-	while read repo; do
-		repositoryPath=${repositoryPath}${repo}
-	done
-
-	cat qompoter.json \
-	 | jsonh \
-	 | egrep "\[\"require${dev}\",\".*\"\]" \
-	 | sed -r "s/\"//g;s/\[require${dev},//g;s/\]	/ /g;s/dev-//g" \
-	 | while read line; do
-	    downloadRequire $repositoryPath $vendorDir $line
-	done
+  VENDOR_PATH=${PWD}/${VENDOR_DIR}
+  return 0
 }
+
+main()
+{
+  cmdline $ARGS
+  if [ -f "${LOG_FILENAME}" ]; then
+    rm ${LOG_FILENAME}
+  fi
+  touch ${LOG_FILENAME}
+    
+  echo "Qompoter"
+  echo "======== ${ACTION}"
+  echo
+ 
+   
+  if [ "${ACTION}" == "export" ]; then
+    exportAction ${VENDOR_DIR} \
+      && echo -e "\033[1;32mdone\e[0m" \
+      || echo -e "\033[1;31mFAILLURE\e[0m"
+  elif [ "${ACTION}" == "install" ]; then
+    installAction ${QOMPOTER_FILENAME} ${VENDOR_DIR} \
+      && echo -e "\033[1;32mdone\e[0m" \
+      || echo -e "\033[1;31mFAILLURE\e[0m"
+  elif [ "${ACTION}" == "jsonh" ]; then
+    jsonhAction ${QOMPOTER_FILENAME} \
+      && echo -e "\033[1;32mdone\e[0m" \
+      || echo -e "\033[1;31mFAILLURE\e[0m"
+  elif [ "${ACTION}" == "repo-export" ]; then
+    repoExportAction \
+      && echo -e "\033[1;32mdone\e[0m" \
+      || echo -e "\033[1;31mFAILLURE\e[0m"
+  else
+    echo -e "\033[1;31mFAILLURE\e[0m Unknown action '${ACTION}'"
+  fi
+}
+main

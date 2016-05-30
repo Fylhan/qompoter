@@ -1,4 +1,7 @@
 node_modules
 vendor
+docs/generated
 release*
 *.log
+*.user
+*.un~
