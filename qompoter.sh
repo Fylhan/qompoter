@@ -685,6 +685,10 @@ main()
     repoExportAction \
       && echo -e "${FORMAT_OK}done${FORMAT_END}" \
       || echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END}"
+  elif [ "${ACTION}" == "update" ]; then
+    updateAction ${QOMPOTER_FILENAME} ${VENDOR_DIR} \
+      && echo -e "${FORMAT_OK}done${FORMAT_END}" \
+      || echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END}"
   else
     echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END} Unknown action '${ACTION}'"
   fi
