@@ -511,9 +511,23 @@ downloadPackageFromGit()
   return $gitError
 }
 
+getProjectName()
+{
+  cat ${qomoterFiler} \
+   | jsonh \
+   | egrep "\[\"name\"\]" \
+   | sed -e 's/"//g;s/\[name\]\s*//;s/.*\///'
+}
+
 exportAction()
 {
-  local vendorBackup=`date +"%Y-%m-%d"`_${VENDOR_DIR}.zip
+  local qomoterFiler=$1
+  if [ ! -f "${qomoterFiler}" ]; then
+    echo "Qompoter could not find a '${qomoterFiler}' file in '${PWD}'"
+    echo "To initialize a project, please create a '${qomoterFiler}' file as described in the https://github.com/Fylhan/qompoter/blob/master/docs/Qompoter-file.md"
+    return -1
+  fi
+  local vendorBackup=`date +"%Y-%m-%d"`_`getProjectName ${qomoterFiler}`_${VENDOR_DIR}.zip
   if [ -f "${vendorBackup}" ]; then
     rm ${vendorBackup}
   fi
@@ -670,7 +684,7 @@ main()
  
    
   if [ "${ACTION}" == "export" ]; then
-    exportAction ${VENDOR_DIR} \
+    exportAction ${QOMPOTER_FILENAME} ${VENDOR_DIR} \
       && echo -e "${FORMAT_OK}done${FORMAT_END}" \
       || echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END}"
   elif [ "${ACTION}" == "install" ]; then

@@ -18,6 +18,7 @@ do
     echo "ok $i - $input"    
   fi
   rm -rf vendor
+  rm qompoter.log
 done
 #~ echo "$fails test(s) failed"
 exit $fails
