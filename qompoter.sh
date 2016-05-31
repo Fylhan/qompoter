@@ -213,7 +213,7 @@ jsonh()
 
 usage()
 {
-	cat <<- EOF	
+	cat <<- EOF
 	Usage: $PROGNAME [action] [ --repo <repo> | other options ]
 	
 	    action		Select an action: install, update, export, repo-export
@@ -255,119 +255,142 @@ version()
 createQompotePri()
 {
 	local qompotePri=$1
-	echo '# $$setLibPath()' > $qompotePri
-	echo '# Generate a lib path name depending of the OS and the arch' >> $qompotePri
-	echo '# Export and return LIBPATH' >> $qompotePri
-	echo 'defineReplace(setLibPath){' >> $qompotePri
-	echo '    LIBPATH = lib' >> $qompotePri
-	echo '    win32|win32-cross-mingw {' >> $qompotePri
-	echo '        LIBPATH = $${LIBPATH}_windows' >> $qompotePri
-	echo '    }' >> $qompotePri
-	echo '    else:unix {' >> $qompotePri
-	echo '        LIBPATH = $${LIBPATH}_linux' >> $qompotePri
-	echo '    }' >> $qompotePri
-	echo '' >> $qompotePri
-	echo '    linux-g++-32 {' >> $qompotePri
-	echo '        LIBPATH = $${LIBPATH}_32' >> $qompotePri
-	echo '    }' >> $qompotePri
-	echo '    else:linux-g++-64 {' >> $qompotePri
-	echo '        LIBPATH = $${LIBPATH}_64' >> $qompotePri
-	echo '    }' >> $qompotePri
-	echo '    else {' >> $qompotePri
-	echo '        contains(QMAKE_HOST.arch, x86_64) {' >> $qompotePri
-	echo '            LIBPATH = $${LIBPATH}_64' >> $qompotePri
-	echo '        }' >> $qompotePri
-	echo '        else {' >> $qompotePri
-	echo '            LIBPATH = $${LIBPATH}_32' >> $qompotePri
-	echo '        }' >> $qompotePri
-	echo '    }' >> $qompotePri
-	echo '' >> $qompotePri
-	echo '    export(LIBPATH)' >> $qompotePri
-	echo '    return($${LIBPATH})' >> $qompotePri
-	echo '}' >> $qompotePri
-	echo '' >> $qompotePri
-	echo '# $$setLibName(lib name[, lib version])' >> $qompotePri
-	echo '# Will add a "d" at the end of lib name in case of debug compilation, and "-version" if provided' >> $qompotePri
-	echo '# Export VERSION, export and return LIBNAME' >> $qompotePri
-	echo 'defineReplace(setLibName){' >> $qompotePri
-	echo '    unset(LIBNAME)' >> $qompotePri
-	echo '    LIBNAME = $$1' >> $qompotePri
-	echo '    VERSION = $$2' >> $qompotePri
-	echo '    CONFIG(debug,debug|release){' >> $qompotePri
-	echo '        LIBNAME = $${LIBNAME}d' >> $qompotePri
-	echo '    }' >> $qompotePri
-	echo '' >> $qompotePri
-	echo '    export(VERSION)' >> $qompotePri
-	echo '    export(LIBNAME)' >> $qompotePri
-	echo '    return($${LIBNAME})' >> $qompotePri
-	echo '}' >> $qompotePri
-	echo '' >> $qompotePri
-	echo '# $$getLibName(lib name)' >> $qompotePri
-	echo '# Will add a "d" at the end of lib name in case of debug compilation, and "-version" if provided' >> $qompotePri
-	echo '# Return lib name' >> $qompotePri
-	echo 'defineReplace(getLibName){' >> $qompotePri
-	echo '    ExtLibName = $$1' >> $qompotePri
-	echo '    CONFIG(debug,debug|release){' >> $qompotePri
-	echo '        ExtLibName = $${ExtLibName}d' >> $qompotePri
-	echo '    }' >> $qompotePri
-	echo '' >> $qompotePri
-	echo '    return($${ExtLibName})' >> $qompotePri
-	echo '}' >> $qompotePri
-	echo '' >> $qompotePri
-	echo '# $$setBuildDir()' >> $qompotePri
-	echo '# Generate a build dir depending of OS and arch' >> $qompotePri
-	echo '# Export MOC_DIR, OBJECTS_DIR, UI_DIR, TARGET, LIBS' >> $qompotePri
-	echo 'defineReplace(setBuildDir){' >> $qompotePri
-	echo '    CONFIG(debug,debug|release){' >> $qompotePri
-	echo '        MOC_DIR = debug' >> $qompotePri
-	echo '        OBJECTS_DIR = debug' >> $qompotePri
-	echo '        UI_DIR      = debug' >> $qompotePri
-	echo '    }' >> $qompotePri
-	echo '    else {' >> $qompotePri
-	echo '        MOC_DIR = release' >> $qompotePri
-	echo '        OBJECTS_DIR = release' >> $qompotePri
-	echo '        UI_DIR      = release' >> $qompotePri
-	echo '    }' >> $qompotePri
-	echo '' >> $qompotePri
-	echo '    win32|win32-cross-mingw{' >> $qompotePri
-	echo '        MOC_DIR     = $${MOC_DIR}/build_windows' >> $qompotePri
-	echo '        OBJECTS_DIR = $${OBJECTS_DIR}/build_windows' >> $qompotePri
-	echo '        UI_DIR      = $${UI_DIR}/build_windows' >> $qompotePri
-	echo '    }' >> $qompotePri
-	echo '    else:linux-g++-32{' >> $qompotePri
-	echo '        MOC_DIR     = $${MOC_DIR}/build_linux_32' >> $qompotePri
-	echo '        OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_32' >> $qompotePri
-	echo '        UI_DIR      = $${UI_DIR}/build_linux_32' >> $qompotePri
-	echo '        LIBS       += -L/usr/lib/gcc/i586-linux-gnu/4.9' >> $qompotePri
-	echo '    }' >> $qompotePri
-	echo '    else:linux-g++-64{' >> $qompotePri
-	echo '        MOC_DIR     = $${MOC_DIR}/build_linux_64' >> $qompotePri
-	echo '        OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_64' >> $qompotePri
-	echo '        UI_DIR      = $${UI_DIR}/build_linux_64' >> $qompotePri
-	echo '        LIBS       += -L/usr/lib/gcc/x86_64-linux-gnu/4.9' >> $qompotePri
-	echo '    }' >> $qompotePri
-	echo '    else:unix{' >> $qompotePri
-	echo '        contains(QMAKE_HOST.arch, x86_64){' >> $qompotePri
-	echo '            MOC_DIR     = $${MOC_DIR}/build_linux_64' >> $qompotePri
-	echo '            OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_64' >> $qompotePri
-	echo '            UI_DIR      = $${UI_DIR}/build_linux_64' >> $qompotePri
-	echo '        }' >> $qompotePri
-	echo '        else{' >> $qompotePri
-	echo '            MOC_DIR     = $${MOC_DIR}/build_linux_32' >> $qompotePri
-	echo '            OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_32' >> $qompotePri
-	echo '            UI_DIR      = $${UI_DIR}/build_linux_32' >> $qompotePri
-	echo '        }' >> $qompotePri
-	echo '    }' >> $qompotePri
-	echo '    DESTDIR = $$OUT_PWD/$$OBJECTS_DIR' >> $qompotePri
-	echo '' >> $qompotePri
-	echo '    export(DESTDIR)' >> $qompotePri
-	echo '    export(MOC_DIR)' >> $qompotePri
-	echo '    export(OBJECTS_DIR)' >> $qompotePri
-	echo '    export(UI_DIR)' >> $qompotePri
-	echo '    export(LIBS)' >> $qompotePri
-	echo '    return($TARGET)' >> $qompotePri
-	echo '}' >> $qompotePri
-	echo '' >> $qompotePri
+	cat << 'EOF' > ${qompotePri}
+# $$setLibPath()
+# Generate a lib path name depending of the OS and the arch
+# Export and return LIBPATH
+defineReplace(setLibPath){
+    LIBPATH = lib
+    win32|win32-cross-mingw {
+	LIBPATH = $${LIBPATH}_windows
+    }
+    else:unix {
+	LIBPATH = $${LIBPATH}_linux
+    }
+
+    linux-g++-32 {
+	LIBPATH = $${LIBPATH}_32
+    }
+    else:linux-g++-64 {
+	LIBPATH = $${LIBPATH}_64
+    }
+    else {
+	contains(QMAKE_HOST.arch, x86_64) {
+	    LIBPATH = $${LIBPATH}_64
+	}
+	else {
+	    LIBPATH = $${LIBPATH}_32
+	}
+    }
+
+    export(LIBPATH)
+    return($${LIBPATH})
+}
+
+# $$setLibName(lib name[, lib version])
+# Will add a "d" at the end of lib name in case of debug compilation, and "-version" if provided
+# Export VERSION, export and return LIBNAME
+defineReplace(setLibName){
+    unset(LIBNAME)
+    LIBNAME = $$1
+    VERSION = $$2
+    CONFIG(debug,debug|release){
+	LIBNAME = $${LIBNAME}d
+    }
+
+    export(VERSION)
+    export(LIBNAME)
+    return($${LIBNAME})
+}
+
+# $$getLibName(lib name)
+# Will add a "d" at the end of lib name in case of debug compilation, and "-version" if provided
+# Return lib name
+defineReplace(getLibName){
+    ExtLibName = $$1
+    QtVersion = $$2
+    equals(QtVersion, "Qt"){
+	ExtLibName = $${ExtLibName}-Qt$$QT_VERSION
+    }
+    CONFIG(debug,debug|release){
+	ExtLibName = $${ExtLibName}d
+    }
+
+    return($${ExtLibName})
+}
+
+# $$getCompleteLibName(lib name)
+# Will add a "d" at the end of lib name in case of debug  echo compilation, and "-version" if provided
+# Return lib name
+defineReplace(getCompleteLibName){
+	ExtLibName = $$1
+    QtVersion = $$2
+    LIBSUFIX = a
+    contains(CONFIG,"dll"){
+	win32|win32-cross-mingw {
+	    LIBSUFIX = dll
+	}
+	else:unix {
+	    LIBSUFIX = so
+       }
+   }
+    return(lib$$getLibName($$ExtLibName,$$QtVersion).$$LIBSUFIX)
+}
+
+# $$setBuildDir()
+# Generate a build dir depending of OS and arch
+# Export MOC_DIR, OBJECTS_DIR, UI_DIR, TARGET, LIBS
+defineReplace(setBuildDir){
+    CONFIG(debug,debug|release){
+	MOC_DIR = debug
+	OBJECTS_DIR = debug
+	UI_DIR      = debug
+    }
+    else {
+	MOC_DIR = release
+	OBJECTS_DIR = release
+	UI_DIR      = release
+    }
+
+    win32|win32-cross-mingw{
+	MOC_DIR     = $${MOC_DIR}/build_windows
+	OBJECTS_DIR = $${OBJECTS_DIR}/build_windows
+	UI_DIR      = $${UI_DIR}/build_windows
+    }
+    else:linux-g++-32{
+	MOC_DIR     = $${MOC_DIR}/build_linux_32
+	OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_32
+	UI_DIR      = $${UI_DIR}/build_linux_32
+	LIBS       += -L/usr/lib/gcc/i586-linux-gnu/4.9
+    }
+    else:linux-g++-64{
+	MOC_DIR     = $${MOC_DIR}/build_linux_64
+	OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_64
+	UI_DIR      = $${UI_DIR}/build_linux_64
+	LIBS       += -L/usr/lib/gcc/x86_64-linux-gnu/4.9
+    }
+    else:unix{
+	contains(QMAKE_HOST.arch, x86_64){
+	    MOC_DIR     = $${MOC_DIR}/build_linux_64
+	    OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_64
+	    UI_DIR      = $${UI_DIR}/build_linux_64
+	}
+	else{
+	    MOC_DIR     = $${MOC_DIR}/build_linux_32
+	    OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_32
+	    UI_DIR      = $${UI_DIR}/build_linux_32
+	}
+    }
+    DESTDIR = $$OUT_PWD/$$OBJECTS_DIR
+
+    export(DESTDIR)
+    export(MOC_DIR)
+    export(OBJECTS_DIR)
+    export(UI_DIR)
+    export(LIBS)
+    return($TARGET)
+}
+EOF
 }
 
 prepareVendorDir()
@@ -705,6 +728,10 @@ main()
       || echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END}"
   else
     echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END} Unknown action '${ACTION}'"
+  fi
+  
+  if [ "$IS_VERBOSE" == "0" ]; then
+    rm ${LOG_FILENAME}
   fi
 }
 main
