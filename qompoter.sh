@@ -456,6 +456,7 @@ downloadPackageFromCp()
       && return 0 \
       || return -1
   fi
+  rm -rf ${target}
   echo "  Error: no package found '${source}'"
   return -1
 }
@@ -484,17 +485,16 @@ downloadPackageFromGit()
   local requireLocalPath=${vendorDir}/${projectName}
   local isSource=1
   local gitError=0
-  echo "  Downloading sources from Git..."
   # Already exist: update
   if [ -d "${requireLocalPath}/.git" ]; then
     currentPath=`pwd`
     cd ${requireLocalPath}
     git fetch --all \
-      >> ${LOG_FILENAME} 2>&1
+      >> ${currentPath}/${LOG_FILENAME} 2>&1
     git checkout -f ${requireVersion} \
-      >> ${LOG_FILENAME} 2>&1
+      >> ${currentPath}/${LOG_FILENAME} 2>&1
     git reset --hard origin/${requireVersion} \
-      >> ${LOG_FILENAME} 2>&1
+      >> ${currentPath}/${LOG_FILENAME} 2>&1
     cd $currentPath
   # Else: clone
   else

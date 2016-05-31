@@ -1,0 +1,13 @@
+Qompoter
+======== install
+
+* git/acme master
+  Downloading sources from Git...
+  done
+
+* missing/package master
+  Downloading sources...
+  Error: no package found 'qompoter-repo/missing/package/master'
+  FAILLURE
+
+FAILLURE

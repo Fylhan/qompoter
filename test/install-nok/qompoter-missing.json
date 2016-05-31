@@ -1,0 +1,14 @@
+{
+	"name": "test/install-nok-missing",
+	"authors": [
+		{
+			"name": "Fylhan",
+			"homepage": "http://fylhan.la-bnbox.fr"
+		}
+	],
+	"require": {
+		"git/acme": "dev-master",
+		"missing/package": "dev-master",
+		"cp/fylhan": "v1.0"
+	}
+}

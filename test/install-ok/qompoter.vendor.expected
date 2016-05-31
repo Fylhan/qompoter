@@ -1,0 +1,13 @@
+vendor
+vendor/acme
+vendor/acme/qompoter.json
+vendor/acme/qompoter.pri
+vendor/acme-tag
+vendor/acme-tag/acme.txt
+vendor/acme-tag/qompoter.json
+vendor/acme-tag/qompoter.pri
+vendor/fylhan
+vendor/fylhan/qompoter.json
+vendor/fylhan/qompoter.pri
+vendor/qompote.pri
+vendor/vendor.pri

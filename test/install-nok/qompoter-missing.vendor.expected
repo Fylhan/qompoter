@@ -1,0 +1,6 @@
+vendor
+vendor/acme
+vendor/acme/qompoter.json
+vendor/acme/qompoter.pri
+vendor/qompote.pri
+vendor/vendor.pri
