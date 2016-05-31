@@ -3,6 +3,9 @@
 readonly PROGNAME=$(basename $0)
 readonly PROGDIR=$(readlink -m $(dirname $0))
 readonly ARGS="$@"
+FORMAT_OK="\e[1;32m"
+FORMAT_FAIL="\e[1;31m"
+FORMAT_END="\e[0m"
 
 #######################
 # JSON.H              #
@@ -221,8 +224,9 @@ usage()
 	    			filled in qompoter.json."
 	    			E.g. "repo/repositories/vendor name/project name"
 	        --vendor-dir	Pick another vendor directory as "vendor"
-	    -f, --file		Pick another file as "qompoter.json"
-	        --no-dev	Don't retrieve dev dependencies listed in "require-dev"
+	        --qompoter-file	Pick another file as "qompoter.json"
+	        --no-color	Do not enable color on output
+	        --no-dev	Do not retrieve dev dependencies listed in "require-dev"
 	    -V, --verbose	Enable more verbosity
 	    -h, --help		Display this help
 	    -v, --version	Display the version
@@ -401,6 +405,7 @@ downloadPackage()
   if [ "${isSource}" -eq 1 ]; then
     # Git
     if [ -d "${requireBasePath}/${projectName}.git" ] || [[ "$REPO_PATH" == *"github"* ]] || [[ "$REPO_PATH" == *"gitlab"* ]]; then
+      echo "  Downloading sources from Git..."
       downloadPackageFromGit $repositoryPath $vendorDir $requireName $requireVersion \
 	|| result=-1
     fi
@@ -424,7 +429,7 @@ downloadPackage()
   fi
   
    if [ "$result" == "-1" ]; then
-    echo -e "\e[1;31m  FAILLURE\e[0m"
+    echo -e "  ${FORMAT_FAIL}FAILLURE${FORMAT_END}"
     echo
     return -1
   else
@@ -434,7 +439,7 @@ downloadPackage()
     else
 	  echo "  Warning: no 'qompoter.pri' found for this package"
     fi
-    echo -e "\e[1;32m  done\e[0m"
+    echo -e "  ${FORMAT_OK}done${FORMAT_END}"
     echo
   fi
   return 0
@@ -585,13 +590,13 @@ cmdline()
   IS_VERBOSE=0
 
   if [ "$#" -lt "1" ]; then
-    echo -e "\e[1;31mFAILLURE\e[0m missing arguments"
+    echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END} missing arguments"
     usage
     exit -1
   fi
   while [ "$1" != "" ]; do
   case $1 in
-    -f | --file )
+    --qompoter-file )
       shift
       QOMPOTER_FILENAME=$1
       shift
@@ -601,13 +606,19 @@ cmdline()
       REPO_PATH=$1
       shift
       ;;
-    -vd | --vendor-dir )
+    --vendor-dir )
       shift
       VENDOR_DIR=$1
       shift
       ;;
-    -nd | --no-dev )
+    --no-dev )
       INCLUDE_DEV=
+      shift
+      ;;
+     --no-color )
+      FORMAT_OK=
+      FORMAT_FAIL=
+      FORMAT_END=
       shift
       ;;
     -V | --verbose )
@@ -627,7 +638,7 @@ cmdline()
         ACTION=$1
         shift
 	else
-        echo -e "\e[1;31mFAILLURE\e[0m unknwon argument '$1'"
+        echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END} unknwon argument '$1'"
         usage
         exit -1
       fi
@@ -636,7 +647,7 @@ cmdline()
   done
   
   if [ "${ACTION}" == ""  ]; then
-    echo -e "\e[1;31mFAILLURE\e[0m missing action"
+    echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END} missing action"
     usage
     exit -1
   fi
@@ -660,22 +671,22 @@ main()
    
   if [ "${ACTION}" == "export" ]; then
     exportAction ${VENDOR_DIR} \
-      && echo -e "\033[1;32mdone\e[0m" \
-      || echo -e "\033[1;31mFAILLURE\e[0m"
+      && echo -e "${FORMAT_OK}done${FORMAT_END}" \
+      || echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END}"
   elif [ "${ACTION}" == "install" ]; then
     installAction ${QOMPOTER_FILENAME} ${VENDOR_DIR} \
-      && echo -e "\033[1;32mdone\e[0m" \
-      || echo -e "\033[1;31mFAILLURE\e[0m"
+      && echo -e "${FORMAT_OK}done${FORMAT_END}" \
+      || echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END}"
   elif [ "${ACTION}" == "jsonh" ]; then
     jsonhAction ${QOMPOTER_FILENAME} \
-      && echo -e "\033[1;32mdone\e[0m" \
-      || echo -e "\033[1;31mFAILLURE\e[0m"
+      && echo -e "${FORMAT_OK}done${FORMAT_END}" \
+      || echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END}"
   elif [ "${ACTION}" == "repo-export" ]; then
     repoExportAction \
-      && echo -e "\033[1;32mdone\e[0m" \
-      || echo -e "\033[1;31mFAILLURE\e[0m"
+      && echo -e "${FORMAT_OK}done${FORMAT_END}" \
+      || echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END}"
   else
-    echo -e "\033[1;31mFAILLURE\e[0m Unknown action '${ACTION}'"
+    echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END} Unknown action '${ACTION}'"
   fi
 }
 main
