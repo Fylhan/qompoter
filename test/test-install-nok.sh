@@ -1,6 +1,5 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-cd ${0%/*}
 fails=0
 i=0
 tests=`ls install-nok/*.json | wc -l`
@@ -18,7 +17,6 @@ do
     echo "ok $i - $input"    
   fi
   rm -rf vendor
-  rm qompoter.log
 done
 #~ echo "$fails test(s) failed"
 exit $fails

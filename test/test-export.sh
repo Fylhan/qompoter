@@ -1,6 +1,5 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-cd ${0%/*}
 fails=0
 i=0
 tests=`ls install-ok/*.json | wc -l`
@@ -22,7 +21,6 @@ do
     fi
   fi
   rm -rf vendor
-  rm qompoter.log
   rm "`date +"%Y-%m-%d"`_install-ok_vendor.zip"
 done
 #~ echo "$fails test(s) failed"

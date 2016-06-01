@@ -1,0 +1,6 @@
+language: bash
+script:
+  - bash run-all-tests.sh
+branches:
+  only:
+    - qompoter-bash

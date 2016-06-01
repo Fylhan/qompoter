@@ -1,13 +1,12 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-cd ${0%/*}
-
-#set -e
+cd test
+set -e
 fail=0
 tests=0
 #all_tests=${__dirname:}
 #echo PLAN ${#all_tests}
-for test in test/*.sh ;
+for test in *.sh ;
 do
   tests=$((tests+1))
   echo "TEST: $test"

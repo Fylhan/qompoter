@@ -14,8 +14,12 @@ The current version is still a work in progress, a lot have to be done to make i
 Requirements
 --------------------------------
 
+* Bash
 * Git
-* Linux, should also work on Mac or Windows (Cygwin or Mysys command line)
+* sed
+* zip is recommended
+
+Works on Linux, and should also work on Mac or Windows (Cygwin or Mysys command line)
 
 Installation
 --------------------------------
@@ -23,7 +27,7 @@ Installation
 Make the script file runnable, and move it to a place accessible in the PATH:
 
     chmod u+x qompoter.sh
-	mv qompoter.sh /usr/bin/qompoter
+	mv qompoter.sh /usr/bin/qompoter-bash
 
 Usage
 --------------------------------
@@ -53,7 +57,7 @@ In your project, create a qompoter.json file:
 
 Then, download and install dependencies listed in your qompoter.json using:
 
-	qompoter
+	qompoter-bash install
 
 That's it! You can now include vendor.pri in the .pro file of your project, and include the dependencies that you required:
 
