@@ -430,11 +430,11 @@ downloadPackage()
     if [ -d "${requireBasePath}/${projectName}.git" ] || [[ "$REPO_PATH" == *"github"* ]] || [[ "$REPO_PATH" == *"gitlab"* ]]; then
       echo "  Downloading sources from Git..."
       downloadPackageFromGit $repositoryPath $vendorDir $requireName $requireVersion \
-	|| result=-1
+	|| result=1
     fi
     # Copy (also done if Git failed)
     if [ ! -d "${requireLocalPath}/.git" ]; then
-      if [ "$result" == "-1" ]; then
+      if [ "$result" == "1" ]; then
         echo "  Error with Git. Downloading sources from scratch..."
         mkdir -p ${requireLocalPath}
       else
@@ -442,7 +442,7 @@ downloadPackage()
       fi
       downloadPackageFromCp ${requirePath} ${requireLocalPath} \
 	&& result=0 \
-	|| result=-1
+	|| result=1
     fi
   # Lib
   else
@@ -451,10 +451,10 @@ downloadPackage()
       || result=-1
   fi
   
-   if [ "$result" == "-1" ]; then
+   if [ "$result" == "1" ]; then
     echo -e "  ${FORMAT_FAIL}FAILLURE${FORMAT_END}"
     echo
-    return -1
+    return 1
   else
     # Qompoter.pri
     if [ -f "${qompoterPriFile}" ]; then
@@ -475,13 +475,12 @@ downloadPackageFromCp()
   
   if [ -d "${source}" ]; then
     cp -rf ${source}/* ${target} \
-      >> ${LOG_FILENAME} 2>&1 \
-      && return 0 \
-      || return -1
+      >> ${LOG_FILENAME} 2>&1
+    return
   fi
   rm -rf ${target}
   echo "  Error: no package found '${source}'"
-  return -1
+  return 1
 }
 
 downloadLibFromCp()
@@ -511,14 +510,14 @@ downloadPackageFromGit()
   # Already exist: update
   if [ -d "${requireLocalPath}/.git" ]; then
     currentPath=`pwd`
-    cd ${requireLocalPath}
+    cd ${requireLocalPath} || ( echo "  Error: can not go to ${requireLocalPath}" ; echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END}" ; exit -1)
     git fetch --all \
       >> ${currentPath}/${LOG_FILENAME} 2>&1
     git checkout -f ${requireVersion} \
       >> ${currentPath}/${LOG_FILENAME} 2>&1
     git reset --hard origin/${requireVersion} \
       >> ${currentPath}/${LOG_FILENAME} 2>&1
-    cd $currentPath
+    cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END}" ; exit -1)
   # Else: clone
   else
     gitPath=${requireBasePath}/${projectName}.git
@@ -529,7 +528,7 @@ downloadPackageFromGit()
       >> ${LOG_FILENAME} 2>&1
   fi
   if [ ! -d "${requireLocalPath}/.git" ]; then
-    gitError=-1
+    gitError=1
   fi
   return $gitError
 }
@@ -548,7 +547,7 @@ exportAction()
   if [ ! -f "${qomoterFiler}" ]; then
     echo "Qompoter could not find a '${qomoterFiler}' file in '${PWD}'"
     echo "To initialize a project, please create a '${qomoterFiler}' file as described in the https://github.com/Fylhan/qompoter/blob/master/docs/Qompoter-file.md"
-    return -1
+    return 1
   fi
   local vendorBackup=`date +"%Y-%m-%d"`_`getProjectName ${qomoterFiler}`_${VENDOR_DIR}.zip
   if [ -f "${vendorBackup}" ]; then
@@ -560,7 +559,7 @@ exportAction()
       >> ${LOG_FILENAME} 2>&1
   else
     echo "Nothing to do: no '${VENDOR_DIR}' dir"
-    return -1
+    return 1
   fi
 }
 
@@ -571,7 +570,7 @@ installAction()
   if [ ! -f "${qomoterFiler}" ]; then
     echo "Qompoter could not find a '${qomoterFiler}' file in '${PWD}'"
     echo "To initialize a project, please create a '${qomoterFiler}' file as described in the https://github.com/Fylhan/qompoter/blob/master/docs/Qompoter-file.md"
-    return -1
+    return 1
   fi
   
   prepareVendorDir ${vendorDir}
@@ -592,7 +591,7 @@ installAction()
 	   | sed -r "s/\"//g;s/\[require${INCLUDE_DEV},//g;s/\]	/ /g;s/dev-//g" \
 	   | while read line; do
 	      downloadPackage ${REPO_PATH} ${vendorDir} $line \
-		|| return -1
+		|| return 1
 	  done
   }
 }
@@ -606,13 +605,13 @@ jsonhAction()
 updateAction()
 {
   echo "Not implemented yet"; 
-  return -1
+  return 1
 }
 
 repoExportAction()
 {
   echo "Not implemented yet"; 
-  return -1
+  return 1
 }
 
 
