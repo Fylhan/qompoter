@@ -437,7 +437,7 @@ downloadPackage()
   # Sources
   if [ "${isSource}" -eq 1 ]; then
     # Git
-    if [ -d "${requireBasePath}/${projectName}.git" ] || [[ "$REPO_PATH" == *"github"* ]] || [[ "$REPO_PATH" == *"gitlab"* ]]; then
+    if [ -d "${requireBasePath}/${projectName}.git" ] || [[ "${requireBasePath}" == *"github"* ]] || [[ "${requireBasePath}" == *"gitlab"* ]]; then
       echo "  Downloading sources from Git..."
       downloadPackageFromGit $repositoryPath $vendorDir $requireName $requireVersion \
 	|| result=1
@@ -523,9 +523,19 @@ downloadPackageFromGit()
     cd ${requireLocalPath} || ( echo "  Error: can not go to ${requireLocalPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
     ilog "  Retrieve data from Git repository"
     git fetch --all \
-      >> ${currentPath}/${LOG_FILENAME} 2>&1
-    git checkout -f ${requireVersion} \
-      >> ${currentPath}/${LOG_FILENAME} 2>&1
+      >> ${LOG_FILENAME} 2>&1
+    ilog -n "  Check if '${requireVersion}' exists: "
+    if ! git rev-parse ${requireVersion} >> ${LOG_FILENAME} 2>&1; then
+      ilog "no it does not"
+      return 2
+    fi
+    ilog "yes it does"
+    if [ -z "`git status | grep \"${requireVersion}\"`" ]; then
+      ilog "  Checkout to '${requireVersion}'"
+      git checkout -f ${requireVersion} \
+        >> ${LOG_FILENAME} 2>&1
+    fi
+    ilog "  Reset any local modification just to be sure"
     git reset --hard origin/${requireVersion} \
       >> ${LOG_FILENAME} 2>&1
     cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
@@ -533,7 +543,7 @@ downloadPackageFromGit()
   else
     gitPath=${requireBasePath}/${projectName}.git
     if [[ "${repositoryPath}" == *"github"* ]] || [[ "${repositoryPath}" == *"gitlab"* ]]; then
-	    gitPath=${requireBasePath}
+      gitPath=${requireBasePath}
     fi
     git clone -b ${requireVersion} ${gitPath} ${requireLocalPath} \
       >> ${LOG_FILENAME} 2>&1
@@ -544,23 +554,59 @@ downloadPackageFromGit()
   return $gitError
 }
 
+checkQompoterFile()
+{
+  local qompoterFile=$1
+  if [ ! -f "${qompoterFile}" ]; then
+      echo "Qompoter could not find a '${qompoterFile}' file in '${PWD}'"
+      echo "To initialize a project, please create a '${qompoterFile}' file as described in the https://github.com/Fylhan/qompoter/blob/master/docs/Qompoter-file.md"
+    return 100
+  fi
+}
+
 getProjectName()
 {
-  cat ${qomoterFiler} \
+  cat ${qompoterFile} \
    | jsonh \
    | egrep "\[\"name\"\]" \
    | sed -e 's/"//g;s/\[name\]\s*//;s/.*\///'
 }
 
+getRelatedRepository()
+{
+  local qompoterFile=$1
+  local requireName=$2
+  local repositoryPathFromQompoterFile=`cat ${qompoterFile} \
+   | jsonh \
+   | egrep "\[\"repositories\",\"${requireName}\"\]" \
+   | sed -r "s/\"//g;s/\[repositories,.*\]\t*//g"`
+  if [ "${repositoryPathFromQompoterFile}" != "" ]; then
+    echo ${repositoryPathFromQompoterFile}
+  else
+    echo ${REPO_PATH}
+  fi
+}
+
+updateVendorDirFromQompoterFile()
+{
+  local qompoterFile=$1
+  if [ -f "${qompoterFile}" ]; then
+    local vendorDirFromQompoterFile=`cat ${qompoterFile} \
+     | jsonh \
+     | egrep "\[\"vendor-dir\"\]" \
+     | sed -r "s/\"//g;s/\[vendor-dir\]//g"`
+    if [ "${vendorDirFromQompoterFile}" != "" ]; then
+      VENDOR_DIR=${vendorDirFromQompoterFile}
+    fi
+  fi
+}
+
 exportAction()
 {
-  local qomoterFiler=$1
-  if [ ! -f "${qomoterFiler}" ]; then
-    echo "Qompoter could not find a '${qomoterFiler}' file in '${PWD}'"
-    echo "To initialize a project, please create a '${qomoterFiler}' file as described in the https://github.com/Fylhan/qompoter/blob/master/docs/Qompoter-file.md"
-    return 1
-  fi
-  local vendorBackup=`date +"%Y-%m-%d"`_`getProjectName ${qomoterFiler}`_${VENDOR_DIR}.zip
+  local qompoterFile=$1
+
+  checkQompoterFile ${qompoterFile} --quiet || return 100
+  local vendorBackup=`date +"%Y-%m-%d"`_`getProjectName ${qompoterFile}`_${VENDOR_DIR}.zip
   if [ -f "${vendorBackup}" ]; then
     rm ${vendorBackup}
   fi
@@ -568,43 +614,30 @@ exportAction()
   if [ -d "${VENDOR_DIR}" ]; then
     zip ${vendorBackup} -r ${VENDOR_DIR} \
       >> ${LOG_FILENAME} 2>&1
+    echo "Exported to ${vendorBackup}"
   else
     echo "Nothing to do: no '${VENDOR_DIR}' dir"
-    return 1
+    return 0
   fi
 }
 
 installAction()
 {
-  local qomoterFiler=$1
+  local qompoterFile=$1
   local vendorDir=$2
-  if [ ! -f "${qomoterFiler}" ]; then
-    echo "Qompoter could not find a '${qomoterFiler}' file in '${PWD}'"
-    echo "To initialize a project, please create a '${qomoterFiler}' file as described in the https://github.com/Fylhan/qompoter/blob/master/docs/Qompoter-file.md"
-    return 1
-  fi
   
+  checkQompoterFile ${qompoterFile} || return 100
   prepareVendorDir ${vendorDir}
   
-  cat ${qomoterFiler} \
+  cat ${qompoterFile} \
    | jsonh \
-   | egrep "\[\"repositories\",\".*\"\]" \
-   | sed -r "s/\"//g;s/\[repositories,.*\]//g" \
-   |
-  {
-	  while read repo; do
-		  repositoryPath=${REPO_PATH}${repo}
-	  done
-
-	  cat ${qomoterFiler} \
-	   | jsonh \
-	   | egrep "\[\"require${INCLUDE_DEV}\",\".*\"\]" \
-	   | sed -r "s/\"//g;s/\[require${INCLUDE_DEV},//g;s/\]	/ /g;s/dev-//g" \
-	   | while read line; do
-	      downloadPackage ${REPO_PATH} ${vendorDir} $line \
-		|| return 1
-	  done
-  }
+   | egrep "\[\"require${INCLUDE_DEV}\",\".*\"\]" \
+   | sed -r "s/\"//g;s/\[require${INCLUDE_DEV},//g;s/\]	/ /g;s/dev-//g" \
+   | while read line; do
+      local repo=`getRelatedRepository ${qompoterFile} $line`
+      downloadPackage ${repo} ${vendorDir} $line \
+        || return 1
+  done
 }
 
 jsonhAction()
@@ -625,6 +658,12 @@ repoExportAction()
   return 1
 }
 
+ilog()
+{
+  if [ "$IS_VERBOSE" == "1" ]; then
+    echo "$@"
+  fi
+}
 
 cmdline()
 {
@@ -715,7 +754,7 @@ main()
   echo "======== ${ACTION}"
   echo
  
-   
+  updateVendorDirFromQompoterFile ${QOMPOTER_FILENAME}
   if [ "${ACTION}" == "export" ]; then
     exportAction ${QOMPOTER_FILENAME} ${VENDOR_DIR} \
       && echo -e "${FORMAT_OK}done${FORMAT_END}" \
