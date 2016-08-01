@@ -8,9 +8,11 @@ echo "1..${tests##* }"
 for input in ${name}/*.json
 do
   i=$((i+1))
-  if ! ../qompoter.sh install --no-color --qompoter-file "$input" --repo qompoter-repo | diff -u - "${input%.json}.expected" \
+  pwd
+  if ! ../qompoter.sh install --verbose --no-color --qompoter-file "$input" --repo qompoter-repo | diff -u - "${input%.json}.expected" \
     || ! find vendor -maxdepth 4 | grep -v ".git" | diff -u - "${input%.json}.vendor.expected"
   then
+    cat qompoter.log
     echo "not ok $i - $input"
     fails=$((fails+1))
   else
