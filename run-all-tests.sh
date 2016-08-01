@@ -4,29 +4,28 @@ cd test
 set -e
 fail=0
 tests=0
-#all_tests=${__dirname:}
-#echo PLAN ${#all_tests}
+echo -e "\e[1mQompoter Test Suite\e[0m"
+echo "###################"
 for test in *.sh ;
 do
   tests=$((tests+1))
-  echo "TEST: $test"
-  ./$test
-  ret=$?
+  echo -e "\e[1mTEST\e[0m: $test"
+  ./$test && ret=0 || ret=$?
   if [ $ret -eq 0 ] ; then
-    echo "OK:   $test"
+    echo -e "\e[1;32mOK\e[0m:   $test"
     passed=$((passed+1))
   else
-    echo "FAIL: $test $fail"
+    echo -e "\e[1;31mFAIL\e[0m: $test $fail"
     fail=$((fail+ret))
   fi
   echo
 done
 
 if [ $fail -eq 0 ]; then
-  echo -n 'SUCCESS '
+  echo -e -n '\e[1;32mSUCCESS\e[0m '
   exitcode=0
 else
-  echo -n 'FAILURE '
+  echo -e -n '\e[1;31mFAILURE\e[0m '
   exitcode=1
 fi
 echo "$passed / $tests"

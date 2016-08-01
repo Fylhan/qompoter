@@ -1,0 +1,20 @@
+{
+	"name": "test/install-2-repo",
+	"authors": [
+		{
+			"name": "Fylhan",
+			"homepage": "http://fylhan.la-bnbox.fr"
+		}
+	],
+	"require": {
+		"git/acme": "dev-master",
+		"cp/fylhan": "v1.0"
+	},
+	"require-dev": {
+		"git/acme-tag": "v1.0"
+	},
+	"repositories": {
+		"https://github.com": "git",
+		"/media/data/qompoter": "fs"
+	}
+}

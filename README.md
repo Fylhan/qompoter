@@ -9,7 +9,7 @@ The current version is still a work in progress, a lot have to be done to make i
 
 * describe dependencies in qomposer.json
 * retrieve all these packages from a Git repository or a structured file system
-* generate a vendor.pri file to be included and used in a .pro file
+* generate a vendor.pri file to be included and used in a .pro file for Qt
 
 Requirements
 --------------------------------
@@ -26,7 +26,7 @@ Installation
 
 Make the script file runnable, and move it to a place accessible in the PATH:
 
-    chmod u+x qompoter.sh
+	chmod u+x qompoter.sh
 	mv qompoter.sh /usr/bin/qompoter-bash
 
 Usage
@@ -45,13 +45,13 @@ In your project, create a qompoter.json file:
 			}
 		],
 		"require": {
-			"qextserialport/qextserialport": "1.2rc"
+			"git/acme": "dev-master"
 		},
 		"require-dev": {
-			"another/package": "v1.0"
+			"cp/fylhan": "v1.0"
 		},
 		"repositories": {
-			"qompotist" : "https://github.com"
+			"cp/fylhan" : "https://github.com"
 		}
 	}
 
@@ -59,9 +59,11 @@ Then, download and install dependencies listed in your qompoter.json using:
 
 	qompoter-bash install
 
+*For more information about the command line options, use `qompoter-bash --help`.*
+
 That's it! You can now include vendor.pri in the .pro file of your project, and include the dependencies that you required:
 
-	CONFIG += solilog chartxy
+	CONFIG += acme fylhan
 	include(vendor/vendor.pri)
     
 Documentation

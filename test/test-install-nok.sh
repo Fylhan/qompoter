@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 
+name="install-nok"
 fails=0
 i=0
-tests=`ls install-nok/*.json | wc -l`
+tests=`ls ${name}/*.json | wc -l`
 echo "1..${tests##* }"
-for input in install-nok/*.json
+for input in ${name}/*.json
 do
   expected="${input%.json}.expected"
   i=$((i+1))

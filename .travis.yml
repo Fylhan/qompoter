@@ -1,4 +1,9 @@
+sudo: false
 language: bash
+addons:
+  apt:
+    packages:
+    - git
 script:
   - bash run-all-tests.sh
 branches:

@@ -1,0 +1,13 @@
+{
+	"name": "test/install-nok-git-badversion",
+	"authors": [
+		{
+			"name": "Fylhan",
+			"homepage": "http://fylhan.la-bnbox.fr"
+		}
+	],
+	"require": {
+		"git/acme": "v1.0-RC",
+		"cp/fylhan": "v1.0"
+	}
+}

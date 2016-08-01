@@ -452,7 +452,7 @@ downloadPackage()
   fi
   
    if [ "$result" == "1" ]; then
-    echo -e "  ${FORMAT_FAIL}FAILLURE${FORMAT_END}"
+    echo -e "  ${FORMAT_FAIL}FAILURE${FORMAT_END}"
     echo
     return 1
   else
@@ -510,14 +510,15 @@ downloadPackageFromGit()
   # Already exist: update
   if [ -d "${requireLocalPath}/.git" ]; then
     currentPath=`pwd`
-    cd ${requireLocalPath} || ( echo "  Error: can not go to ${requireLocalPath}" ; echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END}" ; exit -1)
+    cd ${requireLocalPath} || ( echo "  Error: can not go to ${requireLocalPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
+    ilog "  Retrieve data from Git repository"
     git fetch --all \
       >> ${currentPath}/${LOG_FILENAME} 2>&1
     git checkout -f ${requireVersion} \
       >> ${currentPath}/${LOG_FILENAME} 2>&1
     git reset --hard origin/${requireVersion} \
-      >> ${currentPath}/${LOG_FILENAME} 2>&1
-    cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END}" ; exit -1)
+      >> ${LOG_FILENAME} 2>&1
+    cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
   # Else: clone
   else
     gitPath=${requireBasePath}/${projectName}.git
@@ -626,7 +627,7 @@ cmdline()
   IS_VERBOSE=0
 
   if [ "$#" -lt "1" ]; then
-    echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END} missing arguments"
+    echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} missing arguments"
     usage
     exit -1
   fi
@@ -674,7 +675,7 @@ cmdline()
         ACTION=$1
         shift
 	else
-        echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END} unknwon argument '$1'"
+        echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} unknwon argument '$1'"
         usage
         exit -1
       fi
@@ -683,7 +684,7 @@ cmdline()
   done
   
   if [ "${ACTION}" == ""  ]; then
-    echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END} missing action"
+    echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} missing action"
     usage
     exit -1
   fi
@@ -708,25 +709,25 @@ main()
   if [ "${ACTION}" == "export" ]; then
     exportAction ${QOMPOTER_FILENAME} ${VENDOR_DIR} \
       && echo -e "${FORMAT_OK}done${FORMAT_END}" \
-      || echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END}"
+      || echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}"
   elif [ "${ACTION}" == "install" ]; then
     installAction ${QOMPOTER_FILENAME} ${VENDOR_DIR} \
       && echo -e "${FORMAT_OK}done${FORMAT_END}" \
-      || echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END}"
+      || echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}"
   elif [ "${ACTION}" == "jsonh" ]; then
     jsonhAction ${QOMPOTER_FILENAME} \
       && echo -e "${FORMAT_OK}done${FORMAT_END}" \
-      || echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END}"
+      || echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}"
   elif [ "${ACTION}" == "repo-export" ]; then
     repoExportAction \
       && echo -e "${FORMAT_OK}done${FORMAT_END}" \
-      || echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END}"
+      || echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}"
   elif [ "${ACTION}" == "update" ]; then
     updateAction ${QOMPOTER_FILENAME} ${VENDOR_DIR} \
       && echo -e "${FORMAT_OK}done${FORMAT_END}" \
-      || echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END}"
+      || echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}"
   else
-    echo -e "${FORMAT_FAIL}FAILLURE${FORMAT_END} Unknown action '${ACTION}'"
+    echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} Unknown action '${ACTION}'"
   fi
   
   if [ "$IS_VERBOSE" == "0" ]; then

@@ -1,0 +1,10 @@
+Qompoter
+======== install
+
+* git/acme v1.0-RC
+  Downloading sources from Git...
+  Error with Git. Downloading sources from scratch...
+  Error: no package found 'qompoter-repo/git/acme/v1.0-RC'
+  FAILURE
+
+FAILURE
