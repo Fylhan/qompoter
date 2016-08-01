@@ -274,12 +274,15 @@ defineReplace(setLibPath){
     else:linux-g++-64 {
 	LIBPATH = $${LIBPATH}_64
     }
+    else:linux-arm-gnueabi-g++ {
+	LIBPATH = $${LIBPATH}_arm-gnueabi
+    }
     else {
 	contains(QMAKE_HOST.arch, x86_64) {
-	    LIBPATH = $${LIBPATH}_64
+		LIBPATH = $${LIBPATH}_64
 	}
 	else {
-	    LIBPATH = $${LIBPATH}_32
+		LIBPATH = $${LIBPATH}_32
 	}
     }
 
@@ -369,6 +372,12 @@ defineReplace(setBuildDir){
 	UI_DIR      = $${UI_DIR}/build_linux_64
 	LIBS       += -L/usr/lib/gcc/x86_64-linux-gnu/4.9
     }
+    else:linux-arm-gnueabi-g++{
+	MOC_DIR     = $${MOC_DIR}/build_linux_arm-gnueabi
+	OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_arm-gnueabi
+	UI_DIR      = $${UI_DIR}/build_linux_arm-gnueabi
+	LIBS       += -L/usr/lib/gcc/arm-linux-gnueabi/4.9
+    }
     else:unix{
 	contains(QMAKE_HOST.arch, x86_64){
 	    MOC_DIR     = $${MOC_DIR}/build_linux_64
@@ -399,6 +408,7 @@ prepareVendorDir()
   mkdir -p ${vendorDir}
   createQompotePri ${vendorDir}/qompote.pri
   echo 'include($$PWD/qompote.pri)' > ${vendorDir}/vendor.pri
+  echo 'INCLUDEPATH += $$PWD' >> ${vendorDir}/vendor.pri
   echo '$$setLibPath()' >> ${vendorDir}/vendor.pri
 }
 
