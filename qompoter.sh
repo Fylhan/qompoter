@@ -2,6 +2,7 @@
 
 readonly PROGNAME=$(basename $0)
 readonly PROGDIR=$(readlink -m $(dirname $0))
+readonly PROGVERSION="v0.2.1"
 readonly ARGS="$@"
 FORMAT_OK="\e[1;32m"
 FORMAT_FAIL="\e[1;31m"
@@ -247,7 +248,7 @@ usage()
 version()
 {
 	cat <<- EOF
-	Qompoter 0.2.0
+	Qompoter ${PROGVERSION}
 	Dependency manager for C++/Qt by Fylhan
 	EOF
 }
