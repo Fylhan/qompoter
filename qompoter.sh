@@ -525,16 +525,12 @@ downloadPackageFromGit()
     ilog "  Retrieve data from Git repository"
     git fetch --all \
       >> ${LOG_FILENAME} 2>&1
-    ilog -n "  Check if '${requireVersion}' exists: "
-    if ! git rev-parse ${requireVersion} >> ${LOG_FILENAME} 2>&1; then
-      ilog "no it does not"
-      return 2
-    fi
-    ilog "yes it does"
     if [ -z "`git status | grep \"${requireVersion}\"`" ]; then
       ilog "  Checkout to '${requireVersion}'"
-      git checkout -f ${requireVersion} \
-        >> ${LOG_FILENAME} 2>&1
+      if ! git checkout -f ${requireVersion} >> ${LOG_FILENAME} 2>&1; then
+        ilog "  Oups, it does not exist"
+        return 2
+      fi
     fi
     ilog "  Reset any local modification just to be sure"
     git reset --hard origin/${requireVersion} \
