@@ -2,7 +2,7 @@
 
 readonly PROGNAME=$(basename $0)
 readonly PROGDIR=$(readlink -m $(dirname $0))
-readonly PROGVERSION="v0.2.1"
+readonly PROGVERSION="v0.2.2"
 readonly ARGS="$@"
 FORMAT_OK="\e[1;32m"
 FORMAT_FAIL="\e[1;31m"
@@ -217,21 +217,36 @@ usage()
 	cat <<- EOF
 	Usage: $PROGNAME [action] [ --repo <repo> | other options ]
 	
-	    action		Select an action: install, update, export, require, repo-export
+	    action            Select an action:
+	                      install, update, export, require, repo-export
 	
 	Options:
-	    -q, --qompoter-file	Pick another file as "qompoter.json"
-	    -l, --list					List elements depending of the action
-	        --no-color			Do not enable color on output
-	        --no-dev				Do not retrieve dev dependencies listed in "require-dev"
-	    -r, --repo					Select a repository path as a location for dependency
-	    										research. It is used in addition of the "repositories"
-	    										filled in qompoter.json."
-	    										E.g. "repo/repositories/vendor name/project name"
-      -v, --vendor-dir	Pick another vendor directory as "vendor"
-	    -V, --verbose			Enable more verbosity
-	    -h, --help				Display this help
-          --version			Display the version
+	    -d, --depth       Depth of the recursivity in the searching of
+	                      subpackages
+	
+	    -f, --file        Pick another file as "qompoter.json"
+	
+	    -l, --list        List elements depending of the action
+	                      Supported action is: "require"
+	
+	        --no-color    Do not enable color on output
+	
+	        --no-dev      Do not retrieve dev dependencies listed
+	                      in "require-dev"
+	
+	    -r, --repo        Select a repository path as a location for
+	                      dependency research. It is used in addition
+	                      of the "repositories" provided in
+	                      "qompoter.json".
+	                      E.g. "repo/repositories/<vendor name>/<project name>"
+	
+	    -v, --vendor-dir  Pick another vendor directory as "vendor"
+	
+	    -V, --verbose     Enable more verbosity
+	
+	    -h, --help        Display this help
+	
+	        --version     Display the version
 	
 	Examples:
 	    Install all dependencies:
@@ -239,6 +254,9 @@ usage()
 	    
 	    Install only nominal dependencies:
 	    $PROGNAME install --no-dev --repo /Project
+	    
+	    List required dependencies for this project:
+	    $PROGNAME require --list
 	    
 	    Export existing dependencies:
 	    $PROGNAME export
@@ -744,6 +762,12 @@ cmdline()
       DEPTH_SIZE=$1
       shift
       ;;
+    -f | --file )
+      shift
+      QOMPOTER_FILENAME=$1
+      NEW_SUBPACKAGES=${QOMPOTER_FILENAME}
+      shift
+      ;;
     -l | --list )
       if [ "${ACTION}" == "require"  ]; then
         SUB_ACTION="list"
@@ -760,12 +784,6 @@ cmdline()
       ;;
     --no-dev )
       INCLUDE_DEV=
-      shift
-      ;;
-    -q | --qompoter-file )
-      shift
-      QOMPOTER_FILENAME=$1
-      NEW_SUBPACKAGES=${QOMPOTER_FILENAME}
       shift
       ;;
     -r | --repo )

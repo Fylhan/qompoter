@@ -11,7 +11,7 @@ do
   mkdir vendor/test
   touch vendor/qompote.pri
   touch vendor/vendor.pri
-  if ! ../qompoter.sh export --no-color --qompoter-file "$input" > /dev/null 2>&1
+  if ! ../qompoter.sh export --no-color --file "$input" > /dev/null 2>&1
   then
     echo "not ok $i - $input - error during export"
     fails=$((fails+1))
