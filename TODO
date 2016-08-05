@@ -1,0 +1,16 @@
+* [x] Recursive dependencies
+* [ ] Allow soft version management v1 (e.g. v0.3.*)
+* [ ] Allow soft version management v2 (e.g. ^v1.0 etc)
+* [ ] Prevent from overriding changes (md5sum)
+* [ ] First security level: integrity of packages (md5sum)
+* [ ] qompoter update (md5sum + qompoter.lock)
+* [ ] qompoter self-update (from Github)
+* [ ] qompoter repo-export
+* [ ] qompoter init
+* [ ] qompoter require
+* [ ] Better documentation
+* [ ] FAQ
+* [ ] Translate doc in french
+* [ ] Usage in QtCreator
+* [ ] Use inqlude
+* [ ] Split qompoter.sh into several files and add build step to create qompoter.sh

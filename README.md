@@ -8,8 +8,8 @@ An attempt of dependency manager for Qt / C++, because I am sick of managing eac
 The current version is still a work in progress, a lot have to be done to make it really usable. Still, you can:
 
 * describe dependencies in qomposer.json
-* retrieve all these packages from a Git repository or a structured file system
-* generate a vendor.pri file to be included and used in a .pro file for Qt
+* retrieve all these packages (and recursively for subpackages) from a Git repository or a structured file system
+* generate qompote.pri and vendor.pri files to be included and used in a .pro file for Qt
 
 Requirements
 --------------------------------
@@ -51,7 +51,7 @@ In your project, create a qompoter.json file:
 			"cp/fylhan": "v1.0"
 		},
 		"repositories": {
-			"cp/fylhan" : "https://github.com"
+			"git/acme" : "https://github.com"
 		}
 	}
 

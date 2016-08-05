@@ -6,7 +6,7 @@ Basic Example
 
 Here is a basic example of qompoter.json file.
 
-    {
+	{
 		"name": "fylhan/hope",
 		"description": "Three things remains: faith, hope and love.",
 		"keywords": ["Qt", "C++"],
@@ -17,13 +17,13 @@ Here is a basic example of qompoter.json file.
 			}
 		],
 		"require": {
-			"qextserialport/qextserialport": "1.2rc"
+			"git/acme": "dev-master"
 		},
 		"require-dev": {
-			"another/package": "v1.0"
+			"cp/fylhan": "v1.0"
 		},
 		"repositories": {
-			"github" : "https://github.com"
+			"git/acme" : "https://github.com"
 		}
 	}
 
@@ -41,10 +41,10 @@ The require field is a set of key / value to list all dependencies, and their ve
 Same as "require" but only downloaded in dev mode.
 
 ### repositories
-The repositories field is a set of key / value to list all available repositories. Nowadays, only one url is used.
+The repositories field is a set of key / value to list all available repositories.
 
-In the example above, packages will be downloaded in Github using: `https://github.com/vendor/project name"`.
+In the example above, "git/acme" package will be downloaded in Github using: `https://github.com/vendor/project name"`, which gives `https://github.com/git/acme`.
 
 It is also possible to specify a path to a directory in your file system, [specialy structured for Qompoter usage](Repositories.md).
 
-Note that you can also specifying this in the [command line](Command-line.md) using the "--repo" parameter: `qompoter --repo https://github.com`.
+Note that you can also specifying this for all packages in the [command line](Command-line.md) using the "--repo" parameter: `qompoter --repo https://github.com`.

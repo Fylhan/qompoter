@@ -68,5 +68,5 @@ Example of qompoter.pri file for a source package:
 
 	    INCLUDEPATH += \
 		    $$PWD/projectName \
-		    $$PWD/projectName/src/folder1 \
+		    $$PWD/projectName/src/folder1
 	}
