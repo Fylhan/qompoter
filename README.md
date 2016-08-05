@@ -3,13 +3,14 @@ Qompoter
 
 An attempt of dependency manager for Qt / C++, because I am sick of managing each C++ piece of code separately!
 
-*Inspired by the well-known Composer PHP dependency manager.*
+
+[![Build Status](https://travis-ci.org/Fylhan/qompoter.svg?branch=qompoter-bash)](https://travis-ci.org/Fylhan/qompoter)
 
 The current version is still a work in progress, a lot have to be done to make it really usable. Still, you can:
 
-* describe dependencies in qomposer.json
-* retrieve all these packages (and recursively for subpackages) from a Git repository or a structured file system
-* generate qompote.pri and vendor.pri files to be included and used in a .pro file for Qt
+* describe your dependencies in "qomposer.json" file
+* search and retrieve all dependencies (also recursively for sub-dependencies) from a Git repository or a structured file system
+* generate qompote.pri and vendor.pri files to be included and used in your .pro file for Qt
 
 Requirements
 --------------------------------

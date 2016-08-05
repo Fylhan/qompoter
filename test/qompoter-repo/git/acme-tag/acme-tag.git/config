@@ -1,6 +1,0 @@
-[core]
-	repositoryformatversion = 0
-	filemode = true
-	bare = true
-[remote "origin"]
-	url = /media/data/Projet/Test/qompoter/test/qompoter-repo/git/acme-tag/
