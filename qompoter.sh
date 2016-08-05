@@ -217,20 +217,21 @@ usage()
 	cat <<- EOF
 	Usage: $PROGNAME [action] [ --repo <repo> | other options ]
 	
-	    action		Select an action: install, update, export, repo-export
+	    action		Select an action: install, update, export, require, repo-export
 	
 	Options:
-	    -r, --repo		Select a repository path as a location for dependency
-	    			research. It is used in addition of the "repositories"
-	    			filled in qompoter.json."
-	    			E.g. "repo/repositories/vendor name/project name"
-	        --vendor-dir	Pick another vendor directory as "vendor"
-	        --qompoter-file	Pick another file as "qompoter.json"
-	        --no-color	Do not enable color on output
-	        --no-dev	Do not retrieve dev dependencies listed in "require-dev"
-	    -V, --verbose	Enable more verbosity
-	    -h, --help		Display this help
-	    -v, --version	Display the version
+	    -q, --qompoter-file	Pick another file as "qompoter.json"
+	    -l, --list					List elements depending of the action
+	        --no-color			Do not enable color on output
+	        --no-dev				Do not retrieve dev dependencies listed in "require-dev"
+	    -r, --repo					Select a repository path as a location for dependency
+	    										research. It is used in addition of the "repositories"
+	    										filled in qompoter.json."
+	    										E.g. "repo/repositories/vendor name/project name"
+      -v, --vendor-dir	Pick another vendor directory as "vendor"
+	    -V, --verbose			Enable more verbosity
+	    -h, --help				Display this help
+          --version			Display the version
 	
 	Examples:
 	    Install all dependencies:
@@ -417,14 +418,15 @@ downloadPackage()
 {
   local repositoryPath=$1
   local vendorDir=$2
-  local requireName=$3
-  local requireVersion=$4
+  local vendorName=$3
+  local projectName=$4
+  local requireName=$vendorName/$projectName
+  local requireVersion=$5
   local result=0
   local isSource=1
   if [[ "$requireVersion" == *"-lib" ]]; then
-	isSource=0
+    isSource=0
   fi
-  local projectName=`echo $requireName | cut -d'/' -f2`
   local requireBasePath=${repositoryPath}/${requireName}
   local requirePath=${requireBasePath}/${requireVersion}
   local requireLocalPath=${vendorDir}/${projectName}
@@ -462,17 +464,20 @@ downloadPackage()
       || result=-1
   fi
   
-   if [ "$result" == "1" ]; then
+  # FAILURE
+  if [ "$result" == "1" ]; then
     echo -e "  ${FORMAT_FAIL}FAILURE${FORMAT_END}"
     echo
     return 1
+  # DONE
   else
     # Qompoter.pri
     if [ -f "${qompoterPriFile}" ]; then
-	  cat ${qompoterPriFile} >> ${vendorDir}/vendor.pri
+      cat ${qompoterPriFile} >> ${vendorDir}/vendor.pri
     else
-	  echo "  Warning: no 'qompoter.pri' found for this package"
+      echo "  Warning: no 'qompoter.pri' found for this package"
     fi
+    
     echo -e "  ${FORMAT_OK}done${FORMAT_END}"
     echo
   fi
@@ -561,6 +566,16 @@ checkQompoterFile()
   fi
 }
 
+getProjectRequires()
+{
+  local qompoterFile=$1
+  echo `cat ${qompoterFile} \
+   | jsonh \
+   | egrep "\[\"require${INCLUDE_DEV}\",\".*\"\]" \
+   | sed -r "s/\"//g;s/\[require${INCLUDE_DEV},//g;s/\]	/ /g;s/dev-//g" \
+   | tr ' ' '/'`
+}
+
 getProjectName()
 {
   cat ${qompoterFile} \
@@ -572,7 +587,7 @@ getProjectName()
 getRelatedRepository()
 {
   local qompoterFile=$1
-  local requireName=$2
+  local requireName=$2/$3
   local repositoryPathFromQompoterFile=`cat ${qompoterFile} \
    | jsonh \
    | egrep "\[\"repositories\",\"${requireName}\"\]" \
@@ -582,6 +597,26 @@ getRelatedRepository()
   else
     echo ${REPO_PATH}
   fi
+}
+
+downloadQompoterFilePackages()
+{
+  local qompoterFile=$1
+  local vendorDir=$2
+  
+  for packageInfo in `getProjectRequires ${qompoterFile}`; do
+      local vendorName=`echo ${packageInfo} | cut -d'/' -f1`
+      local projectName=`echo ${packageInfo} | cut -d'/' -f2`
+      local version=`echo ${packageInfo} | cut -d'/' -f3`
+      test "${DOWNLOADED_PACKAGES#*$projectName}" != "$DOWNLOADED_PACKAGES" && continue
+      local repo=`getRelatedRepository ${qompoterFile} ${vendorName} ${projectName}`
+      downloadPackage ${repo} ${vendorDir} ${vendorName} ${projectName} ${version} \
+        || return 1
+      DOWNLOADED_PACKAGES="${DOWNLOADED_PACKAGES} ${projectName}"
+      if [ -f "${vendorDir}/${projectName}/qompoter.json" ]; then
+        NEW_SUBPACKAGES="${NEW_SUBPACKAGES} ${vendorDir}/${projectName}/qompoter.json"
+      fi
+  done
 }
 
 updateVendorDirFromQompoterFile()
@@ -626,14 +661,18 @@ installAction()
   checkQompoterFile ${qompoterFile} || return 100
   prepareVendorDir ${vendorDir}
   
-  cat ${qompoterFile} \
-   | jsonh \
-   | egrep "\[\"require${INCLUDE_DEV}\",\".*\"\]" \
-   | sed -r "s/\"//g;s/\[require${INCLUDE_DEV},//g;s/\]	/ /g;s/dev-//g" \
-   | while read line; do
-      local repo=`getRelatedRepository ${qompoterFile} $line`
-      downloadPackage ${repo} ${vendorDir} $line \
+  local depth=0
+  while [ "$depth" -lt "$DEPTH_SIZE" ] && [ -n "${NEW_SUBPACKAGES}" ]; do
+    depth=$((depth+1))
+    local newSubpackages=${NEW_SUBPACKAGES}
+    NEW_SUBPACKAGES=""
+    for subQompoterFile in ${newSubpackages}; do
+      downloadQompoterFilePackages ${subQompoterFile} ${vendorDir} \
         || return 1
+    done
+    if [ "$depth" == "$DEPTH_SIZE" ] && [ -n "${NEW_SUBPACKAGES}" ]; then
+      echo -e "${FORMAT_FAIL}WARNING${FORMAT_END} There are still packages to download but maximal recursive depth of $DEPTH_SIZE have been reached."
+    fi
   done
 }
 
@@ -671,6 +710,9 @@ cmdline()
   REPO_PATH=
   INCLUDE_DEV=(-dev)?
   IS_VERBOSE=0
+  DEPTH_SIZE=10
+  DOWNLOADED_PACKAGES=
+  NEW_SUBPACKAGES=${QOMPOTER_FILENAME}
 
   if [ "$#" -lt "1" ]; then
     echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} missing arguments"
@@ -679,9 +721,33 @@ cmdline()
   fi
   while [ "$1" != "" ]; do
   case $1 in
-    --qompoter-file )
+    -d | --depth )
+      shift
+      DEPTH_SIZE=$1
+      shift
+      ;;
+    -l | --list )
+      if [ "${ACTION}" == "require"  ]; then
+        SUB_ACTION="list"
+      else
+        echo "Ignore flag --list for action ${ACTION}"
+      fi
+      shift
+      ;;
+    --no-color )
+      FORMAT_OK=
+      FORMAT_FAIL=
+      FORMAT_END=
+      shift
+      ;;
+    --no-dev )
+      INCLUDE_DEV=
+      shift
+      ;;
+    -q | --qompoter-file )
       shift
       QOMPOTER_FILENAME=$1
+      NEW_SUBPACKAGES=${QOMPOTER_FILENAME}
       shift
       ;;
     -r | --repo )
@@ -689,19 +755,9 @@ cmdline()
       REPO_PATH=$1
       shift
       ;;
-    --vendor-dir )
+    -v | --vendor-dir )
       shift
       VENDOR_DIR=$1
-      shift
-      ;;
-    --no-dev )
-      INCLUDE_DEV=
-      shift
-      ;;
-     --no-color )
-      FORMAT_OK=
-      FORMAT_FAIL=
-      FORMAT_END=
       shift
       ;;
     -V | --verbose )
@@ -712,7 +768,7 @@ cmdline()
       usage
       exit 0
       ;;
-    -v | --version )
+    --version )
       version
       exit 0
       ;;

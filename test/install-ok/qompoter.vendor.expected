@@ -9,5 +9,8 @@ vendor/acme-tag/qompoter.pri
 vendor/fylhan
 vendor/fylhan/qompoter.json
 vendor/fylhan/qompoter.pri
+vendor/fylhan2
+vendor/fylhan2/qompoter.json
+vendor/fylhan2/qompoter.pri
 vendor/qompote.pri
 vendor/vendor.pri
