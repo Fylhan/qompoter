@@ -9,14 +9,14 @@ for input in ${name}/*.json
 do
   i=$((i+1))
   if ! ../qompoter.sh install --no-color --file "$input" --repo qompoter-repo | diff -u - "${input%.json}.expected" \
-    || ! find vendor -maxdepth 4 | grep -v ".git" | diff -u - "${input%.json}.vendor.expected"
+    || ! find vendor -maxdepth 4 | grep -v ".git" | LC_ALL=C sort | diff -u - "${input%.json}.vendor.expected"
   then
     echo "not ok $i - $input"
     fails=$((fails+1))
   else
     echo "ok $i - $input"    
   fi
-  rm -rf vendor
+  #rm -rf vendor
 done
 #~ echo "$fails test(s) failed"
 exit $fails
