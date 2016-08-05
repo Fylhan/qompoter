@@ -458,7 +458,7 @@ downloadPackage()
   # Sources
   if [ "${isSource}" -eq 1 ]; then
     # Git
-    if [ -d "${requireBasePath}/${projectName}.git" ] || [[ "${requireBasePath}" == *"github"* ]] || [[ "${requireBasePath}" == *"gitlab"* ]]; then
+    if [ -d "${requireBasePath}/${projectName}.git" ] || [[ "${requireBasePath}" == *"github"* ]] || [[ "${requireBasePath}" == *"gitlab"* ]] || [[ "${requireBasePath}" == *"framagit"* ]]; then
       echo "  Downloading sources from Git..."
       downloadPackageFromGit $repositoryPath $vendorDir $requireName $requireVersion \
 	|| result=1
@@ -562,7 +562,7 @@ downloadPackageFromGit()
   # Else: clone
   else
     gitPath=${requireBasePath}/${projectName}.git
-    if [[ "${repositoryPath}" == *"github"* ]] || [[ "${repositoryPath}" == *"gitlab"* ]]; then
+    if [[ "${repositoryPath}" == *"github"* ]] || [[ "${repositoryPath}" == *"gitlab"* ]] || [[ "${requireBasePath}" == *"framagit"* ]]; then
       gitPath=${requireBasePath}
     fi
     git clone -b ${requireVersion} ${gitPath} ${requireLocalPath} \
