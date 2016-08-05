@@ -688,6 +688,23 @@ updateAction()
   return 1
 }
 
+requireListAction()
+{
+  local qompoterFile=$1
+  
+  checkQompoterFile ${qompoterFile} || return 100
+  for packageInfo in `getProjectRequires ${qompoterFile}`; do
+    echo "* ${packageInfo}"
+  done
+  echo
+}
+
+requireAction()
+{
+  echo "Not implemented yet"; 
+  return 1
+}
+
 repoExportAction()
 {
   echo "Not implemented yet"; 
@@ -704,6 +721,7 @@ ilog()
 cmdline()
 {
   ACTION=
+  SUB_ACTION=
   LOG_FILENAME=qompoter.log
   QOMPOTER_FILENAME=qompoter.json
   VENDOR_DIR=vendor
@@ -820,6 +838,16 @@ main()
     jsonhAction ${QOMPOTER_FILENAME} \
       && echo -e "${FORMAT_OK}done${FORMAT_END}" \
       || echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}"
+  elif [ "${ACTION}" == "require" ]; then
+    if [ "${SUB_ACTION}" == "list" ]; then
+    requireListAction ${QOMPOTER_FILENAME} \
+      && echo -e "${FORMAT_OK}done${FORMAT_END}" \
+      || echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}"
+    else
+      requireAction ${QOMPOTER_FILENAME} \
+      && echo -e "${FORMAT_OK}done${FORMAT_END}" \
+      || echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}"
+    fi
   elif [ "${ACTION}" == "repo-export" ]; then
     repoExportAction \
       && echo -e "${FORMAT_OK}done${FORMAT_END}" \

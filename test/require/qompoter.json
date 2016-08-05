@@ -1,0 +1,16 @@
+{
+	"name": "test/install-ok",
+	"authors": [
+		{
+			"name": "Fylhan",
+			"homepage": "http://fylhan.la-bnbox.fr"
+		}
+	],
+	"require": {
+		"git/acme": "dev-master",
+		"cp/fylhan": "v1.0"
+	},
+	"require-dev": {
+		"git/acme-tag": "v1.0"
+	}
+}
