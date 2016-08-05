@@ -7,10 +7,14 @@
 		}
 	],
 	"require": {
-		"git/acme": "dev-master",
+		"fylhan/posibrain": "v0.2",
 		"cp/fylhan": "v1.0"
 	},
 	"require-dev": {
-		"git/acme-tag": "v1.0"
+		"fylhan/platphorm": "dev-master"
+	},
+	"repositories": {
+		"fylhan/posibrain": "https://github.com/",
+		"fylhan/platphorm": "https://github.com/"
 	}
 }

@@ -1,13 +1,10 @@
 {
-	"name": "cp/fylhan2",
+	"name": "cp/acme-cp",
 	"authors": [
 		{
 			"name": "Olivier Maridat",
 			"company": "Trialog",
 			"homepage": "http://olivier.maridat.com"
 		}
-	],
-	"require": {
-		"cp/acme-cp": "v1.0"
-	}
+	]
 }

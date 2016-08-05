@@ -1,19 +1,25 @@
 Qompoter
 ======== install
 
-* git/acme master
+* fylhan/posibrain v0.2
   Downloading sources from Git...
+  Warning: no 'qompoter.pri' found for this package
   done
 
 * cp/fylhan v1.0
   Downloading sources...
   done
 
-* git/acme-tag v1.0
+* fylhan/platphorm master
   Downloading sources from Git...
+  Warning: no 'qompoter.pri' found for this package
   done
 
 * cp/fylhan2 v1.0
+  Downloading sources...
+  done
+
+* cp/acme-cp v1.0
   Downloading sources...
   done
 

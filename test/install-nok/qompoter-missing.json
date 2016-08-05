@@ -7,8 +7,8 @@
 		}
 	],
 	"require": {
-		"git/acme": "dev-master",
+		"cp/fylhan": "v1.0",
 		"missing/package": "dev-master",
-		"cp/fylhan": "v1.0"
+		"fylhan/posibrain": "v0.2"
 	}
 }
