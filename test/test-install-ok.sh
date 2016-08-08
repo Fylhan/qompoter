@@ -16,7 +16,7 @@ do
   else
     echo "ok $i - $input"    
   fi
-  #rm -rf vendor
+  rm -rf vendor
 done
 #~ echo "$fails test(s) failed"
 exit $fails

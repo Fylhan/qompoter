@@ -626,11 +626,13 @@ downloadQompoterFilePackages()
       local vendorName=`echo ${packageInfo} | cut -d'/' -f1`
       local projectName=`echo ${packageInfo} | cut -d'/' -f2`
       local version=`echo ${packageInfo} | cut -d'/' -f3`
-      test "${DOWNLOADED_PACKAGES#*$projectName}" != "$DOWNLOADED_PACKAGES" && continue
+      #~ Skip if already installed
+      test "${DOWNLOADED_PACKAGES#* $projectName }" != "$DOWNLOADED_PACKAGES" && continue
+      #~ Download
       local repo=`getRelatedRepository ${qompoterFile} ${vendorName} ${projectName}`
       downloadPackage ${repo} ${vendorDir} ${vendorName} ${projectName} ${version} \
         || return 1
-      DOWNLOADED_PACKAGES="${DOWNLOADED_PACKAGES} ${projectName}"
+      DOWNLOADED_PACKAGES="${DOWNLOADED_PACKAGES} ${projectName} "
       if [ -f "${vendorDir}/${projectName}/qompoter.json" ]; then
         NEW_SUBPACKAGES="${NEW_SUBPACKAGES} ${vendorDir}/${projectName}/qompoter.json"
       fi
