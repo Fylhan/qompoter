@@ -89,7 +89,7 @@ License
 --------------------------------
 
 * Qompoter is distributed under the LGPL3+ license.
-* Qompoter is using [JSON.sh](https://github.com/dominictarr/JSON.sh) under the MIT and Apache 2 license.
+* Qompoter is using [JSON.sh](https://github.com/dominictarr/JSON.sh) under the MIT and Apache 2 license. Qompoter unit tests are also based on the JSON.sh unit test architecture.
 
 Please feel free to contribute.
 

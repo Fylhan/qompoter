@@ -2,7 +2,7 @@
 
 readonly PROGNAME=$(basename $0)
 readonly PROGDIR=$(readlink -m $(dirname $0))
-readonly PROGVERSION="v0.2.2"
+readonly PROGVERSION="v0.2.3"
 readonly ARGS="$@"
 FORMAT_OK="\e[1;32m"
 FORMAT_FAIL="\e[1;31m"
@@ -346,17 +346,25 @@ defineReplace(getLibName){
 # Will add a "d" at the end of lib name in case of debug  echo compilation, and "-version" if provided
 # Return lib name
 defineReplace(getCompleteLibName){
-	ExtLibName = $$1
+    ExtLibName = $$1
     QtVersion = $$2
     LIBSUFIX = a
     contains(CONFIG,"dll"){
-	win32|win32-cross-mingw {
-	    LIBSUFIX = dll
-	}
-	else:unix {
-	    LIBSUFIX = so
-       }
-   }
+      win32|win32-cross-mingw {
+        LIBSUFIX = dll
+      }
+      else:unix {
+        LIBSUFIX = so
+      }
+    }
+    contains(CONFIG,"shared"){
+      win32|win32-cross-mingw {
+        LIBSUFIX = dll
+      }
+      else:unix {
+        LIBSUFIX = so
+      }
+    }
     return(lib$$getLibName($$ExtLibName,$$QtVersion).$$LIBSUFIX)
 }
 
@@ -427,9 +435,11 @@ prepareVendorDir()
   local vendorDir=$1
   mkdir -p ${vendorDir}
   createQompotePri ${vendorDir}/qompote.pri
-  echo 'include($$PWD/qompote.pri)' > ${vendorDir}/vendor.pri
+  cat ${vendorDir}/qompote.pri > ${vendorDir}/vendor.pri
+  echo '' >> ${vendorDir}/vendor.pri
   echo 'INCLUDEPATH += $$PWD' >> ${vendorDir}/vendor.pri
   echo '$$setLibPath()' >> ${vendorDir}/vendor.pri
+  echo '' >> ${vendorDir}/vendor.pri
 }
 
 downloadPackage()
@@ -499,6 +509,7 @@ downloadPackage()
     echo -e "  ${FORMAT_OK}done${FORMAT_END}"
     echo
   fi
+  
   return 0
 }
 
