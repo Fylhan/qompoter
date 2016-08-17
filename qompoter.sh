@@ -2,7 +2,7 @@
 
 readonly PROGNAME=$(basename $0)
 readonly PROGDIR=$(readlink -m $(dirname $0))
-readonly PROGVERSION="v0.2.3"
+readonly PROGVERSION="v0.2.4"
 readonly ARGS="$@"
 FORMAT_OK="\e[1;32m"
 FORMAT_FAIL="\e[1;31m"
@@ -549,24 +549,37 @@ downloadPackageFromGit()
   local vendorDir=$2
   local requireName=$3
   local requireVersion=$4
+  local requireBranch=$4
+  if [ "${4#*#}" != "$4" ]; then
+    requireVersion=`echo ${4} | cut -d'#' -f2`
+    requireBranch=`echo ${4} | cut -d'#' -f1`
+    test "${requireBranch}" == "" && requireBranch="master"
+  fi
   local requireLocalPath=${vendorDir}/${projectName}
   local isSource=1
   local gitError=0
+  
+  
   # Already exist: update
   if [ -d "${requireLocalPath}/.git" ]; then
     currentPath=`pwd`
     cd ${requireLocalPath} || ( echo "  Error: can not go to ${requireLocalPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
     ilog "  Retrieve data from Git repository"
+    ilog "  git fetch --all"
     git fetch --all \
       >> ${LOG_FILENAME} 2>&1
+    ilog "  git status | grep \"${requireVersion}\""
     if [ -z "`git status | grep \"${requireVersion}\"`" ]; then
       ilog "  Checkout to '${requireVersion}'"
+      ilog "  git checkout -f ${requireVersion}"
       if ! git checkout -f ${requireVersion} >> ${LOG_FILENAME} 2>&1; then
         ilog "  Oups, it does not exist"
+        cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
         return 2
       fi
     fi
     ilog "  Reset any local modification just to be sure"
+    ilog "  git reset --hard origin/${requireVersion}"
     git reset --hard origin/${requireVersion} \
       >> ${LOG_FILENAME} 2>&1
     cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
@@ -576,8 +589,22 @@ downloadPackageFromGit()
     if [[ "${repositoryPath}" == *"github"* ]] || [[ "${repositoryPath}" == *"gitlab"* ]] || [[ "${requireBasePath}" == *"framagit"* ]]; then
       gitPath=${requireBasePath}
     fi
-    git clone -b ${requireVersion} ${gitPath} ${requireLocalPath} \
-      >> ${LOG_FILENAME} 2>&1
+    ilog "  git clone -b ${requireBranch} ${gitPath} ${requireLocalPath}"
+    if ! git clone -b ${requireBranch} ${gitPath} ${requireLocalPath} >> ${LOG_FILENAME} 2>&1; then
+      ilog "  Oups, \"${requireBranch}\" does not exist"
+      return 2
+    fi
+    if [ "${requireVersion}" != "${requireBranch}" ]; then
+      currentPath=`pwd`
+      cd ${requireLocalPath} || ( echo "  Error: can not go to ${requireLocalPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
+      ilog "  git checkout -f ${requireVersion}"
+      if ! git checkout -f ${requireVersion} >> ${LOG_FILENAME} 2>&1; then
+        ilog "  Oups, commit \"${requireVersion}\" does not exist"
+        cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
+        return 2
+      fi
+      cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
+    fi
   fi
   if [ ! -d "${requireLocalPath}/.git" ]; then
     gitError=1
