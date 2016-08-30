@@ -2,7 +2,7 @@
 
 readonly PROGNAME=$(basename $0)
 readonly PROGDIR=$(readlink -m $(dirname $0))
-readonly PROGVERSION="v0.2.4"
+readonly PROGVERSION="v0.2.5"
 readonly ARGS="$@"
 FORMAT_OK="\e[1;32m"
 FORMAT_FAIL="\e[1;31m"
@@ -229,16 +229,20 @@ usage()
 	    -l, --list        List elements depending of the action
 	                      Supported action is: "require"
 	
-	        --no-color    Do not enable color on output
+	        --no-color    Do not enable color on output. [default = false]
 	
 	        --no-dev      Do not retrieve dev dependencies listed
-	                      in "require-dev"
+	                      in "require-dev". [default = false]
 	
 	    -r, --repo        Select a repository path as a location for
 	                      dependency research. It is used in addition
 	                      of the "repositories" provided in
 	                      "qompoter.json".
 	                      E.g. "repo/repositories/<vendor name>/<project name>"
+	
+	        --stable-only Do not select unstable versions. [default = false]
+	                      E.g. If "v1.*" is given to Qompoter, it will select "v1.0.3"
+	                      and not "v1.0.4-RC1".
 	
 	    -v, --vendor-dir  Pick another vendor directory as "vendor"
 	
@@ -427,6 +431,22 @@ defineReplace(setBuildDir){
     export(LIBS)
     return($TARGET)
 }
+
+# addSubdirs(subdirs,deps): Adds directories to the project that depend on other directories
+defineTest(addSubdirs) {
+    for(subdirs, 1) {
+        entries = $$files($$subdirs)
+        for(entry, entries) {
+            name = $$replace(entry, [/\\\\], _)
+            SUBDIRS += $$name
+            eval ($${name}.subdir = $$entry)
+            for(dep, 2):eval ($${name}.depends += $$replace(dep, [/\\\\], _))
+            export ($${name}.subdir)
+            export ($${name}.depends)
+        }
+    }
+    export (SUBDIRS)
+}
 EOF
 }
 
@@ -481,6 +501,8 @@ downloadPackage()
       else
         echo "  Downloading sources..."
       fi
+      #~ requireVersion=`ls ${requireBasePath}| LC_ALL=C sort | grep "v\?${requireVersion}\$" | tail -1`
+      #~ local requirePath=${requireBasePath}/${requireVersion}
       downloadPackageFromCp ${requirePath} ${requireLocalPath} \
 	&& result=0 \
 	|| result=1
@@ -488,6 +510,8 @@ downloadPackage()
   # Lib
   else
     echo "  Downloading lib..."
+    requireVersion=`ls ${requireBasePath}| LC_ALL=C sort | grep "v\?${requireVersion}\$" | tail -1`
+    local requirePath=${requireBasePath}/${requireVersion}
     downloadLibFromCp ${vendorDir} ${requirePath} ${requireLocalPath} \
       || result=-1
   fi
@@ -550,62 +574,118 @@ downloadPackageFromGit()
   local requireName=$3
   local requireVersion=$4
   local requireBranch=$4
+  local requireLocalPath=${vendorDir}/${projectName}
+  local isSource=1
+  local gitError=0
+  
+  # Parse commit number in version
   if [ "${4#*#}" != "$4" ]; then
     requireVersion=`echo ${4} | cut -d'#' -f2`
     requireBranch=`echo ${4} | cut -d'#' -f1`
     test "${requireBranch}" == "" && requireBranch="master"
   fi
-  local requireLocalPath=${vendorDir}/${projectName}
-  local isSource=1
-  local gitError=0
   
-  
-  # Already exist: update
-  if [ -d "${requireLocalPath}/.git" ]; then
-    currentPath=`pwd`
-    cd ${requireLocalPath} || ( echo "  Error: can not go to ${requireLocalPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
-    ilog "  Retrieve data from Git repository"
-    ilog "  git fetch --all"
-    git fetch --all \
-      >> ${LOG_FILENAME} 2>&1
-    ilog "  git status | grep \"${requireVersion}\""
-    if [ -z "`git status | grep \"${requireVersion}\"`" ]; then
-      ilog "  Checkout to '${requireVersion}'"
-      ilog "  git checkout -f ${requireVersion}"
-      if ! git checkout -f ${requireVersion} >> ${LOG_FILENAME} 2>&1; then
-        ilog "  Oups, it does not exist"
-        cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
-        return 2
-      fi
-    fi
-    ilog "  Reset any local modification just to be sure"
-    ilog "  git reset --hard origin/${requireVersion}"
-    git reset --hard origin/${requireVersion} \
-      >> ${LOG_FILENAME} 2>&1
-    cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
-  # Else: clone
-  else
+  # Does not exist yet: clone
+  if [ ! -d "${requireLocalPath}/.git" ]; then
     gitPath=${requireBasePath}/${projectName}.git
     if [[ "${repositoryPath}" == *"github"* ]] || [[ "${repositoryPath}" == *"gitlab"* ]] || [[ "${requireBasePath}" == *"framagit"* ]]; then
       gitPath=${requireBasePath}
     fi
-    ilog "  git clone -b ${requireBranch} ${gitPath} ${requireLocalPath}"
-    if ! git clone -b ${requireBranch} ${gitPath} ${requireLocalPath} >> ${LOG_FILENAME} 2>&1; then
-      ilog "  Oups, \"${requireBranch}\" does not exist"
+    ilog "  git clone ${gitPath} ${requireLocalPath}"
+    if ! git clone ${gitPath} ${requireLocalPath} >> ${LOG_FILENAME} 2>&1; then
+      ilog "  Oups, cannot clone the project"
       return 2
     fi
-    if [ "${requireVersion}" != "${requireBranch}" ]; then
-      currentPath=`pwd`
-      cd ${requireLocalPath} || ( echo "  Error: can not go to ${requireLocalPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
-      ilog "  git checkout -f ${requireVersion}"
-      if ! git checkout -f ${requireVersion} >> ${LOG_FILENAME} 2>&1; then
-        ilog "  Oups, commit \"${requireVersion}\" does not exist"
-        cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
-        return 2
-      fi
-      cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
-    fi
   fi
+  
+  currentPath=`pwd`
+  ilog "  cd ${requireLocalPath}"
+  cd ${requireLocalPath} || ( echo "  Error: can not go to ${requireLocalPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
+  #~ # Verify no manual changes and warning otherwize
+  #~ ilog "  git status -s"
+  #~ if ! -z git status -s >> ${LOG_FILENAME} 2>&1; then
+    #~ ilog "  Warning: there are manual updates on this project."
+    #~ ilog "  Qompoter stop here."
+    #~ #ilog "  Use --force to discard change."
+    #~ cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
+    #~ return 2
+  #~ fi
+  
+  # Update
+  ilog "  git fetch --all"
+  git fetch --all \
+    >> ${LOG_FILENAME} 2>&1
+  
+  # Select the best version (if variadic version number provided)
+  if [ "${requireVersion#*\*}" != "$requireVersion" ]; then
+    ilog "  git tag --list"
+    requireVersion=`git tag --list | getBestVersionNumber`
+    echo "  Selected version: ${requireVersion}"
+  fi 
+  
+  # TODO Verify version availability
+    
+  # Reset
+  ilog "  git checkout -f ${requireVersion}"
+  if ! git checkout -f ${requireVersion} >> ${LOG_FILENAME} 2>&1; then
+    ilog "  Oups, \"${requireVersion}\" does not exist"
+    cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
+    return 2
+  fi
+  ilog "  Reset any local modification just to be sure"
+  ilog "  git reset --hard origin/${requireVersion}"
+  git reset --hard origin/${requireVersion} \
+    >> ${LOG_FILENAME} 2>&1
+  cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
+    
+  #~ # Already exists: update  
+  #~ if [ -d "${requireLocalPath}/.git" ]; then
+    #~ currentPath=`pwd`
+    #~ cd ${requireLocalPath} || ( echo "  Error: can not go to ${requireLocalPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
+    #~ ilog "  Retrieve data from Git repository"
+    #~ ilog "  git fetch --all"
+    #~ git fetch --all \
+      #~ >> ${LOG_FILENAME} 2>&1
+    #~ ilog "  Search relevant version"
+    #~ requireVersion=`git tag | LC_ALL=C sort | grep "v\?${requireVersion}\$" | tail -1`
+    #~ ilog "  git status | grep \"${requireVersion}\""
+    #~ if [ -z "`git status | grep \"${requireVersion}\"`" ]; then
+      #~ ilog "  Checkout to '${requireVersion}'"
+      #~ ilog "  git checkout -f ${requireVersion}"
+      #~ if ! git checkout -f ${requireVersion} >> ${LOG_FILENAME} 2>&1; then
+        #~ ilog "  Oups, it does not exist"
+        #~ cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
+        #~ return 2
+      #~ fi
+    #~ fi
+    #~ ilog "  Reset any local modification just to be sure"
+    #~ ilog "  git reset --hard origin/${requireVersion}"
+    #~ git reset --hard origin/${requireVersion} \
+      #~ >> ${LOG_FILENAME} 2>&1
+    #~ cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
+  #~ # Else: clone
+  #~ else
+    #~ gitPath=${requireBasePath}/${projectName}.git
+    #~ if [[ "${repositoryPath}" == *"github"* ]] || [[ "${repositoryPath}" == *"gitlab"* ]] || [[ "${requireBasePath}" == *"framagit"* ]]; then
+      #~ gitPath=${requireBasePath}
+    #~ fi
+    #~ ilog "  git clone -b ${requireBranch} ${gitPath} ${requireLocalPath}"
+    #~ if ! git clone -b ${requireBranch} ${gitPath} ${requireLocalPath} >> ${LOG_FILENAME} 2>&1; then
+      #~ ilog "  Oups, \"${requireBranch}\" does not exist"
+      #~ return 2
+    #~ fi
+    #~ if [ "${requireVersion}" != "${requireBranch}" ]; then
+      #~ currentPath=`pwd`
+      #~ cd ${requireLocalPath} || ( echo "  Error: can not go to ${requireLocalPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
+      #~ ilog "  git checkout -f ${requireVersion}"
+      #~ if ! git checkout -f ${requireVersion} >> ${LOG_FILENAME} 2>&1; then
+        #~ ilog "  Oups, commit \"${requireVersion}\" does not exist"
+        #~ cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
+        #~ return 2
+      #~ fi
+      #~ cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
+    #~ fi
+  #~ fi
   if [ ! -d "${requireLocalPath}/.git" ]; then
     gitError=1
   fi
@@ -620,6 +700,22 @@ checkQompoterFile()
       echo "To initialize a project, please create a '${qompoterFile}' file as described in the https://github.com/Fylhan/qompoter/blob/master/docs/Qompoter-file.md"
     return 100
   fi
+}
+
+getBestVersionNumber()
+{
+  #~ FIXME Sort version number using natural sort (v1.10 > v1.3)
+    if [ "${IS_STABLE_ONLY}" == "1" ]; then
+      LC_ALL=C sort | grep "v\?${requireVersion}\$" | grep -v -e "-\(alpha\|beta\|RC[0-9]*\|[0-9]*\)$" | tail -1
+    else
+      LC_ALL=C sort | grep "v\?${requireVersion}\$" | tail -1
+    fi
+}
+getProjectMd5()
+{
+  #~ See http://stackoverflow.com/questions/1657232/how-can-i-calculate-an-md5-checksum-of-a-directory
+  local projectDir=$1
+  echo `(find "${projectDir}" -type f -not -path "./*/.git/*" | while read f; do md5sum "$f"; done; find "${projectDir}" -type d -not -path "./.git" | sed 's#/$##') | LC_ALL=C sort | md5sum`
 }
 
 getProjectRequires()
@@ -785,6 +881,7 @@ cmdline()
   VENDOR_DIR=vendor
   REPO_PATH=
   INCLUDE_DEV=(-dev)?
+  IS_STABLE_ONLY=0
   IS_VERBOSE=0
   DEPTH_SIZE=10
   DOWNLOADED_PACKAGES=
@@ -824,6 +921,10 @@ cmdline()
       ;;
     --no-dev )
       INCLUDE_DEV=
+      shift
+      ;;
+    --stable-only )
+      IS_STABLE_ONLY=1
       shift
       ;;
     -r | --repo )

@@ -1,0 +1,18 @@
+Qompoter
+======== install
+
+* fylhan/posibrain v0.2
+  Downloading sources from Git...
+  Warning: no 'qompoter.pri' found for this package
+  done
+
+* cp/fylhan v1.*
+  Downloading sources...
+  done
+
+* fylhan/platphorm master
+  Downloading sources from Git...
+  Warning: no 'qompoter.pri' found for this package
+  done
+
+done

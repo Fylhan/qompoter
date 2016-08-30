@@ -1,0 +1,13 @@
+{
+	"name": "test/install-ok",
+	"authors": [
+		{
+			"name": "Fylhan",
+			"homepage": "http://fylhan.la-bnbox.fr"
+		}
+	],
+	"require": {
+		"cp/fylhan": "v1.0",
+		"git/test": "v0.1.*"
+	}
+}
