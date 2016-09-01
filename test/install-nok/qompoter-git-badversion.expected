@@ -3,8 +3,9 @@ Qompoter
 
 * fylhan/posibrain v1.0-RC
   Downloading sources from Git...
-  Error with Git. Downloading sources from scratch...
-  Error: no package found 'https://github.com//fylhan/posibrain/v1.0-RC'
+  Oups, "v1.0-RC" does not exist
+  Warning: error with Git, Qompoter will try downloading sources from scratch...
+  Error: no package found "https://github.com//fylhan/posibrain/v1.0-RC"
   FAILURE
 
 FAILURE

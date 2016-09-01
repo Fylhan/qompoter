@@ -3,9 +3,10 @@
 name="install-nok"
 fails=0
 i=0
-tests=`ls ${name}/*.json | wc -l`
+offline=$1
+tests=`ls ${name}/*${offline}.json | wc -l`
 echo "1..${tests##* }"
-for input in ${name}/*.json
+for input in ${name}/*${offline}.json
 do
   expected="${input%.json}.expected"
   i=$((i+1))

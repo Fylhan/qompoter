@@ -16,16 +16,14 @@ Requirements
 --------------------------------
 
 * Bash
-* Git
-* sed
-* zip is recommended
+* Git, sed, zip
 
 Works on Linux, and should also work on Mac or Windows (Cygwin or Mysys command line)
 
 Installation
 --------------------------------
 
-Make the script file runnable, and move it to a place accessible in the PATH:
+Dowload Qompoter and make the script file runnable, and move it to a place accessible in the `PATH`:
 
 	chmod u+x qompoter.sh
 	mv qompoter.sh /usr/bin/qompoter-bash
@@ -46,27 +44,29 @@ In your project, create a qompoter.json file:
 			}
 		],
 		"require": {
-			"git/acme": "dev-master"
+			"fylhan/platphorm": "dev-master",
+			"fylhan/posibrain": "v0.*"
 		},
 		"require-dev": {
 			"cp/fylhan": "v1.0"
 		},
 		"repositories": {
-			"git/acme" : "https://github.com"
+			"fylhan/platphorm" : "https://github.com",
+			"fylhan/posibrain" : "https://github.com"
 		}
 	}
 
-Then, download and install dependencies listed in your qompoter.json using:
+Then, download and install dependencies listed in your `qompoter.json` using:
 
 	qompoter-bash install
 
 *For more information about the command line options, use `qompoter-bash --help`.*
 
-That's it! You can now include vendor.pri in the .pro file of your project, and include the dependencies that you required:
+That's it! You can now include `vendor.pri` in the `.pro` file of your project, and include the dependencies that you required:
 
-	CONFIG += acme fylhan
+	CONFIG += platphorm posibrain fylhan
 	include(vendor/vendor.pri)
-    
+
 Documentation
 --------------------------------
 
@@ -75,7 +75,6 @@ Documentation
 * [How to create a Qompoter repository?](docs/Repositories.md)
 * [Command line interface](docs/Command-line.md)
 
-
 Releases
 --------------------------------
 Qompoter is released under 2 versions:
@@ -83,7 +82,7 @@ Qompoter is released under 2 versions:
 * The current version is a proof-of-concept called "qompoter-bash", a simple Bash implementation fitted for basic usage. Useful to kickoff the project without involving big development, this version targets basic usage and its development may end once a stable enough version is released.
 * The main "qompoter" version is a more complete implementation in C++/Qt. Developped in the mean time as "qompoter-bash", the "qompoter" version aims to provide more features and flexibilities.
 
-In order to simplify numerotation, v0.1 to v0.6 are reserved for "qompoter-bash". Therefore, the first "qompoter" version is v0.7.
+In order to simplify numerotation, v0.1 to v0.6 are reserved for "qompoter-bash". Therefore, the first "qompoter" version is v0.7. This may change in a near future.
 
 License
 --------------------------------

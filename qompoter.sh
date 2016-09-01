@@ -226,6 +226,9 @@ usage()
 	
 	    -f, --file        Pick another file as "qompoter.json"
 	
+	        --force       Force the action
+	                      Supported action is: "install"
+	
 	    -l, --list        List elements depending of the action
 	                      Supported action is: "require"
 	
@@ -490,29 +493,25 @@ downloadPackage()
     # Git
     if [ -d "${requireBasePath}/${projectName}.git" ] || [[ "${requireBasePath}" == *"github"* ]] || [[ "${requireBasePath}" == *"gitlab"* ]] || [[ "${requireBasePath}" == *"framagit"* ]]; then
       echo "  Downloading sources from Git..."
-      downloadPackageFromGit $repositoryPath $vendorDir $requireName $requireVersion \
-	|| result=1
+      downloadPackageFromGit ${repositoryPath} ${vendorDir} ${requireName} ${requireVersion} \
+        || result=1
     fi
     # Copy (also done if Git failed)
-    if [ ! -d "${requireLocalPath}/.git" ]; then
+    if [ ! -d "${requireLocalPath}/.git" ] || [ "${result}" == "1" ]; then
       if [ "$result" == "1" ]; then
-        echo "  Error with Git. Downloading sources from scratch..."
+        echo "  Warning: error with Git, Qompoter will try downloading sources from scratch..."
         mkdir -p ${requireLocalPath}
       else
         echo "  Downloading sources..."
       fi
-      #~ requireVersion=`ls ${requireBasePath}| LC_ALL=C sort | grep "v\?${requireVersion}\$" | tail -1`
-      #~ local requirePath=${requireBasePath}/${requireVersion}
-      downloadPackageFromCp ${requirePath} ${requireLocalPath} \
-	&& result=0 \
-	|| result=1
+      downloadPackageFromCp ${repositoryPath} ${vendorDir} ${vendorName} ${projectName} ${requireVersion} \
+        && result=0 \
+        || result=1
     fi
   # Lib
   else
     echo "  Downloading lib..."
-    requireVersion=`ls ${requireBasePath}| LC_ALL=C sort | grep "v\?${requireVersion}\$" | tail -1`
-    local requirePath=${requireBasePath}/${requireVersion}
-    downloadLibFromCp ${vendorDir} ${requirePath} ${requireLocalPath} \
+    downloadLibFromCp ${repositoryPath} ${vendorDir} ${vendorName} ${projectName} ${requireVersion}  \
       || result=-1
   fi
   
@@ -539,30 +538,72 @@ downloadPackage()
 
 downloadPackageFromCp()
 {
-  local source=$1
-  local target=$2
-  
-  if [ -d "${source}" ]; then
-    cp -rf ${source}/* ${target} \
+  local repositoryPath=$1
+  local vendorDir=$2
+  local vendorName=$3
+  local packageName=$4
+  local requireVersion=$5
+  local requireName=${vendorName}/${packageName}
+  local requireBasePath=${repositoryPath}/${requireName}
+  local requireLocalPath=${vendorDir}/${packageName}
+
+ # Select the best version (if variadic version number provided)
+  if [ "${requireVersion#*\*}" != "${requireVersion}" ]; then
+    ilog "  Search matching version"
+    local selectedVersion=`ls ${requireBasePath} | getBestVersionNumber`
+    if [ -z "${selectedVersion}" ]; then
+      echo "  Oups, no matching version for \"${requireVersion}\""
+      return 2
+    fi
+    requireVersion=${selectedVersion}
+    echo "  Selected version: ${requireVersion}"
+  fi 
+      
+  # Copy
+  local requirePath=${requireBasePath}/${requireVersion}
+  if [ -d "${requirePath}" ]; then
+    ilog "  Copy \"${requirePath}\" to \"${requireLocalPath}\""
+    cp -rf ${requirePath}/* ${requireLocalPath} \
       >> ${LOG_FILENAME} 2>&1
-    return
+    return 0
   fi
-  rm -rf ${target}
-  echo "  Error: no package found '${source}'"
+  rm -rf ${requireLocalPath}
+  echo "  Error: no package found \"${requirePath}\""
   return 1
 }
 
 downloadLibFromCp()
 {
-  local vendorDir=$1
-  local source=$2
-  local target=$3
-  
-  cp -rf ${source}/lib_* ${vendorDir} \
+  local repositoryPath=$1
+  local vendorDir=$2
+  local vendorName=$3
+  local packageName=$4
+  local requireVersion=$5
+  local requireName=${vendorName}/${packageName}
+  local requireBasePath=${repositoryPath}/${requireName}
+  local requireLocalPath=${vendorDir}/${packageName}
+
+ # Select the best version (if variadic version number provided)
+  if [ "${requireVersion#*\*}" != "${requireVersion}" ]; then
+    ilog "  Search matching version"
+    local selectedVersion=`ls ${requireBasePath} | getBestVersionNumber`
+    if [ -z "${selectedVersion}" ]; then
+      echo "  Oups, no matching version for \"${requireVersion}\""
+      return 2
+    fi
+    requireVersion=${selectedVersion}
+    echo "  Selected version: ${requireVersion}"
+  fi 
+      
+  # Copy
+  local requirePath=${requireBasePath}/${requireVersion}
+  cp -rf ${requirePath}/lib_* ${vendorDir} \
       >> ${LOG_FILENAME} 2>&1
-  cp -rf ${source}/include ${target} \
+  cp -rf ${requirePath}/include ${requireLocalPath} \
       >> ${LOG_FILENAME} 2>&1
-  cp -rf ${source}/qompoter.* ${target} \
+  cp -rf ${requirePath}/qompoter.* ${requireLocalPath} \
+      >> ${LOG_FILENAME} 2>&1
+  cp -rf ${requirePath}/*.md ${requireLocalPath} \
       >> ${LOG_FILENAME} 2>&1
   return 0
 }
@@ -597,19 +638,21 @@ downloadPackageFromGit()
       return 2
     fi
   fi
-  
   currentPath=`pwd`
   ilog "  cd ${requireLocalPath}"
   cd ${requireLocalPath} || ( echo "  Error: can not go to ${requireLocalPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
-  #~ # Verify no manual changes and warning otherwize
-  #~ ilog "  git status -s"
-  #~ if ! -z git status -s >> ${LOG_FILENAME} 2>&1; then
-    #~ ilog "  Warning: there are manual updates on this project."
-    #~ ilog "  Qompoter stop here."
-    #~ #ilog "  Use --force to discard change."
-    #~ cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
-    #~ return 2
-  #~ fi
+
+  # Verify no manual changes and warning otherwize
+  ilog "  git status -s"
+  local hasChanged=`git status -s`
+  if [ ! -z "${hasChanged}" ]; then
+    echo "  Warning: there are manual updates on this project."
+    if [ "$IS_FORCE" != "1" ]; then
+      echo "  Use --force to discard change and continue."
+      cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
+      return 2
+    fi
+  fi
   
   # Update
   ilog "  git fetch --all"
@@ -619,7 +662,13 @@ downloadPackageFromGit()
   # Select the best version (if variadic version number provided)
   if [ "${requireVersion#*\*}" != "$requireVersion" ]; then
     ilog "  git tag --list"
-    requireVersion=`git tag --list | getBestVersionNumber`
+    local selectedVersion=`git tag --list | getBestVersionNumber`
+    if [ -z "${selectedVersion}" ]; then
+      echo "  Oups, no matching version for \"${requireVersion}\""
+      cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
+      return 2
+    fi
+    requireVersion=${selectedVersion}
     echo "  Selected version: ${requireVersion}"
   fi 
   
@@ -628,7 +677,7 @@ downloadPackageFromGit()
   # Reset
   ilog "  git checkout -f ${requireVersion}"
   if ! git checkout -f ${requireVersion} >> ${LOG_FILENAME} 2>&1; then
-    ilog "  Oups, \"${requireVersion}\" does not exist"
+    echo "  Oups, \"${requireVersion}\" does not exist"
     cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
     return 2
   fi
@@ -636,56 +685,9 @@ downloadPackageFromGit()
   ilog "  git reset --hard origin/${requireVersion}"
   git reset --hard origin/${requireVersion} \
     >> ${LOG_FILENAME} 2>&1
+
   cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
-    
-  #~ # Already exists: update  
-  #~ if [ -d "${requireLocalPath}/.git" ]; then
-    #~ currentPath=`pwd`
-    #~ cd ${requireLocalPath} || ( echo "  Error: can not go to ${requireLocalPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
-    #~ ilog "  Retrieve data from Git repository"
-    #~ ilog "  git fetch --all"
-    #~ git fetch --all \
-      #~ >> ${LOG_FILENAME} 2>&1
-    #~ ilog "  Search relevant version"
-    #~ requireVersion=`git tag | LC_ALL=C sort | grep "v\?${requireVersion}\$" | tail -1`
-    #~ ilog "  git status | grep \"${requireVersion}\""
-    #~ if [ -z "`git status | grep \"${requireVersion}\"`" ]; then
-      #~ ilog "  Checkout to '${requireVersion}'"
-      #~ ilog "  git checkout -f ${requireVersion}"
-      #~ if ! git checkout -f ${requireVersion} >> ${LOG_FILENAME} 2>&1; then
-        #~ ilog "  Oups, it does not exist"
-        #~ cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
-        #~ return 2
-      #~ fi
-    #~ fi
-    #~ ilog "  Reset any local modification just to be sure"
-    #~ ilog "  git reset --hard origin/${requireVersion}"
-    #~ git reset --hard origin/${requireVersion} \
-      #~ >> ${LOG_FILENAME} 2>&1
-    #~ cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
-  #~ # Else: clone
-  #~ else
-    #~ gitPath=${requireBasePath}/${projectName}.git
-    #~ if [[ "${repositoryPath}" == *"github"* ]] || [[ "${repositoryPath}" == *"gitlab"* ]] || [[ "${requireBasePath}" == *"framagit"* ]]; then
-      #~ gitPath=${requireBasePath}
-    #~ fi
-    #~ ilog "  git clone -b ${requireBranch} ${gitPath} ${requireLocalPath}"
-    #~ if ! git clone -b ${requireBranch} ${gitPath} ${requireLocalPath} >> ${LOG_FILENAME} 2>&1; then
-      #~ ilog "  Oups, \"${requireBranch}\" does not exist"
-      #~ return 2
-    #~ fi
-    #~ if [ "${requireVersion}" != "${requireBranch}" ]; then
-      #~ currentPath=`pwd`
-      #~ cd ${requireLocalPath} || ( echo "  Error: can not go to ${requireLocalPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
-      #~ ilog "  git checkout -f ${requireVersion}"
-      #~ if ! git checkout -f ${requireVersion} >> ${LOG_FILENAME} 2>&1; then
-        #~ ilog "  Oups, commit \"${requireVersion}\" does not exist"
-        #~ cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
-        #~ return 2
-      #~ fi
-      #~ cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
-    #~ fi
-  #~ fi
+
   if [ ! -d "${requireLocalPath}/.git" ]; then
     gitError=1
   fi
@@ -876,11 +878,12 @@ cmdline()
 {
   ACTION=
   SUB_ACTION=
-  LOG_FILENAME=qompoter.log
+  LOG_FILENAME=`pwd`/qompoter.log
   QOMPOTER_FILENAME=qompoter.json
   VENDOR_DIR=vendor
   REPO_PATH=
   INCLUDE_DEV=(-dev)?
+  IS_FORCE=0
   IS_STABLE_ONLY=0
   IS_VERBOSE=0
   DEPTH_SIZE=10
@@ -903,6 +906,10 @@ cmdline()
       shift
       QOMPOTER_FILENAME=$1
       NEW_SUBPACKAGES=${QOMPOTER_FILENAME}
+      shift
+      ;;
+         --force )
+      IS_FORCE=1
       shift
       ;;
     -l | --list )

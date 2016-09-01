@@ -2,9 +2,10 @@
 
 fails=0
 i=0
-tests=`ls install-ok/*.json | wc -l`
+offline=$1
+tests=`ls install-ok/*${offline}.json | wc -l`
 echo "1..${tests##* }"
-for input in install-ok/*.json
+for input in install-ok/*${offline}.json
 do
   i=$((i+1))
   mkdir vendor

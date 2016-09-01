@@ -7,10 +7,6 @@
 		}
 	],
 	"require": {
-		"cp/fylhan": "v1.*",
-		"fylhan/posibrain": "v0.*"
-	},
-	"repositories": {
-		"fylhan/posibrain": "https://github.com"
+		"cp/fylhan": "v1.*"
 	}
 }

@@ -3,9 +3,10 @@
 name="install-ok"
 fails=0
 i=0
-tests=`ls ${name}/*.json | wc -l`
+offline=$1
+tests=`ls ${name}/*${offline}.json | wc -l`
 echo "1..${tests##* }"
-for input in ${name}/*.json
+for input in ${name}/*${offline}.json
 do
   i=$((i+1))
   if ! ../qompoter.sh install --no-color --file "$input" --repo qompoter-repo | diff -u - "${input%.json}.expected" \

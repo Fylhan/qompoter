@@ -2,9 +2,10 @@
 
 fails=0
 i=0
-tests=`ls require/*.json | wc -l`
+offline=$1
+tests=`ls require/*${offline}.json | wc -l`
 echo "1..${tests##* }"
-for input in require/*.json
+for input in require/*${offline}.json
 do
   i=$((i+1))
   if ! ../qompoter.sh require --list --no-color --file "$input" | diff -u - "${input%.json}.expected"
