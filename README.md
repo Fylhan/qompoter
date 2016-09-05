@@ -25,6 +25,7 @@ Installation
 
 Dowload Qompoter and make the script file runnable, and move it to a place accessible in the `PATH`:
 
+	wget https://raw.githubusercontent.com/Fylhan/qompoter/f5ede63cb54586fc0388a95da3c7cab7ee559f1f/qompoter.sh -O qompoter.sh
 	chmod u+x qompoter.sh
 	mv qompoter.sh /usr/bin/qompoter-bash
 

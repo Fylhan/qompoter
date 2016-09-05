@@ -638,10 +638,10 @@ downloadPackageFromGit()
       return 2
     fi
   fi
-  currentPath=`pwd`
   ilog "  cd ${requireLocalPath}"
   cd ${requireLocalPath} || ( echo "  Error: can not go to ${requireLocalPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
-
+  local LOG_FILENAME_PACKAGE=../${LOG_FILENAME}
+  
   # Verify no manual changes and warning otherwize
   ilog "  git status -s"
   local hasChanged=`git status -s`
@@ -649,7 +649,8 @@ downloadPackageFromGit()
     echo "  Warning: there are manual updates on this project."
     if [ "$IS_FORCE" != "1" ]; then
       echo "  Use --force to discard change and continue."
-      cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
+      cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
+      
       return 2
     fi
   fi
@@ -657,7 +658,7 @@ downloadPackageFromGit()
   # Update
   ilog "  git fetch --all"
   git fetch --all \
-    >> ${LOG_FILENAME} 2>&1
+    >> ${LOG_FILENAME_PACKAGE} 2>&1
   
   # Select the best version (if variadic version number provided)
   if [ "${requireVersion#*\*}" != "$requireVersion" ]; then
@@ -665,7 +666,7 @@ downloadPackageFromGit()
     local selectedVersion=`git tag --list | getBestVersionNumber`
     if [ -z "${selectedVersion}" ]; then
       echo "  Oups, no matching version for \"${requireVersion}\""
-      cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
+      cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
       return 2
     fi
     requireVersion=${selectedVersion}
@@ -676,17 +677,17 @@ downloadPackageFromGit()
     
   # Reset
   ilog "  git checkout -f ${requireVersion}"
-  if ! git checkout -f ${requireVersion} >> ${LOG_FILENAME} 2>&1; then
+  if ! git checkout -f ${requireVersion} >> ${LOG_FILENAME_PACKAGE} 2>&1; then
     echo "  Oups, \"${requireVersion}\" does not exist"
-    cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
+    cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
     return 2
   fi
   ilog "  Reset any local modification just to be sure"
   ilog "  git reset --hard origin/${requireVersion}"
   git reset --hard origin/${requireVersion} \
-    >> ${LOG_FILENAME} 2>&1
+    >> ${LOG_FILENAME_PACKAGE} 2>&1
 
-  cd $currentPath || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
+  cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
 
   if [ ! -d "${requireLocalPath}/.git" ]; then
     gitError=1
@@ -878,7 +879,7 @@ cmdline()
 {
   ACTION=
   SUB_ACTION=
-  LOG_FILENAME=`pwd`/qompoter.log
+  LOG_FILENAME=qompoter.log
   QOMPOTER_FILENAME=qompoter.json
   VENDOR_DIR=vendor
   REPO_PATH=
