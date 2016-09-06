@@ -12,14 +12,15 @@ FORMAT_END="\e[0m"
 # JSON.H              #
 #######################
 
-throw () {
-  echo "$*" >&2
-  exit 1
-}
-
 BRIEF=0
 LEAFONLY=0
 PRUNE=0
+
+throw()
+{
+  echo "$*" >&2
+  exit 1
+}
 
 usage_jsonh() {
   echo
@@ -59,7 +60,7 @@ parse_options() {
   done
 }
 
-awk_egrep () {
+awk_egrep() {
   local pattern_string=$1
 
   gawk '{
@@ -72,19 +73,20 @@ awk_egrep () {
   }' pattern=$pattern_string
 }
 
-tokenize () {
+tokenize()
+{
   local GREP
   local ESCAPE
   local CHAR
 
-  if echo "test string" | egrep -ao --color=never "test" &>/dev/null
+  if echo "test string" | grep -E -ao --color=never "test" &>/dev/null
   then
-    GREP='egrep -ao --color=never'
+    GREP='grep -E -ao --color=never'
   else
-    GREP='egrep -ao'
+    GREP='grep -E -ao'
   fi
 
-  if echo "test string" | egrep -o "test" &>/dev/null
+  if echo "test string" | grep -E -o "test" &>/dev/null
   then
     ESCAPE='(\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
     CHAR='[^[:cntrl:]"\\]'
@@ -99,10 +101,11 @@ tokenize () {
   local KEYWORD='null|false|true'
   local SPACE='[[:space:]]+'
 
-  $GREP "$STRING|$NUMBER|$KEYWORD|$SPACE|." | egrep -v "^$SPACE$"
+  $GREP "$STRING|$NUMBER|$KEYWORD|$SPACE|." | grep -E -v "^$SPACE$"
 }
 
-parse_array () {
+parse_array()
+{
   local index=0
   local ary=''
   read -r token
@@ -128,7 +131,8 @@ parse_array () {
   :
 }
 
-parse_object () {
+parse_object()
+{
   local key
   local obj=''
   read -r token
@@ -163,7 +167,8 @@ parse_object () {
   :
 }
 
-parse_value () {
+parse_value()
+{
   local jpath="${1:+$1,}$2" isleaf=0 isempty=0 print=0
   case "$token" in
     '{') parse_object "$jpath" ;;
@@ -185,7 +190,8 @@ parse_value () {
   :
 }
 
-parse () {
+parse()
+{
   read -r token
   parse_value
   read -r token
@@ -194,12 +200,6 @@ parse () {
     *) throw "EXPECTED EOF GOT $token" ;;
   esac
 }
-
-#if ([ "$0" = "$BASH_SOURCE" ] || ! [ -n "$BASH_SOURCE" ]);
-#then
-#  parse_options "$@"
-#  tokenize | parse
-#fi
 
 jsonh()
 {
