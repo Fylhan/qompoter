@@ -1,0 +1,18 @@
+Qompoter
+======== install
+
+* kde/attica 5.25.0
+  Downloading sources from Git...
+  Warning: no 'qompoter.pri' found for this package
+  done
+
+* cp/fylhan v1.1
+  Downloading sources...
+  done
+
+* digia/0.5.0 master
+  Downloading sources from Git...
+  Warning: no 'qompoter.pri' found for this package
+  done
+
+done

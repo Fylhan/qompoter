@@ -1,0 +1,16 @@
+{
+	"name": "test/install-ok-inqlude",
+	"authors": [
+		{
+			"name": "Fylhan",
+			"homepage": "http://fylhan.la-bnbox.fr"
+		}
+	],
+	"require": {
+		"kde/attica": "v5.25.0",
+		"cp/fylhan": "v1.1"
+	},
+	"require-dev": {
+		"laumaya/glc-lib": "dev-master"
+	}
+}
