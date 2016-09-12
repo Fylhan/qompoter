@@ -116,7 +116,7 @@ parse_array()
       do
         parse_value "$1" "$index"
         index=$((index+1))
-        ary="$ary""$value" 
+        ary="$ary""$value"
         read -r token
         case "$token" in
           ']') break ;;
@@ -152,7 +152,7 @@ parse_object()
         esac
         read -r token
         parse_value "$1" "$key"
-        obj="$obj$key:$value"        
+        obj="$obj$key:$value"
         read -r token
         case "$token" in
           '}') break ;;
@@ -216,58 +216,58 @@ usage()
 {
 	cat <<- EOF
 	Usage: $PROGNAME [action] [ --repo <repo> | other options ]
-	
+
 	    action            Select an action:
 	                      install, update, export, require, repo-export
-	
+
 	Options:
 	    -d, --depth       Depth of the recursivity in the searching of
 	                      subpackages
-	
+
 	    -f, --file        Pick another file as "qompoter.json"
-	
+
 	        --force       Force the action
 	                      Supported action is: "install"
-	
+
 	    -l, --list        List elements depending of the action
 	                      Supported action is: "require"
-	
+
 	        --no-color    Do not enable color on output. [default = false]
-	
+
 	        --no-dev      Do not retrieve dev dependencies listed
 	                      in "require-dev". [default = false]
-	
+
 	    -r, --repo        Select a repository path as a location for
 	                      dependency research. It is used in addition
 	                      of the "repositories" provided in
 	                      "qompoter.json".
 	                      E.g. "repo/repositories/<vendor name>/<project name>"
-	
+
 	        --stable-only Do not select unstable versions. [default = false]
 	                      E.g. If "v1.*" is given to Qompoter, it will select "v1.0.3"
 	                      and not "v1.0.4-RC1".
-	
+
 	    -v, --vendor-dir  Pick another vendor directory as "vendor"
-	
+
 	    -V, --verbose     Enable more verbosity
-	
+
 	    -h, --help        Display this help
-	
+
 	        --version     Display the version
-	
+
 	Examples:
 	    Install all dependencies:
 	    $PROGNAME install --repo /Project
-	    
+
 	    Install only nominal dependencies:
 	    $PROGNAME install --no-dev --repo /Project
-	    
+
 	    List required dependencies for this project:
 	    $PROGNAME require --list
-	    
+
 	    Export existing dependencies:
 	    $PROGNAME export
-	
+
 	EOF
 }
 
@@ -483,19 +483,31 @@ downloadPackage()
   local requireLocalPath=${vendorDir}/${packageName}
   local qompoterPriFile=${requireLocalPath}/qompoter.pri
 
-
   echo "* ${requireName} ${requireVersion}"
-  
+
   mkdir -p ${requireLocalPath}
+
+  # Search in Inqlude repository
+  local inqludeBasePath=`getPackageInqludeUrl ${vendorName} ${packageName} ${requireVersion} ${INQLUDE_FILENAME}`
+  if [ ! -z "${inqludeBasePath}" ]; then
+    ilog "  Use inqlude package \"${packageName}\" (${inqludeBasePath})"
+    requireBasePath=${inqludeBasePath}
+  fi
 
   # Sources
   if [ "${isSource}" -eq 1 ]; then
     # Git
-    if [ -d "${requireBasePath}/${projectName}.git" ] || [[ "${requireBasePath}" == *"github"* ]] || [[ "${requireBasePath}" == *"gitlab"* ]] || [[ "${requireBasePath}" == *"framagit"* ]] || [[ "${requireBasePath}" == *"git.kde"* ]]; then
+    local gitPath=
+    if [ -d "${requireBasePath}/${packageName}.git" ]; then
+      gitPath=${requireBasePath}/${packageName}.git
+    fi
+    isGitRepositories ${requireBasePath} && gitPath=${requireBasePath}
+    if [ ! -z "${gitPath}" ]; then
       echo "  Downloading sources from Git..."
-      downloadPackageFromGit ${repositoryPath} ${vendorDir} ${requireName} ${requireVersion} \
+      downloadPackageFromGit ${gitPath} ${vendorDir} ${packageName} ${requireVersion} \
         || result=1
     fi
+
     # Copy (also done if Git failed)
     if [ ! -d "${requireLocalPath}/.git" ] || [ "${result}" == "1" ]; then
       if [ "$result" == "1" ]; then
@@ -504,17 +516,17 @@ downloadPackage()
       else
         echo "  Downloading sources..."
       fi
-      downloadPackageFromCp ${repositoryPath} ${vendorDir} ${vendorName} ${projectName} ${requireVersion} \
+      downloadPackageFromCp ${repositoryPath} ${vendorDir} ${vendorName} ${packageName} ${requireVersion} \
         && result=0 \
         || result=1
     fi
   # Lib
   else
     echo "  Downloading lib..."
-    downloadLibFromCp ${repositoryPath} ${vendorDir} ${vendorName} ${projectName} ${requireVersion}  \
+    downloadLibFromCp ${repositoryPath} ${vendorDir} ${vendorName} ${packageName} ${requireVersion}  \
       || result=-1
   fi
-  
+
   # FAILURE
   if [ "$result" == "1" ]; then
     echo -e "  ${FORMAT_FAIL}FAILURE${FORMAT_END}"
@@ -528,11 +540,11 @@ downloadPackage()
     else
       echo "  Warning: no 'qompoter.pri' found for this package"
     fi
-    
+
     echo -e "  ${FORMAT_OK}done${FORMAT_END}"
     echo
   fi
-  
+
   return 0
 }
 
@@ -557,8 +569,8 @@ downloadPackageFromCp()
     fi
     requireVersion=${selectedVersion}
     echo "  Selected version: ${requireVersion}"
-  fi 
-      
+  fi
+
   # Copy
   local requirePath=${requireBasePath}/${requireVersion}
   if [ -d "${requirePath}" ]; then
@@ -593,8 +605,8 @@ downloadLibFromCp()
     fi
     requireVersion=${selectedVersion}
     echo "  Selected version: ${requireVersion}"
-  fi 
-      
+  fi
+
   # Copy
   local requirePath=${requireBasePath}/${requireVersion}
   cp -rf ${requirePath}/lib_* ${vendorDir} \
@@ -610,28 +622,24 @@ downloadLibFromCp()
 
 downloadPackageFromGit()
 {
-  local repositoryPath=$1
+  local gitPath=$1
   local vendorDir=$2
-  local requireName=$3
+  local packageName=$3
   local requireVersion=$4
   local requireBranch=$4
-  local requireLocalPath=${vendorDir}/${projectName}
+  local requireLocalPath=${vendorDir}/${packageName}
   local isSource=1
   local gitError=0
-  
+
   # Parse commit number in version
   if [ "${4#*#}" != "$4" ]; then
     requireVersion=`echo ${4} | cut -d'#' -f2`
     requireBranch=`echo ${4} | cut -d'#' -f1`
     test "${requireBranch}" == "" && requireBranch="master"
   fi
-  
+
   # Does not exist yet: clone
   if [ ! -d "${requireLocalPath}/.git" ]; then
-    gitPath=${requireBasePath}/${projectName}.git
-    if [[ "${repositoryPath}" == *"github"* ]] || [[ "${repositoryPath}" == *"gitlab"* ]] || [[ "${requireBasePath}" == *"framagit"* ]] || [[ "${requireBasePath}" == *"git.kde"* ]]; then
-      gitPath=${requireBasePath}
-    fi
     ilog "  git clone ${gitPath} ${requireLocalPath}"
     if ! git clone ${gitPath} ${requireLocalPath} >> ${LOG_FILENAME} 2>&1; then
       ilog "  Oups, cannot clone the project"
@@ -641,7 +649,7 @@ downloadPackageFromGit()
   ilog "  cd ${requireLocalPath}"
   cd ${requireLocalPath} || ( echo "  Error: can not go to ${requireLocalPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
   local LOG_FILENAME_PACKAGE=../${LOG_FILENAME}
-  
+
   # Verify no manual changes and warning otherwize
   ilog "  git status -s"
   local hasChanged=`git status -s`
@@ -650,16 +658,16 @@ downloadPackageFromGit()
     if [ "$IS_FORCE" != "1" ]; then
       echo "  Use --force to discard change and continue."
       cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
-      
+
       return 2
     fi
   fi
-  
+
   # Update
   ilog "  git fetch --all"
   git fetch --all \
     >> ${LOG_FILENAME_PACKAGE} 2>&1
-  
+
   # Select the best version (if variadic version number provided)
   if [ "${requireVersion#*\*}" != "$requireVersion" ]; then
     ilog "  git tag --list"
@@ -671,10 +679,10 @@ downloadPackageFromGit()
     fi
     requireVersion=${selectedVersion}
     echo "  Selected version: ${requireVersion}"
-  fi 
-  
+  fi
+
   # TODO Verify version availability
-    
+
   # Reset
   ilog "  git checkout -f ${requireVersion}"
   if ! git checkout -f ${requireVersion} >> ${LOG_FILENAME_PACKAGE} 2>&1; then
@@ -771,7 +779,8 @@ downloadQompoterFilePackages()
 {
   local qompoterFile=$1
   local vendorDir=$2
-  
+  local globalRes=0;
+
   for packageInfo in `getProjectRequires ${qompoterFile}`; do
       local vendorName=`echo ${packageInfo} | cut -d'/' -f1`
       local projectName=`echo ${packageInfo} | cut -d'/' -f2`
@@ -780,13 +789,19 @@ downloadQompoterFilePackages()
       test "${DOWNLOADED_PACKAGES#* $projectName }" != "$DOWNLOADED_PACKAGES" && continue
       #~ Download
       local repo=`getRelatedRepository ${qompoterFile} ${vendorName} ${projectName}`
-      downloadPackage ${repo} ${vendorDir} ${vendorName} ${projectName} ${version} \
-        || return 1
+      downloadPackage ${repo} ${vendorDir} ${vendorName} ${projectName} ${version}
+      #~ Exit on error if no force
+      local returnCode=$?
+      if [ "$returnCode" != "0" ]; then
+        globalRes="$returnCode"
+        test "${IS_FORCE}" == "0" && return 1
+      fi
       DOWNLOADED_PACKAGES="${DOWNLOADED_PACKAGES} ${projectName} "
       if [ -f "${vendorDir}/${projectName}/qompoter.json" ]; then
         NEW_SUBPACKAGES="${NEW_SUBPACKAGES} ${vendorDir}/${projectName}/qompoter.json"
       fi
   done
+  return $globalRes
 }
 
 updateVendorDirFromQompoterFile()
@@ -881,10 +896,9 @@ inqludeSearchAction()
   local requireName=${vendorName}/${packageName}
   local inqludeAllFile=$4
 
-  echo "* ${requireName} ${requireVersion}"
-
   ilog "  Inqlude repository last update: ${INQLUDE_ALL_CONTENT_LAST_UPDATE}"
   ilog "  Load inqlude repository"
+  ilog
   local inqludePackages=${INQLUDE_ALL_MIN_CONTENT}
   if [ "${inqludeAllFile}" != "" ]; then
     if [ -f "${inqludeAllFile}" ]; then
@@ -893,8 +907,11 @@ inqludeSearchAction()
     else
       echo "  No such file \"${inqludeAllFile}\""
       echo "  Qompoter will use the default inqlude repository file"
+      echo
     fi
   fi
+
+  echo "* ${requireName} ${requireVersion}"
 
   ilog "  Search ${packageName}"
   local packageId=`getInqludeId ${packageName} "${inqludePackages}"`
@@ -942,7 +959,7 @@ exportAction()
   if [ -f "${vendorBackup}" ]; then
     rm ${vendorBackup}
   fi
-  
+
   if [ -d "${VENDOR_DIR}" ]; then
     zip ${vendorBackup} -r ${VENDOR_DIR} \
       >> ${LOG_FILENAME} 2>&1
@@ -957,23 +974,29 @@ installAction()
 {
   local qompoterFile=$1
   local vendorDir=$2
-  
+  local globalRes=0
+
   checkQompoterFile ${qompoterFile} || return 100
   prepareVendorDir ${vendorDir}
-  
+
   local depth=0
   while [ "$depth" -lt "$DEPTH_SIZE" ] && [ -n "${NEW_SUBPACKAGES}" ]; do
     depth=$((depth+1))
     local newSubpackages=${NEW_SUBPACKAGES}
     NEW_SUBPACKAGES=""
     for subQompoterFile in ${newSubpackages}; do
-      downloadQompoterFilePackages ${subQompoterFile} ${vendorDir} \
-        || return 1
+      downloadQompoterFilePackages ${subQompoterFile} ${vendorDir}
+      local returnCode=$?
+      if [ "$returnCode" != "0" ]; then
+        globalRes=$returnCode
+        test "${IS_FORCE}" == "0" && return 1
+      fi
     done
     if [ "$depth" == "$DEPTH_SIZE" ] && [ -n "${NEW_SUBPACKAGES}" ]; then
       echo -e "${FORMAT_FAIL}WARNING${FORMAT_END} There are still packages to download but maximal recursive depth of $DEPTH_SIZE have been reached."
     fi
   done
+  return $globalRes
 }
 
 jsonhAction()
@@ -984,14 +1007,14 @@ jsonhAction()
 
 updateAction()
 {
-  echo "Not implemented yet"; 
+  echo "Not implemented yet";
   return 1
 }
 
 requireListAction()
 {
   local qompoterFile=$1
-  
+
   checkQompoterFile ${qompoterFile} || return 100
   for packageInfo in `getProjectRequires ${qompoterFile}`; do
     echo "* ${packageInfo}"
@@ -1001,13 +1024,13 @@ requireListAction()
 
 requireAction()
 {
-  echo "Not implemented yet"; 
+  echo "Not implemented yet";
   return 1
 }
 
 repoExportAction()
 {
-  echo "Not implemented yet"; 
+  echo "Not implemented yet";
   return 1
 }
 
@@ -1050,7 +1073,7 @@ cmdline()
       DEPTH_SIZE=$1
       shift
       ;;
-    -f | --file )
+    --file )
       shift
       QOMPOTER_FILENAME=$1
       NEW_SUBPACKAGES=${QOMPOTER_FILENAME}
@@ -1061,7 +1084,7 @@ cmdline()
       INQLUDE_FILENAME=$1
       shift
       ;;
-    --force )
+    -f | --force )
       IS_FORCE=1
       shift
       ;;
@@ -1150,7 +1173,7 @@ cmdline()
       ;;
   esac
   done
-  
+
   if [[ "${ACTION}" == "inqlude" ]] && [[ ${SUB_ACTION} == "" ]]; then
     echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} missing subaction 'search' or 'minify' for action 'inqlude'"
     exit -1
@@ -1178,11 +1201,11 @@ main()
     rm ${LOG_FILENAME}
   fi
   touch ${LOG_FILENAME}
-    
+
   echo "Qompoter"
   echo "======== ${ACTION}"
   echo
- 
+
   updateVendorDirFromQompoterFile ${QOMPOTER_FILENAME}
   if [ "${ACTION}" == "export" ]; then
     exportAction ${QOMPOTER_FILENAME} ${VENDOR_DIR} \
@@ -1227,7 +1250,7 @@ main()
   else
     echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} Unknown action '${ACTION}'"
   fi
-  
+
   if [ "$IS_VERBOSE" == "0" ]; then
     rm ${LOG_FILENAME}
   fi
