@@ -218,7 +218,9 @@ usage()
 	Usage: $PROGNAME [action] [ --repo <repo> | other options ]
 
 	    action            Select an action:
-	                      install, update, export, require, repo-export
+	                      inqlude, install, update, export, require, repo-export
+	                      Other actions are useful for digging into Qompoter:
+                        jsonh
 
 	Options:
 	    -d, --depth       Depth of the recursivity in the searching of
@@ -648,7 +650,7 @@ downloadPackageFromGit()
   fi
   ilog "  cd ${requireLocalPath}"
   cd ${requireLocalPath} || ( echo "  Error: can not go to ${requireLocalPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
-  local LOG_FILENAME_PACKAGE=../${LOG_FILENAME}
+  local LOG_FILENAME_PACKAGE=../../${LOG_FILENAME}
 
   # Verify no manual changes and warning otherwize
   ilog "  git status -s"

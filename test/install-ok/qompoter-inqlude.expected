@@ -1,7 +1,7 @@
 Qompoter
 ======== install
 
-* kde/attica 5.25.0
+* kde/attica v5.25.0
   Downloading sources from Git...
   Warning: no 'qompoter.pri' found for this package
   done
@@ -10,7 +10,7 @@ Qompoter
   Downloading sources...
   done
 
-* digia/0.5.0 master
+* laumaya/glc-lib master
   Downloading sources from Git...
   Warning: no 'qompoter.pri' found for this package
   done

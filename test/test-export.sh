@@ -12,17 +12,18 @@ do
   mkdir vendor/test
   touch vendor/qompote.pri
   touch vendor/vendor.pri
+  input_file_name=`echo $input | cut -d'/' -f2 | cut -d'.' -f1`
   if ! ../qompoter.sh export --no-color --file "$input" > /dev/null 2>&1
   then
     echo "not ok $i - $input - error during export"
     fails=$((fails+1))
   else
-    if [ ! -f "`date +"%Y-%m-%d"`_install-ok_vendor.zip" ]; then
+    if [ ! -f "`date +"%Y-%m-%d"`_${input_file_name}_vendor.zip" ]; then
       echo "not ok $i - $input - no archive"
       fails=$((fails+1))
     else
-      echo "ok $i - $input"    
-      rm "`date +"%Y-%m-%d"`_install-ok_vendor.zip"
+      echo "ok $i - $input"
+      rm "`date +"%Y-%m-%d"`_${input_file_name}_vendor.zip"
     fi
   fi
   rm -rf vendor
