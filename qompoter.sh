@@ -212,50 +212,84 @@ jsonh()
 # QOMPOTER            #
 #######################
 
+LOG_FILENAME=qompoter.log
+QOMPOTER_FILENAME=qompoter.json
+INQLUDE_FILENAME=
+VENDOR_DIR=vendor
+REPO_PATH=
+IS_INCLUDE_DEV=(-dev)?
+IS_FORCE=0
+IS_NO_QOMPOTE=0
+IS_STABLE_ONLY=0
+IS_VERBOSE=0
+DEPTH_SIZE=10
+DOWNLOADED_PACKAGES=
+NEW_SUBPACKAGES=${QOMPOTER_FILENAME}
+VENDOR_NAME=
+PACKAGE_NAME=
+PACKAGE_VERSION=
+
 usage()
 {
 	cat <<- EOF
 	Usage: $PROGNAME [action] [ --repo <repo> | other options ]
 
 	    action            Select an action:
-	                      inqlude, install, update, export, require, repo-export
+	                        inqlude, install, update, export, require
 	                      Other actions are useful for digging into Qompoter:
-                        jsonh
+	                        jsonh
 
 	Options:
-	    -d, --depth       Depth of the recursivity in the searching of
-	                      subpackages
+	    -d, --depth         Depth of the recursivity in the searching of
+	                        subpackages [default = $DEPTH_SIZE]
 
-	    -f, --file        Pick another file as "qompoter.json"
+	        --inqlude-file  Pick the provided file to search into the
+	                        inqlude repository
 
-	        --force       Force the action
-	                      Supported action is: "install"
+	    -f, --file          Pick another Qompoter file [default = $QOMPOTER_FILENAME]
 
-	    -l, --list        List elements depending of the action
-	                      Supported action is: "require"
+	        --force         Force the action
+	                        Supported action is: install
 
-	        --no-color    Do not enable color on output. [default = false]
+	    -l, --list          List elements depending of the action
+	                        Supported action is: require
 
-	        --no-dev      Do not retrieve dev dependencies listed
-	                      in "require-dev". [default = false]
+	        --minify        Minify the provided file
+	                        Supported action is: inqlude
 
-	    -r, --repo        Select a repository path as a location for
-	                      dependency research. It is used in addition
-	                      of the "repositories" provided in
-	                      "qompoter.json".
-	                      E.g. "repo/repositories/<vendor name>/<project name>"
+	        --no-color      Do not enable color on output [default = false]
 
-	        --stable-only Do not select unstable versions. [default = false]
-	                      E.g. If "v1.*" is given to Qompoter, it will select "v1.0.3"
-	                      and not "v1.0.4-RC1".
+	        --no-dev        Do not retrieve dev dependencies listed
+	                        in "require-dev" [default = false]
+                          Supported action is: install
 
-	    -v, --vendor-dir  Pick another vendor directory as "vendor"
+	        --no-qompote    Do not generate any Qompoter specific stuffs
+	                        like qompote.pri and vendor.pri [default = false]
+	                        Supported action is: install
 
-	    -V, --verbose     Enable more verbosity
+	    -r, --repo          Select a repository path as a location for
+	                        dependency research. It is used in addition
+	                        of the "repositories" provided in
+	                        "qompoter.json".
+	                        E.g. "repo/repositories/<vendor name>/<project name>"
+                          Supported action is: export, install
 
-	    -h, --help        Display this help
+	        --search        Search related packages in a repository
+	                        Supported action is: inqlude
 
-	        --version     Display the version
+	        --stable-only   Do not select unstable versions [default = false]
+	                        E.g. If "v1.*" is given to Qompoter, it will
+	                        select "v1.0.3" and not "v1.0.4-RC1"
+	                        Supported action is: install
+
+	        --vendor-dir    Pick another vendor directory [default = $VENDOR_DIR]
+	                        Supported action is: export, install
+
+	    -V, --verbose       Enable more verbosity
+
+	    -h, --help          Display this help
+
+	    -v, --version       Display the version
 
 	Examples:
 	    Install all dependencies:
@@ -269,6 +303,9 @@ usage()
 
 	    Export existing dependencies:
 	    $PROGNAME export
+
+	    Search dependency in the inqlude repository:
+	    $PROGNAME inqlude --search vogel/injeqt
 
 	EOF
 }
@@ -749,8 +786,8 @@ getProjectRequires()
   local qompoterFile=$1
   echo `cat ${qompoterFile} \
    | jsonh \
-   | grep -E "\[\"require${INCLUDE_DEV}\",\".*\"\]" \
-   | sed -r "s/\"//g;s/\[require${INCLUDE_DEV},//g;s/\]	/ /g;s/dev-//g" \
+   | grep -E "\[\"require${IS_INCLUDE_DEV}\",\".*\"\]" \
+   | sed -r "s/\"//g;s/\[require${IS_INCLUDE_DEV},//g;s/\]	/ /g;s/dev-//g" \
    | tr ' ' '/'`
 }
 
@@ -1047,21 +1084,6 @@ cmdline()
 {
   ACTION=
   SUB_ACTION=
-  LOG_FILENAME=qompoter.log
-  QOMPOTER_FILENAME=qompoter.json
-  INQLUDE_FILENAME=
-  VENDOR_DIR=vendor
-  REPO_PATH=
-  INCLUDE_DEV=(-dev)?
-  IS_FORCE=0
-  IS_STABLE_ONLY=0
-  IS_VERBOSE=0
-  DEPTH_SIZE=10
-  DOWNLOADED_PACKAGES=
-  NEW_SUBPACKAGES=${QOMPOTER_FILENAME}
-  VENDOR_NAME=
-  PACKAGE_NAME=
-  PACKAGE_VERSION=
 
   if [ "$#" -lt "1" ]; then
     echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} missing arguments"
@@ -1097,7 +1119,11 @@ cmdline()
       shift
       ;;
     --no-dev )
-      INCLUDE_DEV=
+      IS_INCLUDE_DEV=
+      shift
+      ;;
+    --no-qompote  )
+      IS_NO_QOMPOTE=1
       shift
       ;;
     --stable-only )
@@ -1106,10 +1132,14 @@ cmdline()
       ;;
     -r | --repo )
       shift
-      REPO_PATH=$1
-      shift
+      if [ "${ACTION}" == "export"  ]; then
+        SUB_ACTION="repo"
+      else
+        REPO_PATH=$1
+        shift
+      fi
       ;;
-    -v | --vendor-dir )
+    --vendor-dir )
       shift
       VENDOR_DIR=$1
       shift
@@ -1122,7 +1152,7 @@ cmdline()
       usage
       exit 0
       ;;
-    --version )
+    -v | --version )
       version
       exit 0
       ;;
@@ -1178,6 +1208,7 @@ cmdline()
 
   if [[ "${ACTION}" == "inqlude" ]] && [[ ${SUB_ACTION} == "" ]]; then
     echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} missing subaction 'search' or 'minify' for action 'inqlude'"
+    echo "Usage: $PROGNAME inqlude [ --minify | --search <vendor/packagename> <version> ]"
     exit -1
   fi
   if [[ "${ACTION}" == "inqlude" ]] && [[ ${SUB_ACTION} == "search" ]]&& [[ ${PACKAGE_NAME} == "" ]]; then
@@ -1210,9 +1241,15 @@ main()
 
   updateVendorDirFromQompoterFile ${QOMPOTER_FILENAME}
   if [ "${ACTION}" == "export" ]; then
-    exportAction ${QOMPOTER_FILENAME} ${VENDOR_DIR} \
-      && echo -e "${FORMAT_OK}done${FORMAT_END}" \
-      || echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}"
+    if [ "${SUB_ACTION}" == "repo" ]; then
+      repoExportAction ${QOMPOTER_FILENAME} \
+        && echo -e "${FORMAT_OK}done${FORMAT_END}" \
+        || echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}"
+    else
+      exportAction ${QOMPOTER_FILENAME} ${VENDOR_DIR} \
+        && echo -e "${FORMAT_OK}done${FORMAT_END}" \
+        || echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}"
+    fi
   elif [ "${ACTION}" == "install" ]; then
     installAction ${QOMPOTER_FILENAME} ${VENDOR_DIR} \
       && echo -e "${FORMAT_OK}done${FORMAT_END}" \
@@ -1241,10 +1278,6 @@ main()
         && echo -e "${FORMAT_OK}done${FORMAT_END}" \
         || echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}"
     fi
-  elif [ "${ACTION}" == "repo-export" ]; then
-    repoExportAction \
-      && echo -e "${FORMAT_OK}done${FORMAT_END}" \
-      || echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}"
   elif [ "${ACTION}" == "update" ]; then
     updateAction ${QOMPOTER_FILENAME} ${VENDOR_DIR} \
       && echo -e "${FORMAT_OK}done${FORMAT_END}" \

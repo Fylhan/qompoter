@@ -5,6 +5,7 @@ Version 0.2
 * [x] Recursive dependencies
 * [x] Allow soft version management v1 (e.g. v0.3.*)
 * [x] Search in the inqlude repository
+* [x] Create auto-completion script
 * [ ] Add "--no-qompote" flag
 * [ ] Clean documentation and release
 

@@ -23,11 +23,22 @@ Works on Linux and Windows (using Git bash). It should also work on Mac and more
 Installation
 --------------------------------
 
-Download Qompoter and make the script file runnable, and move it to a place accessible in the `PATH`:
+Download Qompoter and move it to a place accessible in the `PATH`:
 
 	wget https://raw.githubusercontent.com/Fylhan/qompoter/f5ede63cb54586fc0388a95da3c7cab7ee559f1f/qompoter.sh -O qompoter.sh
-	chmod u+x qompoter.sh
-	mv qompoter.sh /usr/bin/qompoter
+	sudo mv qompoter.sh /usr/bin/qompoter
+
+To enable autocompletion:
+
+	wget https://raw.githubusercontent.com/Fylhan/qompoter/f5ede63cb54586fc0388a95da3c7cab7ee559f1f/qompoter_bash_completion.sh -O qompoter_bash_completion.sh
+	sudo mv qompoter_bash_completion.sh /usr/share/bash-completion/completions/qompoter
+
+And then add the following to your `~/.bashrc` or `~/.profile` file:
+
+	# Qompoter bash completation
+	if [ -f /usr/share/bash-completion/completions/qompoter ]; then
+		source /usr/share/bash-completion/completions/qompoter
+	fi
 
 Usage
 --------------------------------
@@ -63,7 +74,7 @@ Then, download and install dependencies listed in your `qompoter.json` using:
 
 *For more information about the command line options, use `qompoter --help`.*
 
-That's it! You can now include `vendor.pri` in the `.pro` file of your project, and include the dependencies that you required:
+That's it! You can now include `vendor.pri` in the `.pro` file of your project, and use the dependencies that you required:
 
 	CONFIG += platphorm posibrain fylhan
 	include(vendor/vendor.pri)
@@ -85,7 +96,7 @@ Qompoter is released under 2 versions:
 
 In order to simplify numerotation, v0.1 to v0.6 are reserved for "qompoter.sh". Therefore, the first "qompoter" (C++/Qt) version is v0.7. This may change in the future.
 
-There is a previsional [roadmap](TODO.md)
+There is a previsional [roadmap](TODO.md).
 
 Similar projects
 --------------------------------
@@ -99,7 +110,7 @@ Similar projects
 License
 --------------------------------
 
-* Qompoter is distributed under the [LGPL3+](LICENSE) license. *Therefore, you can freely use it in any projects, even closed one. Just keep in mind that if you modify Qompoter, you shall provide these updates as open source. Thanks!*
+* Qompoter is distributed under the [LGPL3+](LICENSE) license. *Therefore, you can freely use it in any projects, even closed ones. Just keep in mind that if you modify Qompoter, you shall provide these updates as open source. Thanks!*
 * Qompoter is using [JSON.sh](https://github.com/dominictarr/JSON.sh) under the MIT and Apache 2 license. Qompoter unit tests are also based on the JSON.sh architecture.
 
 Please feel free to contribute.
