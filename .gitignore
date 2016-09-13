@@ -1,5 +1,6 @@
-*.user
+*.user*
 *.log
+*.un~
 docs/generated
 release*
 vendor
