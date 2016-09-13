@@ -5,6 +5,7 @@ Version 0.2
 * [x] Recursive dependencies
 * [x] Allow soft version management v1 (e.g. v0.3.*)
 * [x] Search in the inqlude repository
+* [ ] Add "--no-qompote" flag
 * [ ] Clean documentation and release
 
 Version 0.3
@@ -34,4 +35,10 @@ Future versions
 * [ ] Split qompoter.sh into several files and add build step to create qompoter.sh
 * [ ] Install Qompoter though the "Qt Maintenance Tool"
 * [ ] Add Qompoter to Debian and other Linux repositories
+* [ ] Describe and implement a "Packagist" like server for Qompoter
+* [ ] Add qompoter install --local / --global
+* [ ] Use QT += package instead of CONFIG which leverage the usage of include(vendor.pri)
+* [ ] Support CMake
+* [ ] Check Windows support
+* [ ] JSON schema for qompoter.json
 

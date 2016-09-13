@@ -8,4 +8,4 @@ script:
   - bash run-all-tests.sh
 branches:
   only:
-    - qompoter-bash
+    - master

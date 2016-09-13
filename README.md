@@ -4,12 +4,12 @@ Qompoter
 An attempt of dependency manager for Qt / C++, because I am sick of managing each C++ piece of code separately!
 
 
-[![Build Status](https://travis-ci.org/Fylhan/qompoter.svg?branch=qompoter-bash)](https://travis-ci.org/Fylhan/qompoter)
+[![Build Status](https://travis-ci.org/Fylhan/qompoter.svg?branch=master)](https://travis-ci.org/Fylhan/qompoter)
 
 The current version is still a work in progress, a lot have to be done to make it really usable. Still, you can:
 
 * describe your dependencies in a "qomposer.json" file
-* search and retrieve all dependencies (also recursively for sub-dependencies) from a Git repository or a structured file system
+* search and retrieve all dependencies (also recursively for sub-dependencies) from the [inqlude](https://inqlude.org/) repository, a Git repository (a local one or something like Github) or a [structured file system](docs/Repositories.md)
 * generate qompote.pri and vendor.pri files to be included and used in your .pro file for Qt
 
 Requirements
@@ -18,12 +18,12 @@ Requirements
 * Bash
 * Git, sed, zip
 
-Works on Linux and Windows (Git bash). It should also work on Mac or Windows (Cygwin or Mysys command line) but I did not test it yet.
+Works on Linux and Windows (using Git bash). It should also work on Mac and more widely on Windows (Cygwin or Mysys command line) but I did not test it yet.
 
 Installation
 --------------------------------
 
-Dowload Qompoter and make the script file runnable, and move it to a place accessible in the `PATH`:
+Download Qompoter and make the script file runnable, and move it to a place accessible in the `PATH`:
 
 	wget https://raw.githubusercontent.com/Fylhan/qompoter/f5ede63cb54586fc0388a95da3c7cab7ee559f1f/qompoter.sh -O qompoter.sh
 	chmod u+x qompoter.sh
@@ -80,16 +80,27 @@ Releases
 --------------------------------
 Qompoter is released under 2 versions:
 
-* The current version is a proof-of-concept called "qompoter-bash", a simple Bash implementation fitted for basic usage. Useful to kickoff the project without involving big development, this version targets basic usage and its development may end once a stable enough version is released.
-* The main "qompoter" version is a more complete implementation in C++/Qt. Developped in the mean time as "qompoter-bash", the "qompoter" version aims to provide more features and flexibilities.
+* The current version is a proof-of-concept developed in bash, useful to kickoff the project without involving big development. It is actually working quite well and is now more than just a proof-of-concept.
+* A more complete implementation has been started in C++/Qt and should provide more portability and robustness if the project grows. The development of this version is currently paused because bash is actually suffisant at the moment.
 
-In order to simplify numerotation, v0.1 to v0.6 are reserved for "qompoter-bash". Therefore, the first "qompoter" version is v0.7. This may change in a near future.
+In order to simplify numerotation, v0.1 to v0.6 are reserved for "qompoter.sh". Therefore, the first "qompoter" (C++/Qt) version is v0.7. This may change in the future.
+
+There is a previsional [roadmap](TODO.md)
+
+Similar projects
+--------------------------------
+
+* [inqlude](http://inqlude.org/) Listing existing Qt libraries
+* [QPM](https://github.com/Cutehacks/qpm) Qt package manager
+* [CPM](https://github.com/iauns/cpm) C++ package manager using CMake
+* [Conan](https://github.com/conan-io/conan) C/C++ distributed package manager
+* [QtPods](https://github.com/qt-pods/qt-pods) Unify packaging of fragment of Qt codes
 
 License
 --------------------------------
 
-* Qompoter is distributed under the LGPL3+ license.
-* Qompoter is using [JSON.sh](https://github.com/dominictarr/JSON.sh) under the MIT and Apache 2 license. Qompoter unit tests are also based on the JSON.sh unit test architecture.
+* Qompoter is distributed under the [LGPL3+](LICENSE) license. *Therefore, you can freely use it in any projects, even closed one. Just keep in mind that if you modify Qompoter, you shall provide these updates as open source. Thanks!*
+* Qompoter is using [JSON.sh](https://github.com/dominictarr/JSON.sh) under the MIT and Apache 2 license. Qompoter unit tests are also based on the JSON.sh architecture.
 
 Please feel free to contribute.
 
