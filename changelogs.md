@@ -7,6 +7,7 @@ Version 0.2
 * Manage recursive dependencies
 * Allow version number with star (e.g. v0.3.*), flag "--stable-only" allows to select only stable releases (e.g. v0.3.2 instead of v0.3.3-RC1)
 * Search in the inqlude repository and download Git packages
+* Create auto-completion script, oh yeah!
 * /!\ Breaking changes: The concept of "action" have been introduced into the command line, you should now use `qompoter install` instead of just `qompoter`
 * Add "inqlude" action
   * "--search" flag: search a package into the inqlude repository
@@ -17,6 +18,8 @@ Version 0.2
 * Add "require" action to list packages required by the provided qompoter.json file
 * Add "--file <file>" parameter to specify another file as qompoter.json
 * Add "--inqlude-file <file>" parameter to specify another file as inqlude-all.json to search into the inqlude repository
+* Add "--no-qompote" flag which prevent the creation of any Qompoter stuff like vendor.pri and qompote.pri
+* Add "--no-color" flag which prevent fancy colors to be displayed
 * Add unit tests, yeah!
 
 Version 0.1

@@ -496,12 +496,14 @@ prepareVendorDir()
 {
   local vendorDir=$1
   mkdir -p ${vendorDir}
-  createQompotePri ${vendorDir}/qompote.pri
-  cat ${vendorDir}/qompote.pri > ${vendorDir}/vendor.pri
-  echo '' >> ${vendorDir}/vendor.pri
-  echo 'INCLUDEPATH += $$PWD' >> ${vendorDir}/vendor.pri
-  echo '$$setLibPath()' >> ${vendorDir}/vendor.pri
-  echo '' >> ${vendorDir}/vendor.pri
+  if [ "${IS_NO_QOMPOTE}" == "0" ]; then
+    createQompotePri ${vendorDir}/qompote.pri
+    cat ${vendorDir}/qompote.pri > ${vendorDir}/vendor.pri
+    echo '' >> ${vendorDir}/vendor.pri
+    echo 'INCLUDEPATH += $$PWD' >> ${vendorDir}/vendor.pri
+    echo '$$setLibPath()' >> ${vendorDir}/vendor.pri
+    echo '' >> ${vendorDir}/vendor.pri
+  fi
 }
 
 downloadPackage()
@@ -574,10 +576,12 @@ downloadPackage()
   # DONE
   else
     # Qompoter.pri
-    if [ -f "${qompoterPriFile}" ]; then
-      cat ${qompoterPriFile} >> ${vendorDir}/vendor.pri
-    else
-      echo "  Warning: no 'qompoter.pri' found for this package"
+    if [ "${IS_NO_QOMPOTE}" == "0" ]; then
+      if [ -f "${qompoterPriFile}" ]; then
+        cat ${qompoterPriFile} >> ${vendorDir}/vendor.pri
+      else
+        echo "  Warning: no 'qompoter.pri' found for this package"
+      fi
     fi
 
     echo -e "  ${FORMAT_OK}done${FORMAT_END}"
