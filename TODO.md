@@ -1,16 +1,20 @@
 Qompoter Roadmap
 ================
-Version 0.2
+
+Version 0.2 - released 2016, october
 -----------
+
 * [x] Recursive dependencies
 * [x] Allow soft version management v1 (e.g. v0.3.*)
 * [x] Search in the inqlude repository
 * [x] Create auto-completion script
 * [x] Add "--no-qompote" flag
-* [ ] Clean documentation and release
+* [x] Clean documentation and release
 
 Version 0.3
 -----------
+
+* [ ] Fix Git based package issue
 * [ ] Update automaticaly the inqlude repository data
 * [ ] Integrate automaticly inqlude packages if possible (generate qompoter.pri, ... ?)
 * [ ] Prevent from overriding changes (md5sum)
@@ -22,6 +26,7 @@ Version 0.3
 
 Future versions
 -----------
+
 * [ ] Allow soft version management v2 (e.g. ^v1.0 etc)
 * [ ] Search in other package manager repositories (QPM, CPM, ...)
 * [ ] First security level: integrity of packages (md5sum)
