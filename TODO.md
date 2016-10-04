@@ -26,7 +26,7 @@ Future versions
 * [ ] Search in other package manager repositories (QPM, CPM, ...)
 * [ ] First security level: integrity of packages (md5sum)
 * [ ] qompoter self-update (from Github)
-* [ ] qompoter repo-export
+* [ ] qompoter export --repo / --vendor
 * [ ] qompoter require
 * [ ] Better documentation
 * [ ] FAQ
