@@ -2,7 +2,7 @@
 
 readonly PROGNAME=$(basename $0)
 readonly PROGDIR=$(readlink -m $(dirname $0))
-readonly PROGVERSION="v0.2.6"
+readonly PROGVERSION="v0.3.0-alpha"
 readonly ARGS="$@"
 FORMAT_OK="\e[1;32m"
 FORMAT_FAIL="\e[1;31m"
@@ -327,29 +327,36 @@ createQompotePri()
 # Export and return LIBPATH
 defineReplace(setLibPath){
     LIBPATH = lib
+
+    # Windows / Linux
     win32|win32-cross-mingw {
-	LIBPATH = $${LIBPATH}_windows
+      LIBPATH = $${LIBPATH}_windows
     }
     else:unix {
-	LIBPATH = $${LIBPATH}_linux
+      LIBPATH = $${LIBPATH}_linux
     }
-
+    # Precise architecture for Linux host
     linux-g++-32 {
-	LIBPATH = $${LIBPATH}_32
+      LIBPATH = $${LIBPATH}_32
     }
     else:linux-g++-64 {
-	LIBPATH = $${LIBPATH}_64
+      LIBPATH = $${LIBPATH}_64
     }
     else:linux-arm-gnueabi-g++ {
-	LIBPATH = $${LIBPATH}_arm-gnueabi
+      LIBPATH = $${LIBPATH}_arm-gnueabi
     }
+    # Or use architecture of the host when not provided
     else {
-	contains(QMAKE_HOST.arch, x86_64) {
-		LIBPATH = $${LIBPATH}_64
-	}
-	else {
-		LIBPATH = $${LIBPATH}_32
-	}
+      contains(QMAKE_HOST.arch, x86_64) {
+        LIBPATH = $${LIBPATH}_64
+      }
+      else {
+        LIBPATH = $${LIBPATH}_32
+      }
+    }
+    # Yocto
+    !isEmpty($$(TARGET_PREFIX)) {
+        LIBPATH = $$(TARGET_PREFIX)lib
     }
 
     export(LIBPATH)
@@ -364,7 +371,7 @@ defineReplace(setLibName){
     LIBNAME = $$1
     VERSION = $$2
     CONFIG(debug,debug|release){
-	LIBNAME = $${LIBNAME}d
+      LIBNAME = $${LIBNAME}d
     }
 
     export(VERSION)
@@ -379,10 +386,10 @@ defineReplace(getLibName){
     ExtLibName = $$1
     QtVersion = $$2
     equals(QtVersion, "Qt"){
-	ExtLibName = $${ExtLibName}-Qt$$QT_VERSION
+      ExtLibName = $${ExtLibName}-Qt$$QT_VERSION
     }
     CONFIG(debug,debug|release){
-	ExtLibName = $${ExtLibName}d
+      ExtLibName = $${ExtLibName}d
     }
 
     return($${ExtLibName})
@@ -411,6 +418,9 @@ defineReplace(getCompleteLibName){
         LIBSUFIX = so
       }
     }
+    contains(CONFIG,"static"){
+      LIBSUFIX = a
+    }
     return(lib$$getLibName($$ExtLibName,$$QtVersion).$$LIBSUFIX)
 }
 
@@ -419,51 +429,61 @@ defineReplace(getCompleteLibName){
 # Export MOC_DIR, OBJECTS_DIR, UI_DIR, TARGET, LIBS
 defineReplace(setBuildDir){
     CONFIG(debug,debug|release){
-	MOC_DIR = debug
-	OBJECTS_DIR = debug
-	UI_DIR      = debug
+      MOC_DIR = debug
+      OBJECTS_DIR = debug
+      UI_DIR      = debug
     }
     else {
-	MOC_DIR = release
-	OBJECTS_DIR = release
-	UI_DIR      = release
+      MOC_DIR = release
+      OBJECTS_DIR = release
+      UI_DIR      = release
     }
 
+    # Windows
     win32|win32-cross-mingw{
-	MOC_DIR     = $${MOC_DIR}/build_windows
-	OBJECTS_DIR = $${OBJECTS_DIR}/build_windows
-	UI_DIR      = $${UI_DIR}/build_windows
+      MOC_DIR     = $${MOC_DIR}/build_windows
+      OBJECTS_DIR = $${OBJECTS_DIR}/build_windows
+      UI_DIR      = $${UI_DIR}/build_windows
     }
+    # Linux for different architecture
     else:linux-g++-32{
-	MOC_DIR     = $${MOC_DIR}/build_linux_32
-	OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_32
-	UI_DIR      = $${UI_DIR}/build_linux_32
-	LIBS       += -L/usr/lib/gcc/i586-linux-gnu/4.9
+      MOC_DIR     = $${MOC_DIR}/build_linux_32
+      OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_32
+      UI_DIR      = $${UI_DIR}/build_linux_32
+    	LIBS       += -L/usr/lib/gcc/i586-linux-gnu/4.9
     }
     else:linux-g++-64{
-	MOC_DIR     = $${MOC_DIR}/build_linux_64
-	OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_64
-	UI_DIR      = $${UI_DIR}/build_linux_64
-	LIBS       += -L/usr/lib/gcc/x86_64-linux-gnu/4.9
+      MOC_DIR     = $${MOC_DIR}/build_linux_64
+      OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_64
+      UI_DIR      = $${UI_DIR}/build_linux_64
+      LIBS       += -L/usr/lib/gcc/x86_64-linux-gnu/4.9
     }
     else:linux-arm-gnueabi-g++{
-	MOC_DIR     = $${MOC_DIR}/build_linux_arm-gnueabi
-	OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_arm-gnueabi
-	UI_DIR      = $${UI_DIR}/build_linux_arm-gnueabi
-	LIBS       += -L/usr/lib/gcc/arm-linux-gnueabi/4.9
+      MOC_DIR     = $${MOC_DIR}/build_linux_arm-gnueabi
+      OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_arm-gnueabi
+      UI_DIR      = $${UI_DIR}/build_linux_arm-gnueabi
+      LIBS       += -L/usr/lib/gcc/arm-linux-gnueabi/4.9
     }
+    # Linux use the architecture of the host
     else:unix{
-	contains(QMAKE_HOST.arch, x86_64){
-	    MOC_DIR     = $${MOC_DIR}/build_linux_64
-	    OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_64
-	    UI_DIR      = $${UI_DIR}/build_linux_64
-	}
-	else{
-	    MOC_DIR     = $${MOC_DIR}/build_linux_32
-	    OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_32
-	    UI_DIR      = $${UI_DIR}/build_linux_32
-	}
+      contains(QMAKE_HOST.arch, x86_64){
+          MOC_DIR     = $${MOC_DIR}/build_linux_64
+          OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_64
+          UI_DIR      = $${UI_DIR}/build_linux_64
+      }
+      else{
+          MOC_DIR     = $${MOC_DIR}/build_linux_32
+          OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_32
+          UI_DIR      = $${UI_DIR}/build_linux_32
+      }
     }
+    # Yocto
+    !isEmpty($$(TARGET_PREFIX)) {
+      MOC_DIR     = $${MOC_DIR}/$$(TARGET_PREFIX)build
+      OBJECTS_DIR = $${OBJECTS_DIR}/$$(TARGET_PREFIX)build
+      UI_DIR      = $${UI_DIR}/$$(TARGET_PREFIX)build
+    }
+
     DESTDIR = $$OUT_PWD/$$OBJECTS_DIR
 
     export(DESTDIR)
@@ -701,8 +721,7 @@ downloadPackageFromGit()
     if [ "$IS_FORCE" != "1" ]; then
       echo "  Use --force to discard change and continue."
       cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
-
-      return 2
+      return 3
     fi
   fi
 
