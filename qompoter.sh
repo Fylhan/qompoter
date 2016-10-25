@@ -534,7 +534,7 @@ downloadPackage()
   local packageName=$4
   local requireName=$vendorName/$packageName
   local requireVersion=$5
-  local result=0
+  local result=1
   local isSource=1
   if [[ "$requireVersion" == *"-lib" ]]; then
     isSource=0
@@ -565,13 +565,13 @@ downloadPackage()
     isGitRepositories ${requireBasePath} && gitPath=${requireBasePath}
     if [ ! -z "${gitPath}" ]; then
       echo "  Downloading sources from Git..."
-      downloadPackageFromGit ${gitPath} ${vendorDir} ${packageName} ${requireVersion} \
-        || result=1
+      downloadPackageFromGit ${gitPath} ${vendorDir} ${packageName} ${requireVersion}
+      result=$?
     fi
 
     # Copy (also done if Git failed)
-    if [ ! -d "${requireLocalPath}/.git" ] || [ "${result}" == "1" ]; then
-      if [ "$result" == "1" ]; then
+    if [ "${result}" == "1" ] || [ "${result}" == "2" ]; then
+      if [ ! -z "${gitPath}" ]; then
         echo "  Warning: error with Git, Qompoter will try downloading sources from scratch..."
         mkdir -p ${requireLocalPath}
       else
@@ -585,11 +585,12 @@ downloadPackage()
   else
     echo "  Downloading lib..."
     downloadLibFromCp ${repositoryPath} ${vendorDir} ${vendorName} ${packageName} ${requireVersion}  \
-      || result=-1
+      && result=0 \
+      || result=1
   fi
 
   # FAILURE
-  if [ "$result" == "1" ]; then
+  if [ "$result" != "0" ]; then
     echo -e "  ${FORMAT_FAIL}FAILURE${FORMAT_END}"
     echo
     return 1
@@ -683,6 +684,10 @@ downloadLibFromCp()
   return 0
 }
 
+#**
+# * @return 1 on generic error, 2 on git error, 3 on git warning (force required toby-pass and continue)
+# * @exit -1 on fatal issue
+#**
 downloadPackageFromGit()
 {
   local gitPath=$1
@@ -717,11 +722,13 @@ downloadPackageFromGit()
   ilog "  git status -s"
   local hasChanged=`git status -s`
   if [ ! -z "${hasChanged}" ]; then
-    echo "  Warning: there are manual updates on this project."
     if [ "$IS_FORCE" != "1" ]; then
+      echo "  Warning: there are manual updates on this project."
       echo "  Use --force to discard change and continue."
       cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
       return 3
+    else
+      echo "  Warning: there were manual updates on this project. Update forced."
     fi
   fi
 
