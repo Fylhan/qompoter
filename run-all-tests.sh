@@ -19,7 +19,7 @@ done
 
 echo $suffix
 
-for test in *.sh ;
+for test in test-*.sh ;
 do
   tests=$((tests+1))
   echo -e "\e[1mTEST\e[0m: $test"

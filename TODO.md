@@ -14,9 +14,10 @@ Version 0.2 - released 2016, october
 Version 0.3
 -----------
 
-* [ ] qompoter init
-* [ ] Fix Git based package issue: branch, tag, commit ; first install or update
+* [x] Fix Git based package issue: branch, tag, commit ; first install or update
 * [x] Do not automatically override Git package in vendor with manual changes
+* [ ] qompoter init
+* [ ] Cache downloaded packages
 * [ ] Prevent from overriding manual changes for all packages in vendor (md5sum)
 * [ ] Allow package to be available as zip or tar in repositories (this will also preserve symbolic links and reduce space)
 * [ ] Integrate automaticly inqlude packages if possible (generate qompoter.pri, ... ?)

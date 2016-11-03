@@ -719,6 +719,7 @@ downloadPackageFromGit()
   local LOG_FILENAME_PACKAGE=../../${LOG_FILENAME}
 
   # Verify no manual changes and warning otherwize
+  #~ TODO Use also last commit number
   ilog "  git status -s"
   local hasChanged=`git status -s`
   if [ ! -z "${hasChanged}" ]; then
@@ -740,6 +741,7 @@ downloadPackageFromGit()
   # Select the best version (if variadic version number provided)
   if [ "${requireVersion#*\*}" != "$requireVersion" ]; then
     ilog "  git tag --list"
+    ilog "  "`git tag --list`
     local selectedVersion=`git tag --list | getBestVersionNumber`
     if [ -z "${selectedVersion}" ]; then
       echo "  Oups, no matching version for \"${requireVersion}\""
@@ -1272,48 +1274,39 @@ main()
   updateVendorDirFromQompoterFile ${QOMPOTER_FILENAME}
   if [ "${ACTION}" == "export" ]; then
     if [ "${SUB_ACTION}" == "repo" ]; then
-      repoExportAction ${QOMPOTER_FILENAME} \
-        && echo -e "${FORMAT_OK}done${FORMAT_END}" \
-        || echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}"
+      repoExportAction ${QOMPOTER_FILENAME}
     else
-      exportAction ${QOMPOTER_FILENAME} ${VENDOR_DIR} \
-        && echo -e "${FORMAT_OK}done${FORMAT_END}" \
-        || echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}"
+      exportAction ${QOMPOTER_FILENAME} ${VENDOR_DIR}
     fi
   elif [ "${ACTION}" == "install" ]; then
-    installAction ${QOMPOTER_FILENAME} ${VENDOR_DIR} \
-      && echo -e "${FORMAT_OK}done${FORMAT_END}" \
-      || echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}"
+    installAction ${QOMPOTER_FILENAME} ${VENDOR_DIR}
   elif [ "${ACTION}" == "inqlude" ]; then
     if [ "${SUB_ACTION}" == "search" ]; then
-      inqludeSearchAction ${VENDOR_NAME} ${PACKAGE_NAME} ${PACKAGE_VERSION} ${INQLUDE_FILENAME} \
-        && echo -e "${FORMAT_OK}done${FORMAT_END}" \
-        || echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}"
+      inqludeSearchAction ${VENDOR_NAME} ${PACKAGE_NAME} ${PACKAGE_VERSION} ${INQLUDE_FILENAME}
     elif [ "${SUB_ACTION}" == "minify" ]; then
-      inqludeMinifyAction ${INQLUDE_FILENAME} \
-        && echo -e "${FORMAT_OK}done${FORMAT_END}" \
-        || echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}"
+      inqludeMinifyAction ${INQLUDE_FILENAME}
     fi
   elif [ "${ACTION}" == "jsonh" ]; then
-    jsonhAction ${QOMPOTER_FILENAME} \
-      && echo -e "${FORMAT_OK}done${FORMAT_END}" \
-      || echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}"
+    jsonhAction ${QOMPOTER_FILENAME}
   elif [ "${ACTION}" == "require" ]; then
     if [ "${SUB_ACTION}" == "list" ]; then
-      requireListAction ${QOMPOTER_FILENAME} \
-        && echo -e "${FORMAT_OK}done${FORMAT_END}" \
-        || echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}"
+      requireListAction ${QOMPOTER_FILENAME}
     else
-      requireAction ${QOMPOTER_FILENAME} \
-        && echo -e "${FORMAT_OK}done${FORMAT_END}" \
-        || echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}"
+      requireAction ${QOMPOTER_FILENAME}
     fi
   elif [ "${ACTION}" == "update" ]; then
-    updateAction ${QOMPOTER_FILENAME} ${VENDOR_DIR} \
-      && echo -e "${FORMAT_OK}done${FORMAT_END}" \
-      || echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}"
+    updateAction ${QOMPOTER_FILENAME} ${VENDOR_DIR}
   else
     echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} Unknown action '${ACTION}'"
+    return 1
+  fi
+
+  if [ "$?" != "0" ]; then
+    echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}"
+    return 1
+  else
+    echo -e "${FORMAT_OK}done${FORMAT_END}"
+    return 0
   fi
 
   if [ "$IS_VERBOSE" == "0" ]; then
