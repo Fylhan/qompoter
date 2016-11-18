@@ -2,7 +2,7 @@
 
 readonly PROGNAME=$(basename $0)
 readonly PROGDIR=$(readlink -m $(dirname $0))
-readonly PROGVERSION="v0.3.0-alpha"
+readonly PROGVERSION="v0.3.0"
 readonly ARGS="$@"
 FORMAT_OK="\e[1;32m"
 FORMAT_FAIL="\e[1;31m"
@@ -370,39 +370,41 @@ createQompotePri()
 # Generate a lib path name depending of the OS and the arch
 # Export and return LIBPATH
 defineReplace(setLibPath){
-    LIBPATH = lib
-
-    # Windows / Linux
-    win32|win32-cross-mingw {
-      LIBPATH = $${LIBPATH}_windows
+    # Detection of YoctoLinux SDK
+    YOCTO = $$(TARGET_PREFIX)
+    !isEmpty(YOCTO) {
+      LIBPATH = $${YOCTO}lib
     }
-    else:unix {
-      LIBPATH = $${LIBPATH}_linux
-    }
-    # Precise architecture for Linux host
-    linux-g++-32 {
-      LIBPATH = $${LIBPATH}_32
-    }
-    else:linux-g++-64 {
-      LIBPATH = $${LIBPATH}_64
-    }
-    else:linux-arm-gnueabi-g++ {
-      LIBPATH = $${LIBPATH}_arm-gnueabi
-    }
-    # Or use architecture of the host when not provided
     else {
-      contains(QMAKE_HOST.arch, x86_64) {
-        LIBPATH = $${LIBPATH}_64
+      LIBPATH = lib
+      # Windows / Linux
+      win32|win32-cross-mingw {
+        LIBPATH = $${LIBPATH}_windows
       }
-      else {
+      else:unix {
+        LIBPATH = $${LIBPATH}_linux
+      }
+      # Precise architecture for Linux host
+      linux-g++-32 {
         LIBPATH = $${LIBPATH}_32
       }
+      else:linux-g++-64 {
+        LIBPATH = $${LIBPATH}_64
+      }
+      else:linux-arm-gnueabi-g++ {
+        LIBPATH = $${LIBPATH}_arm-gnueabi
+      }
+      # Or use architecture of the host when not provided
+      else {
+        contains(QMAKE_HOST.arch, x86_64) {
+          LIBPATH = $${LIBPATH}_64
+        }
+        else {
+          LIBPATH = $${LIBPATH}_32
+        }
+      }
     }
-    # Yocto
-    !isEmpty($$(TARGET_PREFIX)) {
-        LIBPATH = $$(TARGET_PREFIX)lib
-    }
-
+    
     export(LIBPATH)
     return($${LIBPATH})
 }
@@ -483,8 +485,15 @@ defineReplace(setBuildDir){
       UI_DIR      = release
     }
 
+    # Detection of YoctoLinux SDK
+    YOCTO = $$(TARGET_PREFIX)
+    !isEmpty(YOCTO) {
+      MOC_DIR     = $${MOC_DIR}/$${YOCTO}build
+      OBJECTS_DIR = $${OBJECTS_DIR}/$${YOCTO}build
+      UI_DIR      = $${UI_DIR}/$${YOCTO}build
+    }
     # Windows
-    win32|win32-cross-mingw{
+    else:win32|win32-cross-mingw{
       MOC_DIR     = $${MOC_DIR}/build_windows
       OBJECTS_DIR = $${OBJECTS_DIR}/build_windows
       UI_DIR      = $${UI_DIR}/build_windows
@@ -520,12 +529,6 @@ defineReplace(setBuildDir){
           OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_32
           UI_DIR      = $${UI_DIR}/build_linux_32
       }
-    }
-    # Yocto
-    !isEmpty($$(TARGET_PREFIX)) {
-      MOC_DIR     = $${MOC_DIR}/$$(TARGET_PREFIX)build
-      OBJECTS_DIR = $${OBJECTS_DIR}/$$(TARGET_PREFIX)build
-      UI_DIR      = $${UI_DIR}/$$(TARGET_PREFIX)build
     }
 
     DESTDIR = $$OUT_PWD/$$OBJECTS_DIR
@@ -717,15 +720,24 @@ downloadLibFromCp()
 
   # Copy
   local requirePath=${requireBasePath}/${requireVersion}
-  cp -rf ${requirePath}/lib_* ${vendorDir} \
-      >> ${LOG_FILENAME} 2>&1
-  cp -rf ${requirePath}/include ${requireLocalPath} \
-      >> ${LOG_FILENAME} 2>&1
-  cp -rf ${requirePath}/qompoter.* ${requireLocalPath} \
-      >> ${LOG_FILENAME} 2>&1
-  cp -rf ${requirePath}/*.md ${requireLocalPath} \
-      >> ${LOG_FILENAME} 2>&1
-  return 0
+  if [ -d "${requirePath}" ]; then
+    ilog "  Copy \"${requirePath}/*lib_?*\" to \"${vendorDir}\""
+    cp -rf ${requirePath}/lib_* ${vendorDir} \
+        >> ${LOG_FILENAME} 2>&1
+    cp -rf ${requirePath}/*lib ${vendorDir} \
+        >> ${LOG_FILENAME} 2>&1
+    ilog "  Copy \"${requirePath}/include\" to \"${requireLocalPath}\""
+    cp -rf ${requirePath}/include ${requireLocalPath} \
+        >> ${LOG_FILENAME} 2>&1
+    cp -rf ${requirePath}/qompoter.* ${requireLocalPath} \
+        >> ${LOG_FILENAME} 2>&1
+    cp -rf ${requirePath}/*.md ${requireLocalPath} \
+        >> ${LOG_FILENAME} 2>&1
+    return 0
+  fi
+  rm -rf ${requireLocalPath}
+  echo "  Error: no library found \"${requirePath}\""
+  return 1
 }
 
 #**
@@ -785,7 +797,7 @@ downloadPackageFromGit()
   # Select the best version (if variadic version number provided)
   if [ "${requireVersion#*\*}" != "$requireVersion" ]; then
     ilog "  git tag --list"
-    ilog "  "`git tag --list`
+    ilog "    "`git tag --list`
     local selectedVersion=`git tag --list | getBestVersionNumber`
     if [ -z "${selectedVersion}" ]; then
       echo "  Oups, no matching version for \"${requireVersion}\""
