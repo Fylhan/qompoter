@@ -1,5 +1,5 @@
 {
-	"name": "install-ok/qompoter-versionstar-offline",
+	"name": "test/install-nok-badversion-lib",
 	"authors": [
 		{
 			"name": "Fylhan",
@@ -7,7 +7,7 @@
 		}
 	],
 	"require": {
-		"cp/fylhan": "v1.*",
-		"cp/acme-cp": "v1.*-lib"
+		"cp/acme-cp": "v0.1-lib",
+		"cp/fylhan2": "v1.0"
 	}
 }

@@ -17,6 +17,7 @@ Version 0.3
 * [x] Fix Git based package issue: branch, tag, commit ; first install or update
 * [x] Do not automatically override Git package in vendor with manual changes
 * [ ] qompoter init
+* [x] Fix: download lib does not failed properly
 * [ ] Cache downloaded packages
 * [ ] Prevent from overriding manual changes for all packages in vendor (md5sum)
 * [ ] Allow package to be available as zip or tar in repositories (this will also preserve symbolic links and reduce space)
@@ -50,3 +51,8 @@ Future versions
 * [ ] Support CMake
 * [ ] Check Windows support
 * [ ] JSON schema for qompoter.json
+
+Note
+-----------
+qompoter=/home/Project/Test/qompoter-repo
+qompoter=/home/smb4k/SQUEAK/Project/PlateformeVehiculeElectrique/qompoter

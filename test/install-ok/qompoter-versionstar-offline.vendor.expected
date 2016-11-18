@@ -1,6 +1,11 @@
 vendor
+vendor/acme-cp
+vendor/acme-cp/qompoter.json
+vendor/acme-cp/qompoter.pri
 vendor/fylhan
 vendor/fylhan/qompoter.json
 vendor/fylhan/qompoter.pri
+vendor/lib_linux_64
+vendor/lib_linux_64/acme-cp_fake.a
 vendor/qompote.pri
 vendor/vendor.pri

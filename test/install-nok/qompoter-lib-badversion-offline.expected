@@ -1,0 +1,9 @@
+Qompoter
+======== install
+
+* cp/acme-cp v0.1-lib
+  Downloading lib...
+  Error: no library found "qompoter-repo/cp/acme-cp/v0.1-lib"
+  FAILURE
+
+FAILURE
