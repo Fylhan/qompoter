@@ -208,9 +208,53 @@ jsonh()
 }
 
 
+
 #######################
-# QOMPOTER            #
 #######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#                     #
+#                     #
+#                     #
+#      QOMPOTER       #
+#                     #
+#                     #
+#                     #
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+#######################
+
 
 LOG_FILENAME=qompoter.log
 QOMPOTER_FILENAME=qompoter.json
@@ -235,7 +279,7 @@ usage()
 	Usage: $PROGNAME [action] [ --repo <repo> | other options ]
 
 	    action            Select an action:
-	                        inqlude, install, update, export, require
+	                        export, init, inqlude, install, update, require
 	                      Other actions are useful for digging into Qompoter:
 	                        jsonh
 
@@ -265,14 +309,14 @@ usage()
 
 	        --no-qompote    Do not generate any Qompoter specific stuffs
 	                        like qompote.pri and vendor.pri [default = false]
-	                        Supported action is: install
+	                        Supported actions are: init, install
 
 	    -r, --repo          Select a repository path as a location for
 	                        dependency research. It is used in addition
 	                        of the "repositories" provided in
 	                        "qompoter.json".
 	                        E.g. "repo/repositories/<vendor name>/<project name>"
-                          Supported action is: export, install
+                          Supported actions are: export, install
 
 	        --search        Search related packages in a repository
 	                        Supported action is: inqlude
@@ -283,7 +327,7 @@ usage()
 	                        Supported action is: install
 
 	        --vendor-dir    Pick another vendor directory [default = $VENDOR_DIR]
-	                        Supported action is: export, install
+	                        Supported actions are: export, install
 
 	    -V, --verbose       Enable more verbosity
 
@@ -958,6 +1002,128 @@ getPackageInqludeData()
    | sed -r "s/\[${packageId},\"${keys}\"\]\\s*\"([^\"]*)\"/\1/"
 }
 
+exportAction()
+{
+  local qompoterFile=$1
+
+  checkQompoterFile ${qompoterFile} --quiet || return 100
+  local vendorBackup=`date +"%Y-%m-%d"`_`getProjectName ${qompoterFile}`_${VENDOR_DIR}.zip
+  if [ -f "${vendorBackup}" ]; then
+    rm ${vendorBackup}
+  fi
+
+  if [ -d "${VENDOR_DIR}" ]; then
+    zip ${vendorBackup} -r ${VENDOR_DIR} \
+      >> ${LOG_FILENAME} 2>&1
+    echo "Exported to ${vendorBackup}"
+  else
+    echo "Nothing to do: no '${VENDOR_DIR}' dir"
+    return 0
+  fi
+}
+
+initAction()
+{
+  local vendorName=$1
+  local packageName=$2
+  local requireVersion=$3
+  local requireName=${vendorName}/${packageName}
+  local qompoterFile=$4
+  local qtProFile="${packageName}.pro"
+  local qtGlobalPriFile='.qmake.conf'
+
+  echo "Init ${requireName} ${requireVersion}..."
+  echo
+  
+  local dirs=('src' 'test')
+  for i in "${dirs[@]}"; do
+    if [ ! -d "${i}" ]; then
+      echo "* Create \"${i}\" dir"
+      mkdir ${i}
+    else
+      echo "* Do not override \"${i}\" dir"
+    fi
+  done
+
+  local files=('README.md' 'changelogs.md')
+  for i in "${files[@]}"; do
+    if [ ! -f "${i}" ]; then
+      echo "* Create \"${i}\" file"
+      touch ${i}
+    else
+      echo "* Do not override \"${i}\" file"
+    fi
+  done
+  
+  local qtFiles=("${qtProFile}" "${qtGlobalPriFile}")
+  local qompoterFiles=('${qompoterFile}')
+  local qompoterLibFiles=('qompoter.pri')
+  # qompoter.json
+  if [ "$IS_FORCE" == "1" ] || [ ! -f "${qompoterFile}" ]; then
+    echo "* Create \"${qompoterFile}\" file"
+    cat <<- EOF > ${qompoterFile}
+{
+  "name": "${requireName}",
+  "version": "${requireVersion}"
+}
+EOF
+  else
+    echo "* Do not override \"${qompoterFile}\" file"
+  fi
+  
+
+  # *.pro
+  if [ "$IS_FORCE" == "1" ] || [ ! -f "${packageName}.pro" ]; then
+    echo "* Create \"${packageName}.pro\" file"
+    cat <<- EOF > ${packageName}.pro
+TEMPLATE = subdirs
+
+SUBDIRS += src
+SUBDIRS += test
+
+OTHER_FILES += \\
+    .qmake.conf \\
+    build.xml \\
+    build.properties \\
+    build.properties.dist \\
+    qompoter.json \\
+    README.md \\
+    changelogs.md \\
+
+include(\$\$PWD/vendor/qompote.pri)
+\$\$setBuildDir()
+message("\$\$APPNAME [ build folder is \$\$OBJECTS_DIR ]")
+EOF
+  else
+    echo "* Do not override \"${qompoterFile}\" file"
+  fi
+  
+  # .qmake.conf
+  if [ "$IS_FORCE" == "1" ] || [ ! -f "${qtGlobalPriFile}" ]; then
+    echo "* Create \"${qtGlobalPriFile}\" file"
+    cat <<- EOF > ${qtGlobalPriFile}
+# Included into every .pro and .pri files
+VENDORNAME = ${vendorName}
+APPNAME = ${packageName}
+APPVERSION = ${requireVersion}
+win32 {
+    BUILDDATE = \$\$system("data /t")
+} else {
+    BUILDDATE = \$\$system("date --rfc-3339=date")
+}
+DEFINES += VENDORNAME=\\\\\\"\$\${VENDORNAME}\\\\\\"
+DEFINES += APPNAME=\\\\\\"\$\${APPNAME}\\\\\\"
+DEFINES += APPVERSION=\\\\\\"\$\${APPVERSION}\\\\\\"
+DEFINES += BUILDDATE=\\\\\\"\$\${BUILDDATE}\\\\\\"
+EOF
+  else
+    echo "* Do not override \"${qtGlobalPriFile}\" file"
+  fi
+  
+  echo
+  
+}
+
 #~ To be tested with: attica (Git url), diff-match-path (Unknown VCS but download url), kdtools (no url), unknown-package (not found)
 inqludeSearchAction()
 {
@@ -1019,26 +1185,6 @@ inqludeMinifyAction()
   minifyInqludeFile ${inqludeAllFile} \
     > ${inqludeAllFile}.min
   echo
-}
-
-exportAction()
-{
-  local qompoterFile=$1
-
-  checkQompoterFile ${qompoterFile} --quiet || return 100
-  local vendorBackup=`date +"%Y-%m-%d"`_`getProjectName ${qompoterFile}`_${VENDOR_DIR}.zip
-  if [ -f "${vendorBackup}" ]; then
-    rm ${vendorBackup}
-  fi
-
-  if [ -d "${VENDOR_DIR}" ]; then
-    zip ${vendorBackup} -r ${VENDOR_DIR} \
-      >> ${LOG_FILENAME} 2>&1
-    echo "Exported to ${vendorBackup}"
-  else
-    echo "Nothing to do: no '${VENDOR_DIR}' dir"
-    return 0
-  fi
 }
 
 installAction()
@@ -1216,7 +1362,7 @@ cmdline()
       if [ "${ACTION}" == ""  ]; then
         ACTION=$1
         shift
-      elif [ "${ACTION}" == "inqlude"  ]; then
+      elif [ "${ACTION}" == "inqlude"  ] || [ "${ACTION}" == "init" ]; then
         if [ "${VENDOR_NAME}" == ""  ]; then
           VENDOR_NAME=`echo ${1} | cut -d'/' -f1`
           PACKAGE_NAME=`echo ${1} | cut -d'/' -f2`
@@ -1225,12 +1371,12 @@ cmdline()
           PACKAGE_VERSION=$1
           shift
         else
-          echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} unknwon argument '$1'"
+          echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} unknown argument '$1'"
           usage
           exit -1
         fi
       else
-        echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} unknwon argument '$1'"
+        echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} unknown argument '$1'"
         usage
         exit -1
       fi
@@ -1272,36 +1418,48 @@ main()
   echo
 
   updateVendorDirFromQompoterFile ${QOMPOTER_FILENAME}
-  if [ "${ACTION}" == "export" ]; then
-    if [ "${SUB_ACTION}" == "repo" ]; then
-      repoExportAction ${QOMPOTER_FILENAME}
-    else
-      exportAction ${QOMPOTER_FILENAME} ${VENDOR_DIR}
-    fi
-  elif [ "${ACTION}" == "install" ]; then
-    installAction ${QOMPOTER_FILENAME} ${VENDOR_DIR}
-  elif [ "${ACTION}" == "inqlude" ]; then
-    if [ "${SUB_ACTION}" == "search" ]; then
-      inqludeSearchAction ${VENDOR_NAME} ${PACKAGE_NAME} ${PACKAGE_VERSION} ${INQLUDE_FILENAME}
-    elif [ "${SUB_ACTION}" == "minify" ]; then
-      inqludeMinifyAction ${INQLUDE_FILENAME}
-    fi
-  elif [ "${ACTION}" == "jsonh" ]; then
-    jsonhAction ${QOMPOTER_FILENAME}
-  elif [ "${ACTION}" == "require" ]; then
-    if [ "${SUB_ACTION}" == "list" ]; then
-      requireListAction ${QOMPOTER_FILENAME}
-    else
-      requireAction ${QOMPOTER_FILENAME}
-    fi
-  elif [ "${ACTION}" == "update" ]; then
-    updateAction ${QOMPOTER_FILENAME} ${VENDOR_DIR}
-  else
-    echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} Unknown action '${ACTION}'"
-    return 1
-  fi
+  case ${ACTION} in
+    "export")
+      if [ "${SUB_ACTION}" == "repo" ]; then
+        repoExportAction ${QOMPOTER_FILENAME}
+      else
+        exportAction ${QOMPOTER_FILENAME} ${VENDOR_DIR}
+      fi
+      ;;
+    "init")
+      initAction ${VENDOR_NAME} ${PACKAGE_NAME} "${PACKAGE_VERSION}" ${QOMPOTER_FILENAME}
+      ;;
+    "inqlude")
+      if [ "${SUB_ACTION}" == "search" ]; then
+        inqludeSearchAction ${VENDOR_NAME} ${PACKAGE_NAME} ${PACKAGE_VERSION} ${INQLUDE_FILENAME}
+      elif [ "${SUB_ACTION}" == "minify" ]; then
+        inqludeMinifyAction ${INQLUDE_FILENAME}
+      fi
+      ;;
+    "install")
+      installAction ${QOMPOTER_FILENAME} ${VENDOR_DIR}
+      ;;
+    "jsonh")
+      jsonhAction ${QOMPOTER_FILENAME}
+      ;;
+    "require")
+      if [ "${SUB_ACTION}" == "list" ]; then
+        requireListAction ${QOMPOTER_FILENAME}
+      else
+        requireAction ${QOMPOTER_FILENAME}
+      fi
+      ;;
+    "update")
+      updateAction ${QOMPOTER_FILENAME} ${VENDOR_DIR}
+      ;;
+    *)
+      echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} Unknown action '${ACTION}'"
+      return 1
+      ;;
+  esac
+  local status=$?
 
-  if [ "$?" != "0" ]; then
+  if [ "$status" != "0" ]; then
     echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}"
     return 1
   else
