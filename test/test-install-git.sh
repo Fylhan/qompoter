@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+OFFLINE=$1
+if [ "${OFFLINE}" == "-offline" ]; then
+  exit 2
+fi
+
 TEST_NAME="install-git"
 FAILS=0
 i=0

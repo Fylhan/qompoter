@@ -1,1 +1,0 @@
-{ "name": "install-git/git", "require": { "fylhan/qompoter-test-package4git": "dev-mybranch" }, "repository": { "fylhan/qompoter-test-package4git": "https://github.com" }}
