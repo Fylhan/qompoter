@@ -2,7 +2,7 @@
 
 readonly PROGNAME=$(basename $0)
 readonly PROGDIR=$(readlink -m $(dirname $0))
-readonly PROGVERSION="v0.3.0"
+readonly PROGVERSION="v0.3.1-alpha"
 readonly ARGS="$@"
 FORMAT_OK="\e[1;32m"
 FORMAT_FAIL="\e[1;31m"
@@ -281,7 +281,7 @@ usage()
 	    action            Select an action:
 	                        export, init, inqlude, install, update, require
 	                      Other actions are useful for digging into Qompoter:
-	                        jsonh
+	                        jsonh, md5sum
 
 	Options:
 	    -d, --depth         Depth of the recursivity in the searching of
@@ -339,8 +339,8 @@ usage()
 	    Install all dependencies:
 	    $PROGNAME install --repo /Project
 
-	    Install only nominal dependencies:
-	    $PROGNAME install --no-dev --repo /Project
+	    Install only nominal and stable dependencies:
+	    $PROGNAME install --no-dev --stable-only --repo /Project
 
 	    List required dependencies for this project:
 	    $PROGNAME require --list
@@ -866,7 +866,11 @@ getProjectMd5()
 {
   #~ See http://stackoverflow.com/questions/1657232/how-can-i-calculate-an-md5-checksum-of-a-directory
   local projectDir=$1
-  echo `(find "${projectDir}" -type f -not -path "./*/.git/*" | while read f; do md5sum "$f"; done; find "${projectDir}" -type d -not -path "./.git" | sed 's#/$##') | LC_ALL=C sort | md5sum`
+  (find "${projectDir}" -type f -not -path "*.git*" \
+      | while read f; do md5sum "$f"; done; find "${projectDir}" -type d -not -path "*.git*" ) \
+    | LC_ALL=C sort \
+    | md5sum \
+    | sed -e 's/ - *//'
 }
 
 getProjectRequires()
@@ -1234,6 +1238,12 @@ jsonhAction()
   cat ${qompoterFile} | jsonh
 }
 
+md5sumAction()
+{
+  local projectDir=$1
+  getProjectMd5 ${projectDir}
+}
+
 updateAction()
 {
   echo "Not implemented yet";
@@ -1387,6 +1397,9 @@ cmdline()
           usage
           exit -1
         fi
+      elif [ "${ACTION}" == "md5sum" ] && [ "${VENDOR_NAME}" == ""  ]; then
+        VENDOR_NAME=$1
+        shift
       else
         echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} unknown argument '$1'"
         usage
@@ -1396,14 +1409,23 @@ cmdline()
   esac
   done
 
-  if [[ "${ACTION}" == "inqlude" ]] && [[ ${SUB_ACTION} == "" ]]; then
-    echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} missing subaction 'search' or 'minify' for action 'inqlude'"
-    echo "Usage: $PROGNAME inqlude [ --minify | --search <vendor/packagename> <version> ]"
+  if [[ "${ACTION}" == "init" ]] && [[ ${PACKAGE_NAME} == "" ]]; then
+    echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} missing parameters for action '${ACTION}'"
+    echo "Usage: $PROGNAME ${ACTION} <vendor/packagename> [<version>]"
     exit -1
-  fi
-  if [[ "${ACTION}" == "inqlude" ]] && [[ ${SUB_ACTION} == "search" ]]&& [[ ${PACKAGE_NAME} == "" ]]; then
-    echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} missing parameters for action 'inqlude'"
-    echo "Usage: $PROGNAME inqlude [ --minify | --search <vendor/packagename> <version> ]"
+  elif [[ "${ACTION}" == "inqlude" ]]; then
+    if [[ ${SUB_ACTION} == "" ]]; then
+      echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} missing subaction 'search' or 'minify' for action '${ACTION}'"
+      echo "Usage: $PROGNAME ${ACTION} [ --minify | --search <vendor/packagename> <version> ]"
+      exit -1
+    elif [[ "${ACTION}" == "inqlude" ]] && [[ ${SUB_ACTION} == "search" ]] && [[ ${PACKAGE_NAME} == "" ]]; then
+      echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} missing parameters for action '${ACTION}'"
+      echo "Usage: $PROGNAME ${ACTION} [ --minify | --search <vendor/packagename> <version> ]"
+      exit -1
+    fi
+  elif [[ "${ACTION}" == "md5sum" ]] && [[ ${VENDOR_NAME} == "" ]]; then
+    echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} missing dir name for action '${ACTION}'"
+    echo "Usage: $PROGNAME ${ACTION} <dir>"
     exit -1
   fi
 
@@ -1453,6 +1475,9 @@ main()
       ;;
     "jsonh")
       jsonhAction ${QOMPOTER_FILENAME}
+      ;;
+    "md5sum")
+      md5sumAction ${VENDOR_NAME}
       ;;
     "require")
       if [ "${SUB_ACTION}" == "list" ]; then
