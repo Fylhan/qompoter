@@ -15,26 +15,33 @@ Version 0.3
 -----------
 
 * [x] Fix Git based package issue: branch, tag, commit ; first install or update
-* [x] Do not automatically override Git package in vendor with manual changes
-* [ ] qompoter init
 * [x] Fix: download lib does not failed properly
-* [ ] Cache downloaded packages
+* [*] qompoter init
+* [ ] qompoter release
+* [ ] qompoter export --repo / --vendor
+* [ ] qompoter export with compression / optimization
+* [x] Do not automatically override Git package in vendor with manual changes
+* [*] qompoter install / update (md5sum + qompoter.lock)
 * [ ] Prevent from overriding manual changes for all packages in vendor (md5sum)
+* [ ] Clean documentation and release
+
+Version 0.4
+-----------
+
+* [ ] Cache downloaded packages
 * [ ] Allow package to be available as zip or tar in repositories (this will also preserve symbolic links and reduce space)
 * [ ] Integrate automaticly inqlude packages if possible (generate qompoter.pri, ... ?)
 * [ ] Update automaticaly the inqlude repository data
-* [ ] qompoter install --repo vendor.zip
-* [ ] qompoter update (md5sum + qompoter.lock)
 * [ ] Clean documentation and release
 
 Future versions
 -----------
 
-* [ ] Allow soft version management v2 (e.g. ^v1.0 etc)
+* [ ] Allow soft version management v2 (e.g. ^v1.0 etc)
 * [ ] Search in other package manager repositories (QPM, CPM, ...)
 * [ ] First security level: integrity of packages (md5sum)
-* [ ] qompoter self-update (from Github)
-* [ ] qompoter export --repo / --vendor
+* [ ] Create Debian package or qompoter self-update (from Github)
+* [ ] qompoter install --repo vendor.zip
 * [ ] qompoter require
 * [ ] Better documentation
 * [ ] Support extension using qompoter-command available in PATH

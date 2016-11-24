@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-readonly PROGNAME=$(basename $0)
-readonly PROGDIR=$(readlink -m $(dirname $0))
-readonly PROGVERSION="v0.3.1-alpha"
-readonly ARGS="$@"
-FORMAT_OK="\e[1;32m"
-FORMAT_FAIL="\e[1;31m"
-FORMAT_END="\e[0m"
+readonly C_PROGNAME=$(basename $0)
+readonly C_PROGDIR=$(readlink -m $(dirname $0))
+readonly C_PROGVERSION="v0.3.1-alpha"
+readonly C_ARGS="$@"
+C_OK="\e[1;32m"
+C_FAIL="\e[1;31m"
+C_END="\e[0m"
 
 #######################
 # JSON.H              #
@@ -256,7 +256,7 @@ jsonh()
 #######################
 
 
-LOG_FILENAME=qompoter.log
+C_LOG_FILENAME=qompoter.log
 QOMPOTER_FILENAME=qompoter.json
 INQLUDE_FILENAME=
 VENDOR_DIR=vendor
@@ -270,13 +270,14 @@ DEPTH_SIZE=10
 DOWNLOADED_PACKAGES=
 NEW_SUBPACKAGES=${QOMPOTER_FILENAME}
 VENDOR_NAME=
-PACKAGE_NAME=
+PROJECT_NAME=
+# Version of the current package
 PACKAGE_VERSION=
 
 usage()
 {
 	cat <<- EOF
-	Usage: $PROGNAME [action] [ --repo <repo> | other options ]
+	Usage: $C_PROGNAME [action] [ --repo <repo> | other options ]
 
 	    action            Select an action:
 	                        export, init, inqlude, install, update, require
@@ -337,19 +338,19 @@ usage()
 
 	Examples:
 	    Install all dependencies:
-	    $PROGNAME install --repo /Project
+	    $C_PROGNAME install --repo /Project
 
 	    Install only nominal and stable dependencies:
-	    $PROGNAME install --no-dev --stable-only --repo /Project
+	    $C_PROGNAME install --no-dev --stable-only --repo /Project
 
 	    List required dependencies for this project:
-	    $PROGNAME require --list
+	    $C_PROGNAME require --list
 
 	    Export existing dependencies:
-	    $PROGNAME export
+	    $C_PROGNAME export
 
 	    Search dependency in the inqlude repository:
-	    $PROGNAME inqlude --search vogel/injeqt
+	    $C_PROGNAME inqlude --search vogel/injeqt
 
 	EOF
 }
@@ -357,7 +358,7 @@ usage()
 version()
 {
 	cat <<- EOF
-	Qompoter ${PROGVERSION}
+	Qompoter ${C_PROGVERSION}
 	Dependency manager for C++/Qt by Fylhan
 	EOF
 }
@@ -573,14 +574,63 @@ prepareVendorDir()
   fi
 }
 
+prepareQompoterLock()
+{
+  local qompoterLockFile=$1
+  local packageFullName=$2
+  cat <<- EOF > ${qompoterLockFile}
+{
+  "name": "${packageFullName}",
+  "date": "`date --iso-8601=sec`",
+  "require": {
+  }
+}
+EOF
+}
+
+# file line newText
+function insertAfter 
+{
+   local file="$1"
+   local line="$2"
+   local newText="$3"
+   sed -i -e "/^$line$/a"$'\\\n'"$newText"$'\n' "$file"
+}
+
+updateQompoterLock()
+{
+  local qompoterLockFile=$1
+  local vendorName=$2
+  local packageName=$3
+  local version=$4
+  local type=$5
+  local url=$6
+  local md5sum=`getProjectMd5 ${VENDOR_DIR}/$packageName`
+  local packageFullName=$vendorName/$packageName
+  
+  local jsonData="\"${packageFullName}\": {";
+  jsonData+="\"version\": \"${version}\", "
+  jsonData+="\"type\": \"${type}\", "
+  jsonData+="\"url\": \"${url}\", "
+  jsonData+="\"md5sum\": \"${md5sum}\""
+  jsonData+="}"
+  insertAfter ${qompoterLockFile} '  "require": {' "    ${jsonData},"
+}
+
 downloadPackage()
 {
   local repositoryPath=$1
   local vendorDir=$2
   local vendorName=$3
+  VENDOR_NAME=$3
   local packageName=$4
+  PROJECT_NAME=$4
   local requireName=$vendorName/$packageName
   local requireVersion=$5
+  PACKAGE_VERSION=$5
+  local selectedVersion=
+  local qompoterLockFile=$6
+  local packageDistUrl
   local result=1
   local isSource=1
   if [[ "$requireVersion" == *"-lib" ]]; then
@@ -612,6 +662,8 @@ downloadPackage()
     isGitRepositories ${requireBasePath} && gitPath=${requireBasePath}
     if [ ! -z "${gitPath}" ]; then
       echo "  Downloading sources from Git..."
+      test `echo ${gitPath} | grep "${REPO_PATH}"` && packageDistUrl=${gitPath}
+      packageType="git"
       downloadPackageFromGit ${gitPath} ${vendorDir} ${packageName} ${requireVersion}
       result=$?
     fi
@@ -624,6 +676,7 @@ downloadPackage()
       else
         echo "  Downloading sources..."
       fi
+      packageType="qompoter-fs"
       downloadPackageFromCp ${repositoryPath} ${vendorDir} ${vendorName} ${packageName} ${requireVersion} \
         && result=0 \
         || result=1
@@ -631,14 +684,15 @@ downloadPackage()
   # Lib
   else
     echo "  Downloading lib..."
-    downloadLibFromCp ${repositoryPath} ${vendorDir} ${vendorName} ${packageName} ${requireVersion}  \
+    packageType="qompoter-fs"
+    downloadLibFromCp ${repositoryPath} ${vendorDir} ${vendorName} ${packageName} ${PACKAGE_VERSION}  \
       && result=0 \
       || result=1
   fi
 
   # FAILURE
   if [ "$result" != "0" ]; then
-    echo -e "  ${FORMAT_FAIL}FAILURE${FORMAT_END}"
+    echo -e "  ${C_FAIL}FAILURE${C_END}"
     echo
     return 1
   # DONE
@@ -651,8 +705,11 @@ downloadPackage()
         echo "  Warning: no 'qompoter.pri' found for this package"
       fi
     fi
+    
+    # Update qompoter.lock
+    updateQompoterLock ${qompoterLockFile} "${vendorName}" "${packageName}" "${PACKAGE_VERSION}" "${packageType}" "${packageDistUrl}"
 
-    echo -e "  ${FORMAT_OK}done${FORMAT_END}"
+    echo -e "  ${C_OK}done${C_END}"
     echo
   fi
 
@@ -665,29 +722,30 @@ downloadPackageFromCp()
   local vendorDir=$2
   local vendorName=$3
   local packageName=$4
-  local requireVersion=$5
+  local packageVersion=$5
   local requireName=${vendorName}/${packageName}
   local requireBasePath=${repositoryPath}/${requireName}
   local requireLocalPath=${vendorDir}/${packageName}
 
  # Select the best version (if variadic version number provided)
-  if [ "${requireVersion#*\*}" != "${requireVersion}" ]; then
+  if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
     ilog "  Search matching version"
-    local selectedVersion=`ls ${requireBasePath} | getBestVersionNumber`
+    local selectedVersion=`ls ${requireBasePath} | getBestVersionNumber $packageVersion`
     if [ -z "${selectedVersion}" ]; then
-      echo "  Oups, no matching version for \"${requireVersion}\""
+      echo "  Oups, no matching version for \"${packageVersion}\""
       return 2
     fi
-    requireVersion=${selectedVersion}
-    echo "  Selected version: ${requireVersion}"
+    packageVersion=${selectedVersion}
+    echo "  Selected version: ${packageVersion}"
   fi
 
   # Copy
-  local requirePath=${requireBasePath}/${requireVersion}
+  local requirePath=${requireBasePath}/${packageVersion}
   if [ -d "${requirePath}" ]; then
     ilog "  Copy \"${requirePath}\" to \"${requireLocalPath}\""
     cp -rf ${requirePath}/* ${requireLocalPath} \
-      >> ${LOG_FILENAME} 2>&1
+      >> ${C_LOG_FILENAME} 2>&1
+      PACKAGE_VERSION=${packageVersion}
     return 0
   fi
   rm -rf ${requireLocalPath}
@@ -701,38 +759,39 @@ downloadLibFromCp()
   local vendorDir=$2
   local vendorName=$3
   local packageName=$4
-  local requireVersion=$5
+  local packageVersion=$5
   local requireName=${vendorName}/${packageName}
   local requireBasePath=${repositoryPath}/${requireName}
   local requireLocalPath=${vendorDir}/${packageName}
 
  # Select the best version (if variadic version number provided)
-  if [ "${requireVersion#*\*}" != "${requireVersion}" ]; then
+  if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
     ilog "  Search matching version"
-    local selectedVersion=`ls ${requireBasePath} | getBestVersionNumber`
+    local selectedVersion=`ls ${requireBasePath} | getBestVersionNumber ${packageVersion}`
     if [ -z "${selectedVersion}" ]; then
-      echo "  Oups, no matching version for \"${requireVersion}\""
+      echo "  Oups, no matching version for \"${packageVersion}\""
       return 2
     fi
-    requireVersion=${selectedVersion}
-    echo "  Selected version: ${requireVersion}"
+    packageVersion=${selectedVersion}
+    echo "  Selected version: ${packageVersion}"
   fi
 
   # Copy
-  local requirePath=${requireBasePath}/${requireVersion}
+  local requirePath=${requireBasePath}/${packageVersion}
   if [ -d "${requirePath}" ]; then
     ilog "  Copy \"${requirePath}/*lib_?*\" to \"${vendorDir}\""
     cp -rf ${requirePath}/lib_* ${vendorDir} \
-        >> ${LOG_FILENAME} 2>&1
+        >> ${C_LOG_FILENAME} 2>&1
     cp -rf ${requirePath}/*lib ${vendorDir} \
-        >> ${LOG_FILENAME} 2>&1
+        >> ${C_LOG_FILENAME} 2>&1
     ilog "  Copy \"${requirePath}/include\" to \"${requireLocalPath}\""
     cp -rf ${requirePath}/include ${requireLocalPath} \
-        >> ${LOG_FILENAME} 2>&1
+        >> ${C_LOG_FILENAME} 2>&1
     cp -rf ${requirePath}/qompoter.* ${requireLocalPath} \
-        >> ${LOG_FILENAME} 2>&1
+        >> ${C_LOG_FILENAME} 2>&1
     cp -rf ${requirePath}/*.md ${requireLocalPath} \
-        >> ${LOG_FILENAME} 2>&1
+        >> ${C_LOG_FILENAME} 2>&1
+    PACKAGE_VERSION=${packageVersion}
     return 0
   fi
   rm -rf ${requireLocalPath}
@@ -749,7 +808,7 @@ downloadPackageFromGit()
   local gitPath=$1
   local vendorDir=$2
   local packageName=$3
-  local requireVersion=$4
+  local packageVersion=$4
   local requireBranch=$4
   local requireLocalPath=${vendorDir}/${packageName}
   local isSource=1
@@ -757,7 +816,7 @@ downloadPackageFromGit()
 
   # Parse commit number in version
   if [ "${4#*#}" != "$4" ]; then
-    requireVersion=`echo ${4} | cut -d'#' -f2`
+    packageVersion=`echo ${4} | cut -d'#' -f2`
     requireBranch=`echo ${4} | cut -d'#' -f1`
     test "${requireBranch}" == "" && requireBranch="master"
   fi
@@ -765,14 +824,14 @@ downloadPackageFromGit()
   # Does not exist yet: clone
   if [ ! -d "${requireLocalPath}/.git" ]; then
     ilog "  git clone ${gitPath} ${requireLocalPath}"
-    if ! git clone ${gitPath} ${requireLocalPath} >> ${LOG_FILENAME} 2>&1; then
+    if ! git clone ${gitPath} ${requireLocalPath} >> ${C_LOG_FILENAME} 2>&1; then
       ilog "  Oups, cannot clone the project"
       return 2
     fi
   fi
   ilog "  cd ${requireLocalPath}"
-  cd ${requireLocalPath} || ( echo "  Error: can not go to ${requireLocalPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
-  local LOG_FILENAME_PACKAGE=../../${LOG_FILENAME}
+  cd ${requireLocalPath} || ( echo "  Error: can not go to ${requireLocalPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+  local C_LOG_FILENAME_PACKAGE=../../${C_LOG_FILENAME}
 
   # Verify no manual changes and warning otherwize
   #~ TODO Use also last commit number
@@ -782,7 +841,7 @@ downloadPackageFromGit()
     if [ "$IS_FORCE" != "1" ]; then
       echo "  Warning: there are manual updates on this project."
       echo "  Use --force to discard change and continue."
-      cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
+      cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
       return 3
     else
       echo "  Warning: there were manual updates on this project. Update forced."
@@ -790,43 +849,44 @@ downloadPackageFromGit()
   fi
 
   # Update
-  ilog "  git fetch --all"
-  git fetch --all \
-    >> ${LOG_FILENAME_PACKAGE} 2>&1
+  ilog "  git fetch"
+  git fetch \
+    >> ${C_LOG_FILENAME_PACKAGE} 2>&1
 
   # Select the best version (if variadic version number provided)
-  if [ "${requireVersion#*\*}" != "$requireVersion" ]; then
+  if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
     ilog "  git tag --list"
     ilog "    "`git tag --list`
-    local selectedVersion=`git tag --list | getBestVersionNumber`
+    local selectedVersion=`git tag --list | getBestVersionNumber ${packageVersion}`
     if [ -z "${selectedVersion}" ]; then
       echo "  Oups, no matching version for \"${requireVersion}\""
-      cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
+      cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
       return 2
     fi
-    requireVersion=${selectedVersion}
-    echo "  Selected version: ${requireVersion}"
+    packageVersion=${selectedVersion}
+    echo "  Selected version: ${packageVersion}"
   fi
 
-  # TODO Verify version availability
+  # TODO Verify version availability?
 
   # Reset
-  ilog "  git checkout -f ${requireVersion}"
-  if ! git checkout -f ${requireVersion} >> ${LOG_FILENAME_PACKAGE} 2>&1; then
-    echo "  Oups, \"${requireVersion}\" does not exist"
-    cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
+  ilog "  git checkout -f ${packageVersion}"
+  if ! git checkout -f ${packageVersion} >> ${C_LOG_FILENAME_PACKAGE} 2>&1; then
+    echo "  Oups, \"${packageVersion}\" does not exist"
+    cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
     return 2
   fi
   ilog "  Reset any local modification just to be sure"
-  ilog "  git reset --hard origin/${requireVersion}"
-  git reset --hard origin/${requireVersion} \
-    >> ${LOG_FILENAME_PACKAGE} 2>&1
+  ilog "  git reset --hard ${packageVersion}"
+  git reset --hard ${packageVersion} \
+    >> ${C_LOG_FILENAME_PACKAGE} 2>&1
 
-  cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}" ; exit -1)
+  cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
 
   if [ ! -d "${requireLocalPath}/.git" ]; then
     gitError=1
   fi
+  PACKAGE_VERSION=${packageVersion}
   return $gitError
 }
 
@@ -854,11 +914,12 @@ isGitRepositories()
 
 getBestVersionNumber()
 {
+  local versionPattern=$1
   #~ FIXME Sort version number using natural sort (v1.10 > v1.3)
     if [ "${IS_STABLE_ONLY}" == "1" ]; then
-      LC_ALL=C sort | grep "v\?${requireVersion}\$" | grep -v -e "-\(alpha\|beta\|RC[0-9]*\|[0-9]*\)$" | tail -1
+      LC_ALL=C sort | grep "v\?${versionPattern}\$" | grep -v -e "-\(alpha\|beta\|RC[0-9]*\|[0-9]*\)$" | tail -1
     else
-      LC_ALL=C sort | grep "v\?${requireVersion}\$" | tail -1
+      LC_ALL=C sort | grep "v\?${versionPattern}\$" | tail -1
     fi
 }
 
@@ -870,7 +931,7 @@ getProjectMd5()
       | while read f; do md5sum "$f"; done; find "${projectDir}" -type d -not -path "*.git*" ) \
     | LC_ALL=C sort \
     | md5sum \
-    | sed -e 's/ - *//'
+    | sed -e 's/ *- *//'
 }
 
 getProjectRequires()
@@ -885,10 +946,20 @@ getProjectRequires()
 
 getProjectName()
 {
+  local qompoterFile=$1
   cat ${qompoterFile} \
    | jsonh \
    | grep -E "\[\"name\"\]" \
    | sed -e 's/"//g;s/\[name\]\s*//;s/.*\///'
+}
+
+getProjectFullName()
+{
+  local qompoterFile=$1
+  cat ${qompoterFile} \
+   | jsonh \
+   | grep -E "\[\"name\"\]" \
+   | sed -e 's/"//g;s/\[name\]\s*//'
 }
 
 getRelatedRepository()
@@ -910,9 +981,10 @@ downloadQompoterFilePackages()
 {
   local qompoterFile=$1
   local vendorDir=$2
-  local globalRes=0;
+  local globalRes=0
+  local requires=`getProjectRequires ${qompoterFile}`
 
-  for packageInfo in `getProjectRequires ${qompoterFile}`; do
+  for packageInfo in ${requires}; do
       local vendorName=`echo ${packageInfo} | cut -d'/' -f1`
       local projectName=`echo ${packageInfo} | cut -d'/' -f2`
       local version=`echo ${packageInfo} | cut -d'/' -f3`
@@ -920,7 +992,7 @@ downloadQompoterFilePackages()
       test "${DOWNLOADED_PACKAGES#* $projectName }" != "$DOWNLOADED_PACKAGES" && continue
       #~ Download
       local repo=`getRelatedRepository ${qompoterFile} ${vendorName} ${projectName}`
-      downloadPackage ${repo} ${vendorDir} ${vendorName} ${projectName} ${version}
+      downloadPackage ${repo} ${vendorDir} ${vendorName} ${projectName} ${version} ${qompoterLockFile}
       #~ Exit on error if no force
       local returnCode=$?
       if [ "$returnCode" != "0" ]; then
@@ -1030,7 +1102,7 @@ exportAction()
 
   if [ -d "${VENDOR_DIR}" ]; then
     zip ${vendorBackup} -r ${VENDOR_DIR} \
-      >> ${LOG_FILENAME} 2>&1
+      >> ${C_LOG_FILENAME} 2>&1
     echo "Exported to ${vendorBackup}"
   else
     echo "Nothing to do: no '${VENDOR_DIR}' dir"
@@ -1206,11 +1278,13 @@ inqludeMinifyAction()
 installAction()
 {
   local qompoterFile=$1
+  local qompoterLockFile=`echo ${qompoterFile} | cut -d'.' -f1`.lock
   local vendorDir=$2
   local globalRes=0
 
   checkQompoterFile ${qompoterFile} || return 100
   prepareVendorDir ${vendorDir}
+  prepareQompoterLock ${qompoterLockFile} `getProjectFullName ${qompoterFile}`
 
   local depth=0
   while [ "$depth" -lt "$DEPTH_SIZE" ] && [ -n "${NEW_SUBPACKAGES}" ]; do
@@ -1226,9 +1300,10 @@ installAction()
       fi
     done
     if [ "$depth" == "$DEPTH_SIZE" ] && [ -n "${NEW_SUBPACKAGES}" ]; then
-      echo -e "${FORMAT_FAIL}WARNING${FORMAT_END} There are still packages to download but maximal recursive depth of $DEPTH_SIZE have been reached."
+      echo -e "${C_FAIL}WARNING${C_END} There are still packages to download but maximal recursive depth of $DEPTH_SIZE have been reached."
     fi
   done
+  
   return $globalRes
 }
 
@@ -1286,7 +1361,7 @@ cmdline()
   SUB_ACTION=
 
   if [ "$#" -lt "1" ]; then
-    echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} missing arguments"
+    echo -e "${C_FAIL}FAILURE${C_END} missing arguments"
     usage
     exit -1
   fi
@@ -1313,9 +1388,9 @@ cmdline()
       shift
       ;;
     --no-color )
-      FORMAT_OK=
-      FORMAT_FAIL=
-      FORMAT_END=
+      C_OK=
+      C_FAIL=
+      C_END=
       shift
       ;;
     --no-dev )
@@ -1387,13 +1462,13 @@ cmdline()
       elif [ "${ACTION}" == "inqlude"  ] || [ "${ACTION}" == "init" ]; then
         if [ "${VENDOR_NAME}" == ""  ]; then
           VENDOR_NAME=`echo ${1} | cut -d'/' -f1`
-          PACKAGE_NAME=`echo ${1} | cut -d'/' -f2`
+          PROJECT_NAME=`echo ${1} | cut -d'/' -f2`
           shift
         elif [ "${PACKAGE_VERSION}" == ""  ]; then
           PACKAGE_VERSION=$1
           shift
         else
-          echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} unknown argument '$1'"
+          echo -e "${C_FAIL}FAILURE${C_END} unknown argument '$1'"
           usage
           exit -1
         fi
@@ -1401,7 +1476,7 @@ cmdline()
         VENDOR_NAME=$1
         shift
       else
-        echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} unknown argument '$1'"
+        echo -e "${C_FAIL}FAILURE${C_END} unknown argument '$1'"
         usage
         exit -1
       fi
@@ -1409,28 +1484,28 @@ cmdline()
   esac
   done
 
-  if [[ "${ACTION}" == "init" ]] && [[ ${PACKAGE_NAME} == "" ]]; then
-    echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} missing parameters for action '${ACTION}'"
-    echo "Usage: $PROGNAME ${ACTION} <vendor/packagename> [<version>]"
+  if [[ "${ACTION}" == "init" ]] && [[ ${PROJECT_NAME} == "" ]]; then
+    echo -e "${C_FAIL}FAILURE${C_END} missing parameters for action '${ACTION}'"
+    echo "Usage: $C_PROGNAME ${ACTION} <vendor/packagename> [<version>]"
     exit -1
   elif [[ "${ACTION}" == "inqlude" ]]; then
     if [[ ${SUB_ACTION} == "" ]]; then
-      echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} missing subaction 'search' or 'minify' for action '${ACTION}'"
-      echo "Usage: $PROGNAME ${ACTION} [ --minify | --search <vendor/packagename> <version> ]"
+      echo -e "${C_FAIL}FAILURE${C_END} missing subaction 'search' or 'minify' for action '${ACTION}'"
+      echo "Usage: $C_PROGNAME ${ACTION} [ --minify | --search <vendor/packagename> <version> ]"
       exit -1
-    elif [[ "${ACTION}" == "inqlude" ]] && [[ ${SUB_ACTION} == "search" ]] && [[ ${PACKAGE_NAME} == "" ]]; then
-      echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} missing parameters for action '${ACTION}'"
-      echo "Usage: $PROGNAME ${ACTION} [ --minify | --search <vendor/packagename> <version> ]"
+    elif [[ "${ACTION}" == "inqlude" ]] && [[ ${SUB_ACTION} == "search" ]] && [[ ${PROJECT_NAME} == "" ]]; then
+      echo -e "${C_FAIL}FAILURE${C_END} missing parameters for action '${ACTION}'"
+      echo "Usage: $C_PROGNAME ${ACTION} [ --minify | --search <vendor/packagename> <version> ]"
       exit -1
     fi
   elif [[ "${ACTION}" == "md5sum" ]] && [[ ${VENDOR_NAME} == "" ]]; then
-    echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} missing dir name for action '${ACTION}'"
-    echo "Usage: $PROGNAME ${ACTION} <dir>"
+    echo -e "${C_FAIL}FAILURE${C_END} missing dir name for action '${ACTION}'"
+    echo "Usage: $C_PROGNAME ${ACTION} <dir>"
     exit -1
   fi
 
   if [ "${ACTION}" == ""  ]; then
-    echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} missing action"
+    echo -e "${C_FAIL}FAILURE${C_END} missing action"
     usage
     exit -1
   fi
@@ -1441,11 +1516,11 @@ cmdline()
 
 main()
 {
-  cmdline $ARGS
-  if [ -f "${LOG_FILENAME}" ]; then
-    rm ${LOG_FILENAME}
+  cmdline $C_ARGS
+  if [ -f "${C_LOG_FILENAME}" ]; then
+    rm ${C_LOG_FILENAME}
   fi
-  touch ${LOG_FILENAME}
+  touch ${C_LOG_FILENAME}
 
   echo "Qompoter"
   echo "======== ${ACTION}"
@@ -1461,11 +1536,11 @@ main()
       fi
       ;;
     "init")
-      initAction ${VENDOR_NAME} ${PACKAGE_NAME} "${PACKAGE_VERSION}" ${QOMPOTER_FILENAME}
+      initAction ${VENDOR_NAME} ${PROJECT_NAME} "${PACKAGE_VERSION}" ${QOMPOTER_FILENAME}
       ;;
     "inqlude")
       if [ "${SUB_ACTION}" == "search" ]; then
-        inqludeSearchAction ${VENDOR_NAME} ${PACKAGE_NAME} ${PACKAGE_VERSION} ${INQLUDE_FILENAME}
+        inqludeSearchAction ${VENDOR_NAME} ${PROJECT_NAME} ${PACKAGE_VERSION} ${INQLUDE_FILENAME}
       elif [ "${SUB_ACTION}" == "minify" ]; then
         inqludeMinifyAction ${INQLUDE_FILENAME}
       fi
@@ -1490,22 +1565,22 @@ main()
       updateAction ${QOMPOTER_FILENAME} ${VENDOR_DIR}
       ;;
     *)
-      echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END} Unknown action '${ACTION}'"
+      echo -e "${C_FAIL}FAILURE${C_END} Unknown action '${ACTION}'"
       return 1
       ;;
   esac
   local status=$?
 
   if [ "$status" != "0" ]; then
-    echo -e "${FORMAT_FAIL}FAILURE${FORMAT_END}"
+    echo -e "${C_FAIL}FAILURE${C_END}"
     return 1
   else
-    echo -e "${FORMAT_OK}done${FORMAT_END}"
+    echo -e "${C_OK}done${C_END}"
     return 0
   fi
 
   if [ "$IS_VERBOSE" == "0" ]; then
-    rm ${LOG_FILENAME}
+    rm ${C_LOG_FILENAME}
   fi
 }
 
