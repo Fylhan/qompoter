@@ -1340,6 +1340,7 @@ installAction()
         globalRes=${returnCode}
         test "${IS_FORCE}" == "0" && return 1
       fi
+      IS_INCLUDE_DEV=
     done
     if [ "$depth" == "$DEPTH_SIZE" ] && [ -n "${NEW_SUBPACKAGES}" ]; then
       echo -e "${C_FAIL}WARNING${C_END} There are still packages to download but maximal recursive depth of $DEPTH_SIZE have been reached."
