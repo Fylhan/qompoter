@@ -2,7 +2,7 @@
 
 readonly C_PROGNAME=$(basename $0)
 readonly C_PROGDIR=$(readlink -m $(dirname $0))
-readonly C_PROGVERSION="v0.3.1-alpha"
+readonly C_PROGVERSION="v0.3.1-beta"
 readonly C_ARGS="$@"
 C_OK="\e[1;32m"
 C_FAIL="\e[1;31m"
@@ -589,7 +589,7 @@ EOF
 }
 
 # file line newText
-function insertAfter 
+insertAfter()
 {
    local file="$1"
    local line="$2"
@@ -659,7 +659,7 @@ downloadPackage()
     if [ -d "${requireBasePath}/${packageName}.git" ]; then
       gitPath=${requireBasePath}/${packageName}.git
     fi
-    isGitRepositories ${requireBasePath} && gitPath=${requireBasePath}
+    isGitRepositories ${requireBasePath} && gitPath=${requireBasePath}.git
     if [ ! -z "${gitPath}" ]; then
       echo "  Downloading sources from Git..."
       test `echo ${gitPath} | grep "${REPO_PATH}"` && packageDistUrl=${gitPath}
@@ -745,7 +745,7 @@ downloadPackageFromCp()
     ilog "  Copy \"${requirePath}\" to \"${requireLocalPath}\""
     cp -rf ${requirePath}/* ${requireLocalPath} \
       >> ${C_LOG_FILENAME} 2>&1
-      PACKAGE_VERSION=${packageVersion}
+    PACKAGE_VERSION=${packageVersion}
     return 0
   fi
   rm -rf ${requireLocalPath}
@@ -815,9 +815,14 @@ downloadPackageFromGit()
   local gitError=0
 
   # Parse commit number in version
-  if [ "${4#*#}" != "$4" ]; then
+  if [[ $4 == "#"* ]]; then
     packageVersion=`echo ${4} | cut -d'#' -f2`
-    requireBranch=`echo ${4} | cut -d'#' -f1`
+    requireBranch=
+  fi
+  # Parse branch name in version
+  if [[ $4 == "dev-"* ]]; then
+    packageVersion=`echo ${4} | sed 's/dev-//'`
+    requireBranch=${packageVersion}
     test "${requireBranch}" == "" && requireBranch="master"
   fi
 
@@ -864,18 +869,28 @@ downloadPackageFromGit()
       return 2
     fi
     packageVersion=${selectedVersion}
+    requireBranch=${selectedVersion}
     echo "  Selected version: ${packageVersion}"
   fi
 
   # TODO Verify version availability?
 
-  # Reset
+  # Retrieve
   ilog "  git checkout -f ${packageVersion}"
   if ! git checkout -f ${packageVersion} >> ${C_LOG_FILENAME_PACKAGE} 2>&1; then
     echo "  Oups, \"${packageVersion}\" does not exist"
     cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
     return 2
   fi
+  if [ "${requireBranch}" != "" ]; then
+    ilog "  git pull origin ${requireBranch}"
+    if ! git pull origin ${requireBranch} >> ${C_LOG_FILENAME_PACKAGE} 2>&1; then
+      echo "  Oups, cannot pull... Is \"${requireBranch}\" really existing?"
+      cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+      return 2
+    fi
+  fi
+  # Reset
   ilog "  Reset any local modification just to be sure"
   ilog "  git reset --hard ${packageVersion}"
   git reset --hard ${packageVersion} \
@@ -934,13 +949,39 @@ getProjectMd5()
     | sed -e 's/ *- *//'
 }
 
+#**
+# * Retrieve package info from Qompoter file
+# * @param Qompoter file name
+# * @return <vendor name>/<project name>/<version number>
+#**
 getProjectRequires()
 {
   local qompoterFile=$1
+  # Search for "require"
+  # and remove quote ("), "[require,", "] "
+  # replace space by slash
   echo `cat ${qompoterFile} \
    | jsonh \
    | grep -E "\[\"require${IS_INCLUDE_DEV}\",\".*\"\]" \
-   | sed -r "s/\"//g;s/\[require${IS_INCLUDE_DEV},//g;s/\]	/ /g;s/dev-//g" \
+   | sed -r "s/\"//g;s/\[require${IS_INCLUDE_DEV},//g;s/\]	/ /g" \
+   | tr ' ' '/'`
+}
+
+#**
+# * Retrieve package info from Qompoter lockfile
+# * @param Qompoter file name
+# * @return <vendor name>/<project name>/<version number>
+#**
+getProjectRequiresFromLock()
+{
+  local qompoterFile=$1
+  # Search for "require"
+  # and remove quote ("), "[require,", "] "
+  # replace space by slash
+  echo `cat ${qompoterFile} \
+   | jsonh \
+   | grep -E "\[\"require${IS_INCLUDE_DEV}\",\".*\",\"version\"\]" \
+   | sed -r "s/\"//g;s/\[require${IS_INCLUDE_DEV},//g;s/,version//g;s/\]	/ /g" \
    | tr ' ' '/'`
 }
 
@@ -995,8 +1036,8 @@ downloadQompoterFilePackages()
       downloadPackage ${repo} ${vendorDir} ${vendorName} ${projectName} ${version} ${qompoterLockFile}
       #~ Exit on error if no force
       local returnCode=$?
-      if [ "$returnCode" != "0" ]; then
-        globalRes="$returnCode"
+      if [ "${returnCode}" != "0" ]; then
+        globalRes=${returnCode}
         test "${IS_FORCE}" == "0" && return 1
       fi
       DOWNLOADED_PACKAGES="${DOWNLOADED_PACKAGES} ${projectName} "
@@ -1064,9 +1105,9 @@ getPackageInqludeUrl()
   local packagePath=`getPackageInqludeData ${packageId} "urls/vcs" "${inqludePackages}"`
   if [[ "${packagePath}" != "" ]]; then
     if [[ "${packagePath}" == *"projects.kde.org"* ]]; then
-      packagePath="git://anongit.kde.org/${packageName}.git"
+      packagePath="git://anongit.kde.org/${packageName}"
     elif [[ "${packagePath}" == *"cgit.freedesktop.org"* ]]; then
-      packagePath="https://anongit.freedesktop.org/git/${vendorName}/${packageName}.git"
+      packagePath="https://anongit.freedesktop.org/git/${vendorName}/${packageName}"
     fi
 
     isGitRepositories ${packagePath} && \
@@ -1293,9 +1334,10 @@ installAction()
     NEW_SUBPACKAGES=""
     for subQompoterFile in ${newSubpackages}; do
       downloadQompoterFilePackages ${subQompoterFile} ${vendorDir}
+      #~ Exit on error if no force
       local returnCode=$?
-      if [ "$returnCode" != "0" ]; then
-        globalRes=$returnCode
+      if [ "${returnCode}" != "0" ]; then
+        globalRes=${returnCode}
         test "${IS_FORCE}" == "0" && return 1
       fi
     done

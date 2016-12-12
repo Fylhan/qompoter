@@ -1,0 +1,8 @@
+{
+  "name": "install-ok/qompoter-versionstar-offline",
+  "date": "2016-12-02T18:39:33+01:00",
+  "require": {
+    "cp/acme-cp": {"version": "v1.0-lib", "type": "qompoter-fs", "url": "", "md5sum": "115f3cd6f4a5dec31fb31b9cf39fa855"}
+    "cp/fylhan": {"version": "v1.1.3-beta", "type": "qompoter-fs", "url": "", "md5sum": "9d57702586a06dcd5de4d717d936c9d6"}
+  }
+}

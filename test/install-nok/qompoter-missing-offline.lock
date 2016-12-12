@@ -1,0 +1,7 @@
+{
+  "name": "test/install-nok-missing",
+  "date": "2016-12-02T18:24:51+01:00",
+  "require": {
+    "cp/fylhan": {"version": "v1.0", "type": "qompoter-fs", "url": "", "md5sum": "ea9f548ff879e721c12085d7cddce551"},
+  }
+}

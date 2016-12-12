@@ -25,7 +25,7 @@ do
   if [ $ret -eq 0 ] ; then
     echo -e "\e[1;32mOK\e[0m:   $test"
     passed=$((passed+1))
-  elif [ $ret -eq 2 ] ; then
+  elif [ $ret -eq -1 ] ; then
     echo -e "\e[1;33mSKIP\e[0m:   $test"
     tests=$((tests-1))
   else

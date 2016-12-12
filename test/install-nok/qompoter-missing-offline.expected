@@ -5,9 +5,9 @@ Qompoter
   Downloading sources...
   done
 
-* missing/package master
+* missing/package dev-master
   Downloading sources...
-  Error: no package found "qompoter-repo/missing/package/master"
+  Error: no package found "qompoter-repo/missing/package/dev-master"
   FAILURE
 
 FAILURE

@@ -14,7 +14,7 @@
 		"fylhan/platphorm": "dev-master"
 	},
 	"repositories": {
-		"fylhan/posibrain": "https://github.com/",
-		"fylhan/platphorm": "https://github.com/"
+		"fylhan/posibrain": "https://github.com",
+		"fylhan/platphorm": "https://github.com"
 	}
 }

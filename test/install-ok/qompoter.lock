@@ -1,0 +1,11 @@
+{
+  "name": "install-ok/qompoter",
+  "date": "2016-11-24T22:01:22+01:00",
+  "require": {
+    "cp/acme-cp": {"version": "v1.0", "type": "qompoter-fs", "url": "", "md5sum": "115f3cd6f4a5dec31fb31b9cf39fa855"},
+    "cp/fylhan2": {"version": "v1.0", "type": "qompoter-fs", "url": "", "md5sum": "274036013605b10c1f52a688080761dd"},
+    "fylhan/platphorm": {"version": "master", "type": "git", "url": "", "md5sum": "f3825863afd8ecacdfa51d66bc5c4072"},
+    "cp/fylhan": {"version": "v1.0", "type": "qompoter-fs", "url": "", "md5sum": "ea9f548ff879e721c12085d7cddce551"},
+    "fylhan/posibrain": {"version": "v0.2", "type": "git", "url": "", "md5sum": "f2be7bd1e5da767a9a9b0c8dc3c7aa31"},
+  }
+}
