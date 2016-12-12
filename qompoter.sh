@@ -2,7 +2,7 @@
 
 readonly C_PROGNAME=$(basename $0)
 readonly C_PROGDIR=$(readlink -m $(dirname $0))
-readonly C_PROGVERSION="v0.3.1-beta"
+readonly C_PROGVERSION="v0.3.1-beta2"
 readonly C_ARGS="$@"
 C_OK="\e[1;32m"
 C_FAIL="\e[1;31m"
@@ -588,15 +588,6 @@ prepareQompoterLock()
 EOF
 }
 
-# file line newText
-insertAfter()
-{
-   local file="$1"
-   local line="$2"
-   local newText="$3"
-   sed -i -e "/^$line$/a"$'\\\n'"$newText"$'\n' "$file"
-}
-
 updateQompoterLock()
 {
   local qompoterLockFile=$1
@@ -607,7 +598,7 @@ updateQompoterLock()
   local url=$6
   local md5sum=`getProjectMd5 ${VENDOR_DIR}/$packageName`
   local packageFullName=$vendorName/$packageName
-  
+
   local jsonData="\"${packageFullName}\": {";
   jsonData+="\"version\": \"${version}\", "
   jsonData+="\"type\": \"${type}\", "
@@ -615,6 +606,7 @@ updateQompoterLock()
   jsonData+="\"md5sum\": \"${md5sum}\""
   jsonData+="}"
   insertAfter ${qompoterLockFile} '  "require": {' "    ${jsonData},"
+  sed -i -z "s/},\n  }/}\n  }/g" ${qompoterLockFile}
 }
 
 downloadPackage()
@@ -705,9 +697,9 @@ downloadPackage()
         echo "  Warning: no 'qompoter.pri' found for this package"
       fi
     fi
-    
+
     # Update qompoter.lock
-    updateQompoterLock ${qompoterLockFile} "${vendorName}" "${packageName}" "${PACKAGE_VERSION}" "${packageType}" "${packageDistUrl}"
+     updateQompoterLock ${qompoterLockFile} "${vendorName}" "${packageName}" "${PACKAGE_VERSION}" "${packageType}" "${packageDistUrl}"
 
     echo -e "  ${C_OK}done${C_END}"
     echo
@@ -1183,7 +1175,7 @@ initAction()
       echo "* Do not override \"${i}\" file"
     fi
   done
-  
+
   local qtFiles=("${qtProFile}" "${qtGlobalPriFile}")
   local qompoterFiles=('${qompoterFile}')
   local qompoterLibFiles=('qompoter.pri')
@@ -1199,7 +1191,6 @@ EOF
   else
     echo "* Do not override \"${qompoterFile}\" file"
   fi
-  
 
   # *.pro
   if [ "$IS_FORCE" == "1" ] || [ ! -f "${packageName}.pro" ]; then
@@ -1226,7 +1217,7 @@ EOF
   else
     echo "* Do not override \"${qompoterFile}\" file"
   fi
-  
+
   # .qmake.conf
   if [ "$IS_FORCE" == "1" ] || [ ! -f "${qtGlobalPriFile}" ]; then
     echo "* Create \"${qtGlobalPriFile}\" file"
@@ -1248,9 +1239,8 @@ EOF
   else
     echo "* Do not override \"${qtGlobalPriFile}\" file"
   fi
-  
+
   echo
-  
 }
 
 #~ To be tested with: attica (Git url), diff-match-path (Unknown VCS but download url), kdtools (no url), unknown-package (not found)
@@ -1325,7 +1315,7 @@ installAction()
 
   checkQompoterFile ${qompoterFile} || return 100
   prepareVendorDir ${vendorDir}
-  prepareQompoterLock ${qompoterLockFile} `getProjectFullName ${qompoterFile}`
+   prepareQompoterLock ${qompoterLockFile} `getProjectFullName ${qompoterFile}`
 
   local depth=0
   while [ "$depth" -lt "$DEPTH_SIZE" ] && [ -n "${NEW_SUBPACKAGES}" ]; do
@@ -1389,6 +1379,15 @@ repoExportAction()
 {
   echo "Not implemented yet";
   return 1
+}
+
+# file line newText
+insertAfter()
+{
+   local file="$1"
+   local line="$2"
+   local newText="$3"
+   sed -i -e "/^$line$/a"$'\\\n'"$newText"$'\n' "$file"
 }
 
 ilog()
