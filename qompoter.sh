@@ -2,7 +2,7 @@
 
 readonly C_PROGNAME=$(basename $0)
 readonly C_PROGDIR=$(readlink -m $(dirname $0))
-readonly C_PROGVERSION="v0.3.1-beta2"
+readonly C_PROGVERSION="v0.3.1-beta3"
 readonly C_ARGS="$@"
 C_OK="\e[1;32m"
 C_FAIL="\e[1;31m"
@@ -622,7 +622,7 @@ downloadPackage()
   PACKAGE_VERSION=$5
   local selectedVersion=
   local qompoterLockFile=$6
-  local packageDistUrl
+  local packageDistUrl=$7
   local result=1
   local isSource=1
   if [[ "$requireVersion" == *"-lib" ]]; then
@@ -677,7 +677,7 @@ downloadPackage()
   else
     echo "  Downloading lib..."
     packageType="qompoter-fs"
-    downloadLibFromCp ${repositoryPath} ${vendorDir} ${vendorName} ${packageName} ${PACKAGE_VERSION}  \
+    downloadLibFromCp ${repositoryPath} ${vendorDir} ${vendorName} ${packageName} ${PACKAGE_VERSION} ${packageDistUrl} \
       && result=0 \
       || result=1
   fi
@@ -752,6 +752,7 @@ downloadLibFromCp()
   local vendorName=$3
   local packageName=$4
   local packageVersion=$5
+  local packageDistUrl=$6
   local requireName=${vendorName}/${packageName}
   local requireBasePath=${repositoryPath}/${requireName}
   local requireLocalPath=${vendorDir}/${packageName}
@@ -768,9 +769,55 @@ downloadLibFromCp()
     echo "  Selected version: ${packageVersion}"
   fi
 
-  # Copy
+  # Copy from tarball
   local requirePath=${requireBasePath}/${packageVersion}
-  if [ -d "${requirePath}" ]; then
+  if [[ ${repositoryPath} == "http"* ]] || [[ ${packageDistUrl} == "http"* ]]; then
+    local archive=${packageVersion}.tar.gz
+    requirePath=${requireBasePath}/${archive}
+    if [ ! -z "${packageDistUrl}" ]; then
+      requirePath=${packageDistUrl}
+    fi
+    test "$IS_VERBOSE" == "1" && quiet=
+    ilog "  Download \"${requirePath}\" to \"${requireLocalPath}\""
+    wget ${requirePath} --directory-prefix=${requireLocalPath} \
+          >> ${C_LOG_FILENAME} 2>&1
+    local res="$?"
+    if [ "${res}" == "0" ]; then
+      ilog "  Extract library tarball"
+      tar -xf ${requireLocalPath}/${archive} --directory ${requireLocalPath} --overwrite --strip-components=1 \
+          >> ${C_LOG_FILENAME} 2>&1
+      res="$?"
+    elif [[ ${packageDistUrl} != "http"* ]]; then
+      ilog "  Error: there is no tarball, let's try with zip"
+      archive=${packageVersion}.zip
+      requirePath=${requireBasePath}/${archive}
+      ilog "  Download \"${requirePath}\" to \"${requireLocalPath}\""
+      wget ${requirePath} --directory-prefix=${requireLocalPath} \
+          >> ${C_LOG_FILENAME} 2>&1
+      res="$?"
+      if [ "$res" == "0" ]; then
+        ilog "  Extract library archive"
+        unzip -u ${requireLocalPath}/${archive} -d ${requireLocalPath} \
+          >> ${C_LOG_FILENAME} 2>&1
+        res="$?"
+        mv -f ${requireLocalPath}/${packageVersion}/* ${requireLocalPath}
+      fi
+    fi
+    if [ "$res" == "0" ]; then
+      ilog "  Delete archive \"${archive}\""
+      rm -f ${requireLocalPath}/${archive}*
+      ilog "  Move \"${requireLocalPath}/*lib_?*\" to \"${vendorDir}\""
+      cp -rf ${requireLocalPath}/lib_* ${vendorDir} \
+          && rm -rf ${requireLocalPath}/lib_* \
+          >> ${C_LOG_FILENAME} 2>&1
+      cp -rf ${requireLocalPath}/*lib ${vendorDir} \
+          >> ${C_LOG_FILENAME} 2>&1 \
+          && rm -rf ${requireLocalPath}/*lib ${vendorDir} \
+          >> ${C_LOG_FILENAME} 2>&1
+    fi
+    return $res
+  # Copy from directory
+  elif [ -d "${requirePath}" ]; then
     ilog "  Copy \"${requirePath}/*lib_?*\" to \"${vendorDir}\""
     cp -rf ${requirePath}/lib_* ${vendorDir} \
         >> ${C_LOG_FILENAME} 2>&1
@@ -1010,6 +1057,17 @@ getRelatedRepository()
   fi
 }
 
+getRelatedUrl()
+{
+  local qompoterFile=$1
+  local requireName=$2/$3
+  local packageUrlFromQompoterFile=`cat ${qompoterFile} \
+   | jsonh \
+   | grep -E "\[\"repositories\",\"${requireName}\",\"url\"\]" \
+   | sed -r "s/\"//g;s/\[repositories,.*,url\]\t*//g"`
+  echo ${packageUrlFromQompoterFile}
+}
+
 downloadQompoterFilePackages()
 {
   local qompoterFile=$1
@@ -1025,7 +1083,8 @@ downloadQompoterFilePackages()
       test "${DOWNLOADED_PACKAGES#* $projectName }" != "$DOWNLOADED_PACKAGES" && continue
       #~ Download
       local repo=`getRelatedRepository ${qompoterFile} ${vendorName} ${projectName}`
-      downloadPackage ${repo} ${vendorDir} ${vendorName} ${projectName} ${version} ${qompoterLockFile}
+      local url=`getRelatedUrl ${qompoterFile} ${vendorName} ${projectName}`
+      downloadPackage ${repo} ${vendorDir} ${vendorName} ${projectName} ${version} ${qompoterLockFile} "${url}"
       #~ Exit on error if no force
       local returnCode=$?
       if [ "${returnCode}" != "0" ]; then

@@ -19,6 +19,8 @@ Version 0.3
 * [*] qompoter init
 * [ ] qompoter release
 * [ ] qompoter export --repo / --vendor
+* [ ] Download package using HTTP
+* [ ] Allow package to be available as zip or tar in repositories (this will also preserve symbolic links and reduce space)
 * [ ] qompoter export with compression / optimization
 * [x] Do not automatically override Git package in vendor with manual changes
 * [*] qompoter install / update (md5sum + qompoter.lock)
@@ -29,7 +31,6 @@ Version 0.4
 -----------
 
 * [ ] Cache downloaded packages
-* [ ] Allow package to be available as zip or tar in repositories (this will also preserve symbolic links and reduce space)
 * [ ] Integrate automaticly inqlude packages if possible (generate qompoter.pri, ... ?)
 * [ ] Update automaticaly the inqlude repository data
 * [ ] Clean documentation and release

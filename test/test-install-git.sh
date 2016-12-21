@@ -2,7 +2,7 @@
 
 OFFLINE=$1
 if [ "${OFFLINE}" == "-offline" ]; then
-  exit -1
+  exit 255
 fi
 
 TEST_NAME="install-git"
