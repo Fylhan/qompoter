@@ -15,12 +15,18 @@ The current version is still a work in progress but it is now usable for non-cri
 Installation
 -------------
 
-Download Qompoter and move it to a place accessible in the `PATH`:
+Using `npm`:
 
-    wget https://raw.githubusercontent.com/Fylhan/qompoter/a406500/qompoter.sh -O qompoter.sh
-    sudo mv qompoter.sh /usr/bin/qompoter
+    npm install -g qompoter
     qompoter --version
-     Qompoter v0.2.6
+      Qompoter v0.3.2-alpha
+      Dependency manager for C++/Qt by Fylhan
+
+Or download it from Github and move it to a place accessible in the `PATH`:
+
+    wget https://github.com/Fylhan/qompoter/blob/d9fe5cf/qompoter.sh -O qompoter.sh && sudo mv qompoter.sh /usr/bin/qompoter
+    qompoter --version
+     Qompoter v0.3.2-alpha
      Dependency manager for C++/Qt by Fylhan
 
 To enable autocompletion, download the script and source it in your `~/.bashrc` file:
@@ -29,7 +35,7 @@ To enable autocompletion, download the script and source it in your `~/.bashrc` 
     sudo mv qompoter_bash_completion.sh /usr/share/bash-completion/completions/qompoter
     echo "test [ -f /usr/share/bash-completion/completions/qompoter ]; source /usr/share/bash-completion/completions/qompoter" >> ~/.bashrc
 
-Qompoter requires Bash, Git, sed and zip.
+Qompoter requires Bash, Git, sed. Other tools like rsync and tar (or zip) may be useful for some advanced cases.
 
 It works on Linux and Windows (using [Git bash](https://git-scm.com/)).
 It should also work on Mac, FreeBSD and more widely on Windows (Cygwin or Mysys command line) because it is Bash based, but I did not test it yet.

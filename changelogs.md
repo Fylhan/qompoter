@@ -1,5 +1,9 @@
 Qompoter Changelogs
 ===================
+Version 0.3
+-----------
+In progress...
+
 Version 0.2
 -----------
 * Update qompote.pri with new qmake functions

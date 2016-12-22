@@ -6,3 +6,4 @@ release*
 *.user
 *.un~
 *.zip
+*.tar*
