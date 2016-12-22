@@ -16,51 +16,47 @@ Version 0.3
 
 * [x] Fix Git based package issue: branch, tag, commit ; first install or update
 * [x] Fix: download lib does not failed properly
-* [*] qompoter init
-* [ ] qompoter release
-* [*] qompoter export --repo
-* [*] Download package using HTTP
-* [*] Allow package to be available as zip or tar in repositories (this will also preserve symbolic links and reduce space)
-* [*] qompoter export with compression / optimization
-* [x] Do not automatically override Git package in vendor with manual changes
-* [*] qompoter install / update (md5sum + qompoter.lock)
-* [ ] Prevent from overriding manual changes for all packages in vendor (md5sum)
+* [*] New action: qompoter init
+* [*] New action: qompoter export --repo
+* [*] New action: qompoter install / update (md5sum + qompoter.lock)
+* [x] Feature: Prevent from overriding manual changes for Git packages in vendor (git status)
+* [ ] Feature: Prevent from overriding manual changes for all packages in vendor (md5sum)
+* [*] Feature: Install packages from tarball (this will also preserve symbolic links and reduce space)
+* [*] Feature: Download packages using HTTP
+* [*] Enhancement: qompoter export with compression / optimization
 * [ ] Clean documentation and release
 
 Version 0.4
 -----------
 
-* [ ] Cache downloaded packages
-* [ ] Integrate automaticly inqlude packages if possible (generate qompoter.pri, ... ?)
-* [ ] Update automaticaly the inqlude repository data
+* [ ] New action: qompoter release
+* [ ] Feature: Cache downloaded packages
+* [ ] Feature: Integrate automaticly inqlude packages if possible (generate qompoter.pri, ... ?)
+* [ ] Feature: Update automaticaly the inqlude repository data
+* [ ] Installation: create npm package
 * [ ] Clean documentation and release
 
 Future versions
 -----------
 
-* [ ] Allow soft version management v2 (e.g. ^v1.0 etc)
-* [ ] Search in other package manager repositories (QPM, CPM, ...)
-* [ ] First security level: integrity of packages (md5sum)
-* [ ] Create Debian package or qompoter self-update (from Github)
-* [ ] qompoter install --repo vendor.zip
-* [ ] qompoter require
-* [ ] Better documentation
+* [ ] Installation: create Debian package
+* [ ] Installation: create other Linux package
+* [ ] Installation: qompoter self-update (from Github)
+* [ ] Installation: install Qompoter though the "Qt Maintenance Tool"
+* [ ] New action: qompoter require packagename
+* [ ] Feature: Allow soft version management v2 (e.g. ^v1.0 etc)
+* [ ] Feature: Search in other package manager repositories (QPM, CPM, ...)
+* [ ] Feature: Increase security by checkin integrity of packages (md5sum)
+* [ ] Feature: qompoter install --repo vendor.zip
+* [ ] Feature: add qompoter install --local / --global
 * [ ] Support extension using qompoter-command available in PATH
-* [ ] FAQ
-* [ ] Translate doc into french
 * [ ] Integrate automatically Qt plugins if possible (generate qompoter.pri, ... ?)
 * [ ] Integrate into QtCreator
 * [ ] Split qompoter.sh into several files and add build step to create qompoter.sh
-* [ ] Install Qompoter though the "Qt Maintenance Tool"
-* [ ] Add Qompoter to Debian and other Linux repositories
 * [ ] Describe and implement a "Packagist" like server for Qompoter
-* [ ] Add qompoter install --local / --global
 * [ ] Use QT += package instead of CONFIG which leverage the usage of include(vendor.pri)
 * [ ] Support CMake
 * [ ] Check Windows support
 * [ ] JSON schema for qompoter.json
-
-Note
------------
-qompoter=/home/Project/Test/qompoter-repo
-qompoter=/home/smb4k/SQUEAK/Project/PlateformeVehiculeElectrique/qompoter
+* [ ] Translate doc into french
+* [ ] Better documentation
