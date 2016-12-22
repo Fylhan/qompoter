@@ -2,7 +2,7 @@
 
 readonly C_PROGNAME=$(basename $0)
 readonly C_PROGDIR=$(readlink -m $(dirname $0))
-readonly C_PROGVERSION="v0.3.1-beta3"
+readonly C_PROGVERSION="v0.3.2-alpha"
 readonly C_ARGS="$@"
 C_OK="\e[1;32m"
 C_FAIL="\e[1;31m"
@@ -260,7 +260,7 @@ C_LOG_FILENAME=qompoter.log
 QOMPOTER_FILENAME=qompoter.json
 INQLUDE_FILENAME=
 VENDOR_DIR=vendor
-REPO_PATH=
+REPO_PATH=git@gitlab.lan.trialog.com:
 IS_INCLUDE_DEV=(-dev)?
 IS_FORCE=0
 IS_NO_QOMPOTE=0
@@ -285,69 +285,71 @@ usage()
 	                        jsonh, md5sum
 
 	Options:
-	    -d, --depth         Depth of the recursivity in the searching of
-	                        subpackages [default = $DEPTH_SIZE]
+	    -d, --depth SIZE      Depth of the recursivity in the searching of
+                            subpackages [default = $DEPTH_SIZE]
 
-	        --inqlude-file  Pick the provided file to search into the
-	                        inqlude repository
+        --inqlude-file FILE Pick the provided file to search into the
+                            inqlude repository
 
-	    -f, --file          Pick another Qompoter file [default = $QOMPOTER_FILENAME]
+	    -f, --file FILE       Pick another Qompoter file [default = $QOMPOTER_FILENAME]
 
-	        --force         Force the action
-	                        Supported action is: install
+	        --force           Force the action
+                            Supported action is: export, install
 
-	    -l, --list          List elements depending of the action
-	                        Supported action is: require
+	    -l, --list            List elements depending of the action
+                            Supported action is: require
 
-	        --minify        Minify the provided file
-	                        Supported action is: inqlude
+	        --minify          Minify the provided file
+                            Supported action is: inqlude
 
-	        --no-color      Do not enable color on output [default = false]
+	        --no-color        Do not enable color on output [default = false]
 
-	        --no-dev        Do not retrieve dev dependencies listed
-	                        in "require-dev" [default = false]
-                          Supported action is: install
+	        --no-dev          Do not retrieve dev dependencies listed
+                            in "require-dev" [default = false]
+                            Supported action is: install
 
-	        --no-qompote    Do not generate any Qompoter specific stuffs
-	                        like qompote.pri and vendor.pri [default = false]
-	                        Supported actions are: init, install
+	        --no-qompote      Do not generate any Qompoter specific stuffs
+                            like qompote.pri and vendor.pri [default = false]
+                            Supported actions are: init, install
 
-	    -r, --repo          Select a repository path as a location for
-	                        dependency research. It is used in addition
-	                        of the "repositories" provided in
-	                        "qompoter.json".
-	                        E.g. "repo/repositories/<vendor name>/<project name>"
-                          Supported actions are: export, install
+	    -r, --repo DIR        Select a repository path as a location for
+                            dependency research. It is used in addition
+                            of the "repositories" provided in
+                            "qompoter.json".
+                            Supported actions are: export, install
 
-	        --search        Search related packages in a repository
-	                        Supported action is: inqlude
+	        --search PACKAGE  Search related packages in a repository
+                            Supported action is: inqlude
 
-	        --stable-only   Do not select unstable versions [default = false]
-	                        E.g. If "v1.*" is given to Qompoter, it will
-	                        select "v1.0.3" and not "v1.0.4-RC1"
-	                        Supported action is: install
+	        --stable-only     Do not select unstable versions [default = false]
+                            E.g. If "v1.*" is given to Qompoter, it will
+                            select "v1.0.3" and not "v1.0.4-RC1"
+                            Supported action is: install
 
-	        --vendor-dir    Pick another vendor directory [default = $VENDOR_DIR]
-	                        Supported actions are: export, install
+	        --vendor-dir DIR  Pick another vendor directory [default = $VENDOR_DIR]
+                            Supported actions are: export, install
 
-	    -V, --verbose       Enable more verbosity
+	    -V, --verbose         Enable more verbosity
 
-	    -h, --help          Display this help
+	    -h, --help            Display this help
 
-	    -v, --version       Display the version
+	    -v, --version         Display the version
 
 	Examples:
 	    Install all dependencies:
-	    $C_PROGNAME install --repo /Project
+	    $C_PROGNAME install --repo ~/qompoter-repo
 
 	    Install only nominal and stable dependencies:
-	    $C_PROGNAME install --no-dev --stable-only --repo /Project
+	    $C_PROGNAME install --no-dev --stable-only --repo ~/qompoter-repo
 
 	    List required dependencies for this project:
 	    $C_PROGNAME require --list
 
-	    Export existing dependencies:
+	    Export vendor directory:
 	    $C_PROGNAME export
+
+	    Export vendor directory as a qompotist-fs repository:
+	    $C_PROGNAME export --repo ~/other-qompoter-repo
 
 	    Search dependency in the inqlude repository:
 	    $C_PROGNAME inqlude --search vogel/injeqt
@@ -542,21 +544,6 @@ defineReplace(setBuildDir){
     return($TARGET)
 }
 
-# addSubdirs(subdirs,deps): Adds directories to the project that depend on other directories
-defineTest(addSubdirs) {
-    for(subdirs, 1) {
-        entries = $$files($$subdirs)
-        for(entry, entries) {
-            name = $$replace(entry, [/\\\\], _)
-            SUBDIRS += $$name
-            eval ($${name}.subdir = $$entry)
-            for(dep, 2):eval ($${name}.depends += $$replace(dep, [/\\\\], _))
-            export ($${name}.subdir)
-            export ($${name}.depends)
-        }
-    }
-    export (SUBDIRS)
-}
 EOF
 }
 
@@ -989,9 +976,9 @@ getProjectMd5()
 }
 
 #**
-# * Retrieve package info from Qompoter file
+# * Retrieve packages info from Qompoter file
 # * @param Qompoter file name
-# * @return <vendor name>/<project name>/<version number>
+# * @return list of <vendor name>/<project name>/<version number>
 #**
 getProjectRequires()
 {
@@ -1065,6 +1052,11 @@ getOnePackageFullNameFromLock()
    | tr ' ' '/'`
 }
 
+#**
+# * Retrieve project info from Qompoter file
+# * @param Qompoter file name
+# * @return <project name>
+#**
 getProjectName()
 {
   local qompoterFile=$1
@@ -1074,6 +1066,12 @@ getProjectName()
    | sed -e 's/"//g;s/\[name\]\s*//;s/.*\///'
 }
 
+
+#**
+# * Retrieve project info from Qompoter file
+# * @param Qompoter file name
+# * @return <vendor name>/<project name>
+#**
 getProjectFullName()
 {
   local qompoterFile=$1
@@ -1478,9 +1476,10 @@ requireAction()
 repoExportAction()
 {
   local qompoterFile=$1
+  local qompoterLockFile=`echo ${qompoterFile} | cut -d'.' -f1`.lock
   local vendorDir=$2
   
-  checkQompoterFile qompoter.lock || return 100
+  checkQompoterFile ${qompoterLockFile} || return 100
   if [ ! -d "${vendorDir}" ]; then
     echo "Nothing to do: no '${VENDOR_DIR}' dir"
     return 0
@@ -1493,7 +1492,7 @@ repoExportAction()
     
     ## Git package
     if [ -d "${vendorDir}/${projectName}/.git" ]; then
-      local remoteGitPath="${REPO_PATH}/`getOnePackageNameFromLock qompoter.lock ${projectName}`/${projectName}.git"
+      local remoteGitPath="${REPO_PATH}/`getOnePackageNameFromLock ${qompoterLockFile} ${projectName}`/${projectName}.git"
       # Existing remote Git package: push new version
       if [ -d "${remoteGitPath}" ]; then
         cd ${vendorDir}/${projectName} || ( echo "  Error: can not go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
@@ -1525,12 +1524,17 @@ repoExportAction()
     
     ## Version or something else
     else
-      local remotePath="${REPO_PATH}/`getOnePackageFullNameFromLock qompoter.lock ${projectName}`"
+      local remotePath="${REPO_PATH}/`getOnePackageFullNameFromLock ${qompoterLockFile} ${projectName}`"
       if [ ! -d "${remotePath}" ]; then
+        ilog "  Create remote dir \"${remotePath}\""
         mkdir -p ${remotePath}
       fi
+      ilog "  Copy package files"
       cp -rf ${vendorDir}/${projectName}/* ${remotePath} \
-       || res=1
+        || res=1
+      ilog "  Copy package libraries"
+      rsync -avR ${vendorDir}/./lib_*/*${projectName}* ${remotePath} >> ${C_LOG_FILENAME} 2>&1 \
+        || res=1
     fi
 
     if [ "$res" != "0" ]; then
@@ -1552,7 +1556,8 @@ repoExportAction()
   fi
   if [ -d "${REPO_PATH}" ]; then
     ilog "Generate tarball"
-    tar czf ${repositoryBackup} ${REPO_PATH} --directory ${REPO_PATH}/.. >> ${C_LOG_FILENAME} 2>&1
+    local currentPath=`pwd`
+    (cd ${REPO_PATH} ; tar czf ${currentPath}/${repositoryBackup} *)
     if [ "$?" == "0" ]; then
       echo "Exported to ${REPO_PATH}"
       return 0
