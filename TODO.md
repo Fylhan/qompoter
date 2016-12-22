@@ -18,10 +18,10 @@ Version 0.3
 * [x] Fix: download lib does not failed properly
 * [*] qompoter init
 * [ ] qompoter release
-* [ ] qompoter export --repo / --vendor
-* [ ] Download package using HTTP
-* [ ] Allow package to be available as zip or tar in repositories (this will also preserve symbolic links and reduce space)
-* [ ] qompoter export with compression / optimization
+* [*] qompoter export --repo
+* [*] Download package using HTTP
+* [*] Allow package to be available as zip or tar in repositories (this will also preserve symbolic links and reduce space)
+* [*] qompoter export with compression / optimization
 * [x] Do not automatically override Git package in vendor with manual changes
 * [*] qompoter install / update (md5sum + qompoter.lock)
 * [ ] Prevent from overriding manual changes for all packages in vendor (md5sum)

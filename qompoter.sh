@@ -1007,9 +1007,9 @@ getProjectRequires()
 }
 
 #**
-# * Retrieve package info from Qompoter lockfile
+# * Retrieve packages info from Qompoter lockfile
 # * @param Qompoter file name
-# * @return <vendor name>/<project name>/<version number>
+# * @return list of <vendor name>/<project name>/<version number>
 #**
 getProjectRequiresFromLock()
 {
@@ -1021,6 +1021,47 @@ getProjectRequiresFromLock()
    | jsonh \
    | grep -E "\[\"require${IS_INCLUDE_DEV}\",\".*\",\"version\"\]" \
    | sed -r "s/\"//g;s/\[require${IS_INCLUDE_DEV},//g;s/,version//g;s/\]	/ /g" \
+   | tr ' ' '/'`
+}
+
+#**
+# * Retrieve package info from Qompoter lockfile
+# * @param Qompoter file name
+# * @param Searched package info
+# * @return <vendor name>/<project name>
+#**
+getOnePackageNameFromLock()
+{
+  local qompoterFile=$1
+  local packageName=$2
+  
+  # Search for "require"
+  # and remove quote ("), "[require,", "] "
+  # replace space by slash
+  echo `cat ${qompoterFile} \
+   | jsonh \
+   | grep -E "\[\"require(-dev)?\",\".*/${packageName}\",\"version\"\]" \
+   | sed -r "s/\"//g;s/\[require(-dev)?,//g;s/,version//g;s/\]	.*//g"`
+}
+
+#**
+# * Retrieve package info from Qompoter lockfile
+# * @param Qompoter file name
+# * @param Searched package info
+# * @return <vendor name>/<project name>/<version number>
+#**
+getOnePackageFullNameFromLock()
+{
+  local qompoterFile=$1
+  local packageName=$2
+  
+  # Search for "require"
+  # and remove quote ("), "[require,", "] "
+  # replace space by slash
+  echo `cat ${qompoterFile} \
+   | jsonh \
+   | grep -E "\[\"require(-dev)?\",\".*/${packageName}\",\"version\"\]" \
+   | sed -r "s/\"//g;s/\[require(-dev)?,//g;s/,version//g;s/\]	/ /g" \
    | tr ' ' '/'`
 }
 
@@ -1374,7 +1415,7 @@ installAction()
 
   checkQompoterFile ${qompoterFile} || return 100
   prepareVendorDir ${vendorDir}
-   prepareQompoterLock ${qompoterLockFile} `getProjectFullName ${qompoterFile}`
+  prepareQompoterLock ${qompoterLockFile} `getProjectFullName ${qompoterFile}`
 
   local depth=0
   while [ "$depth" -lt "$DEPTH_SIZE" ] && [ -n "${NEW_SUBPACKAGES}" ]; do
@@ -1436,7 +1477,89 @@ requireAction()
 
 repoExportAction()
 {
-  echo "Not implemented yet";
+  local qompoterFile=$1
+  local vendorDir=$2
+  
+  checkQompoterFile qompoter.lock || return 100
+  if [ ! -d "${vendorDir}" ]; then
+    echo "Nothing to do: no '${VENDOR_DIR}' dir"
+    return 0
+  fi
+  
+  local packages=`ls ${vendorDir} | grep -v -e "\(lib_.*\|qompote\.pri\|vendor\.pri\)" `
+  for projectName in ${packages}; do
+    echo "* ${projectName}"
+    local res=0
+    
+    ## Git package
+    if [ -d "${vendorDir}/${projectName}/.git" ]; then
+      local remoteGitPath="${REPO_PATH}/`getOnePackageNameFromLock qompoter.lock ${projectName}`/${projectName}.git"
+      # Existing remote Git package: push new version
+      if [ -d "${remoteGitPath}" ]; then
+        cd ${vendorDir}/${projectName} || ( echo "  Error: can not go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+        # Git remote not already set
+        if [[ -z `git remote -v | grep "${remoteGitPath}"` ]]; then
+          if [[ ! -z `git remote -v | grep "qompoter"` ]]; then
+            ilog "  Change \"qompoter\" remote to \"${remoteGitPath}\""
+            git remote set-url qompoter ${remoteGitPath} >> ${C_LOG_FILENAME} 2>&1 \
+              || res=1
+          else
+            ilog "  Add \"${remoteGitPath}\" as \"qompoter\" remote"
+            git remote add qompoter ${remoteGitPath} >> ${C_LOG_FILENAME} 2>&1 \
+              || res=1
+          fi
+        fi
+        ilog "  Push to remote"
+        git push qompoter --all >> ${C_LOG_FILENAME} 2>&1 \
+          || res=1
+        cd - > /dev/null 2>&1 || ( echo "  Error: can not go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+      # Not remote git package: clone --bare
+      else
+        ilog "  Clone to remote"
+        git clone --bare ${vendorDir}/${projectName} ${remoteGitPath} >> ${C_LOG_FILENAME} 2>&1 \
+          && cd ${remoteGitPath} || ( echo "  Error: can not go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1) \
+          || res=1 \
+          && git gc >> ${C_LOG_FILENAME} 2>&1 \
+          && cd - > /dev/null 2>&1 || ( echo "  Error: can not go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+      fi
+    
+    ## Version or something else
+    else
+      local remotePath="${REPO_PATH}/`getOnePackageFullNameFromLock qompoter.lock ${projectName}`"
+      if [ ! -d "${remotePath}" ]; then
+        mkdir -p ${remotePath}
+      fi
+      cp -rf ${vendorDir}/${projectName}/* ${remotePath} \
+       || res=1
+    fi
+
+    if [ "$res" != "0" ]; then
+      echo -e "  ${C_FAIL}FAILURE${C_END}"
+      echo
+      if [ "$IS_FORCE" != "1" ]; then
+        return 1
+      fi
+    else
+      echo -e "  ${C_OK}done${C_END}"
+      echo
+    fi
+  done
+  
+  ## Generate tarbal
+  local repositoryBackup=`date +"%Y-%m-%d"`_`getProjectName ${qompoterFile}`_repository.tar.gz
+  if [ -f "${repositoryBackup}" ]; then
+    rm ${repositoryBackup}
+  fi
+  if [ -d "${REPO_PATH}" ]; then
+    ilog "Generate tarball"
+    tar czf ${repositoryBackup} ${REPO_PATH} --directory ${REPO_PATH}/.. >> ${C_LOG_FILENAME} 2>&1
+    if [ "$?" == "0" ]; then
+      echo "Exported to ${REPO_PATH}"
+      return 0
+    else
+      echo "Cannot generate the tarball"
+    fi
+  fi
   return 1
 }
 
@@ -1508,11 +1631,10 @@ cmdline()
       ;;
     -r | --repo )
       shift
+      REPO_PATH=$1
+      shift
       if [ "${ACTION}" == "export"  ]; then
         SUB_ACTION="repo"
-      else
-        REPO_PATH=$1
-        shift
       fi
       ;;
     --vendor-dir )
@@ -1631,7 +1753,7 @@ main()
   case ${ACTION} in
     "export")
       if [ "${SUB_ACTION}" == "repo" ]; then
-        repoExportAction ${QOMPOTER_FILENAME}
+        repoExportAction ${QOMPOTER_FILENAME} ${VENDOR_DIR}
       else
         exportAction ${QOMPOTER_FILENAME} ${VENDOR_DIR}
       fi
