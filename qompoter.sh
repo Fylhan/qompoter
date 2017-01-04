@@ -669,7 +669,10 @@ downloadPackage()
   else
     echo "  Downloading lib..."
     packageType="qompoter-fs"
-    downloadLibFromCp ${repositoryPath} ${vendorDir} ${vendorName} ${packageName} ${PACKAGE_VERSION} ${packageDistUrl} \
+    if [ -z "${packageDistUrl}" ] && [ ! -z "${requireBasePath}" ]; then # Use Inqlude binary if any
+      packageDistUrl=${requireBasePath}
+    fi
+    downloadLibFromCp "${repositoryPath}" "${vendorDir}" "${vendorName}" "${packageName}" "${PACKAGE_VERSION}" "${packageDistUrl}" \
       && result=0 \
       || result=1
   fi
