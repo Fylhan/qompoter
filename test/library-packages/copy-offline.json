@@ -1,0 +1,13 @@
+{
+	"name": "install-ok/qompoter-versionstar-offline",
+	"authors": [
+		{
+			"name": "Fylhan",
+			"homepage": "http://fylhan.la-bnbox.fr"
+		}
+	],
+	"require": {
+		"cp/acme": "v1.*-lib",
+		"cp/fylhan3": "v1.0-lib"
+	}
+}
