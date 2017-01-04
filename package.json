@@ -1,6 +1,6 @@
 {
   "name": "qompoter",
-  "version": "0.3.2-alpha",
+  "version": "0.3.2-beta",
   "description": "Dependency manager for Qt / C++",
   "homepage": "https://fylhan.github.com/qompoter",
   "author": "Fylhan (http://fylhan.la-bnbox.fr)",
