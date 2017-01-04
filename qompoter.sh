@@ -296,9 +296,9 @@ usage()
 	    --inqlude-file FILE   Pick the provided file to search into the
 	                          inqlude repository
 
-	    -f, --file FILE       Pick another Qompoter file [default = $QOMPOTER_FILENAME]
+	        --file FILE       Pick another Qompoter file [default = $QOMPOTER_FILENAME]
 
-	        --force           By-pass error by forcing the action to be taken
+      -f, --force           By-pass error by forcing the action to be taken
 	                          and continue the process
 	                          Supported actions are: export --repo, install
 
@@ -328,8 +328,8 @@ usage()
 	                          Supported action is: inqlude
 
 	        --stable-only     Do not select unstable versions [default = false]
-	                          E.g. If "v1.*" is given to Qompoter, it will
-	                          select "v1.0.3" and not "v1.0.4-RC1"
+	                          E.g. If "v1.*" is given to Qompoter, it will select
+                            "v1.0.3" and not "v1.0.4-RC1"
 	                          Supported action is: install
 
 	        --vendor-dir DIR  Pick another vendor directory [default = $VENDOR_DIR]
