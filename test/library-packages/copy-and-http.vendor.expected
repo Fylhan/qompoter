@@ -1,0 +1,16 @@
+vendor
+vendor/acme
+vendor/acme/qompoter.json
+vendor/acme/qompoter.pri
+vendor/lib_linux_64
+vendor/lib_linux_64/acme_fake.a
+vendor/lib_linux_64/qompoter-test-package_fake.a
+vendor/lib_linux_64/qompoter-test-package4git_fake.a
+vendor/qompoter-test-package
+vendor/qompoter-test-package/qompoter.json
+vendor/qompoter-test-package/README.md
+vendor/qompoter-test-package4git
+vendor/qompoter-test-package4git/qompoter.json
+vendor/qompoter-test-package4git/README.md
+vendor/qompote.pri
+vendor/vendor.pri

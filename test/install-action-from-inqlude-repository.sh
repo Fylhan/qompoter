@@ -15,7 +15,7 @@ do
     echo "not ok $i - $input"
     fails=$((fails+1))
   else
-    echo "ok $i - $input"    
+    echo "ok $i - $input"
   fi
   rm -rf vendor
 done

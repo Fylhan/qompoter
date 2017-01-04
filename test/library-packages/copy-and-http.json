@@ -1,0 +1,18 @@
+{
+	"name": "install-ok/qompoter-versionstar-offline",
+	"authors": [
+		{
+			"name": "Fylhan",
+			"homepage": "http://fylhan.la-bnbox.fr"
+		}
+	],
+	"require": {
+		"cp/acme": "v1.*-lib",
+		"fylhan/qompoter-test-package4git": "v1.0-lib",
+		"fylhan/qompoter-test-package": "v1.0-lib"
+	},
+	"repositories": {
+		"fylhan/qompoter-test-package4git": { "url": "https://github.com/Fylhan/qompoter-test-package4git/releases/download/v1.0/qompoter-test-package4git-v1.0-lib.tar.gz" },
+		"fylhan/qompoter-test-package": { "url": "https://wrong-uri.tar.gz" }
+	}
+}

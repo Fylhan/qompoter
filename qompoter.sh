@@ -2,7 +2,7 @@
 
 readonly C_PROGNAME=$(basename $0)
 readonly C_PROGDIR=$(readlink -m $(dirname $0))
-readonly C_PROGVERSION="v0.3.2-beta2"
+readonly C_PROGVERSION="v0.3.2-beta3"
 readonly C_ARGS="$@"
 C_OK="\e[1;32m"
 C_FAIL="\e[1;31m"
@@ -621,16 +621,19 @@ downloadPackage()
     isSource=0
   fi
   local requireBasePath=${repositoryPath}/${requireName}
-  local requirePath=${requireBasePath}/${requireVersion}
+  if [ -z "${packageDistUrl}" ]; then
+    packageDistUrl=${requireBasePath}/${requireVersion}
+  fi
   local requireLocalPath=${vendorDir}/${packageName}
   local qompoterPriFile=${requireLocalPath}/qompoter.pri
+  local inqludeBasePath
 
   echo "* ${requireName} ${requireVersion}"
 
-  mkdir -p ${requireLocalPath}
+  mkdir -p "${requireLocalPath}"
 
   # Search in Inqlude repository
-  local inqludeBasePath=`getPackageInqludeUrl ${vendorName} ${packageName} ${requireVersion} ${INQLUDE_FILENAME}`
+  inqludeBasePath=$(getPackageInqludeUrl "${vendorName}" "${packageName}" "${requireVersion}" "${INQLUDE_FILENAME}")
   if [ ! -z "${inqludeBasePath}" ]; then
     ilog "  Use inqlude package \"${packageName}\" (${inqludeBasePath})"
     requireBasePath=${inqludeBasePath}
@@ -643,12 +646,12 @@ downloadPackage()
     if [ -d "${requireBasePath}/${packageName}.git" ]; then
       gitPath=${requireBasePath}/${packageName}.git
     fi
-    isGitRepositories ${requireBasePath} && gitPath=${requireBasePath}.git
+    isGitRepositories "${requireBasePath}" && gitPath=${requireBasePath}.git
     if [ ! -z "${gitPath}" ]; then
       echo "  Downloading sources from Git..."
-      test `echo ${gitPath} | grep "${REPO_PATH}"` && packageDistUrl=${gitPath}
+      test `echo "${gitPath}" | grep "${REPO_PATH}"` && packageDistUrl=${gitPath}
       packageType="git"
-      downloadPackageFromGit ${gitPath} ${vendorDir} ${packageName} ${requireVersion}
+      downloadPackageFromGit "${gitPath}" "${vendorDir}" "${packageName}" "${requireVersion}"
       result=$?
     fi
 
@@ -669,12 +672,11 @@ downloadPackage()
   else
     echo "  Downloading lib..."
     packageType="qompoter-fs"
-    if [ -z "${packageDistUrl}" ] && [ ! -z "${requireBasePath}" ]; then # Use Inqlude binary if any
-      packageDistUrl=${requireBasePath}
+    if [ -z "${packageDistUrl}" ] && [ ! -z "${inqludeBasePath}" ]; then # Use Inqlude binary if any
+      packageDistUrl=${inqludeBasePath}
     fi
-    downloadLibFromCp "${repositoryPath}" "${vendorDir}" "${vendorName}" "${packageName}" "${PACKAGE_VERSION}" "${packageDistUrl}" \
-      && result=0 \
-      || result=1
+    downloadLibPackage "${repositoryPath}" "${vendorDir}" "${vendorName}" "${packageName}" "${PACKAGE_VERSION}" "${packageDistUrl}"
+    result=$?
   fi
 
   # BY-PASS
@@ -715,6 +717,7 @@ downloadPackageFromCp()
   local vendorName=$3
   local packageName=$4
   local packageVersion=$5
+  local selectedVersion
   local requireName=${vendorName}/${packageName}
   local requireBasePath=${repositoryPath}/${requireName}
   local requireLocalPath=${vendorDir}/${packageName}
@@ -722,7 +725,7 @@ downloadPackageFromCp()
  # Select the best version (if variadic version number provided)
   if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
     ilog "  Search matching version"
-    local selectedVersion=`ls ${requireBasePath} | getBestVersionNumber $packageVersion`
+    selectedVersion=$(ls "${requireBasePath}" | getBestVersionNumber "$packageVersion")
     if [ -z "${selectedVersion}" ]; then
       echo "  Oups, no matching version for \"${packageVersion}\""
       return 2
@@ -732,35 +735,62 @@ downloadPackageFromCp()
   fi
 
   # Copy
-  local requirePath=${requireBasePath}/${packageVersion}
-  if [ -d "${requirePath}" ]; then
-    ilog "  Copy \"${requirePath}\" to \"${requireLocalPath}\""
-    cp -rf ${requirePath}/* ${requireLocalPath} \
+  local packageDistUrl=${requireBasePath}/${packageVersion}
+  if [ -d "${packageDistUrl}" ]; then
+    ilog "  Copy \"${packageDistUrl}\" to \"${requireLocalPath}\""
+    cp -rf ${packageDistUrl}/* ${requireLocalPath} \
       >> ${C_LOG_FILENAME} 2>&1
     PACKAGE_VERSION=${packageVersion}
     return 0
   fi
-  rm -rf ${requireLocalPath}
-  echo "  Error: no package found \"${requirePath}\""
+  rm -rf "${requireLocalPath}"
+  echo "  Error: no package found \"${packageDistUrl}\""
   return 1
 }
 
-downloadLibFromCp()
+downloadLibPackage()
 {
   local repositoryPath=$1
   local vendorDir=$2
   local vendorName=$3
   local packageName=$4
   local packageVersion=$5
+  local selectedVersion
   local packageDistUrl=$6
   local requireName=${vendorName}/${packageName}
   local requireBasePath=${repositoryPath}/${requireName}
   local requireLocalPath=${vendorDir}/${packageName}
 
- # Select the best version (if variadic version number provided)
+  ## Package URL is provided
+  # Download from HTTP
+  if [[ ! -z ${packageDistUrl} ]] && [[ ${packageDistUrl} == "http"* ]]; then
+    ilog "  Download using package provided url"
+    downloadLibFromHttp "${packageDistUrl}" "${requireLocalPath}"
+    res=$? ; test "$res" == "0" && return 0
+    echo "  Warning: cannot find provided \"${packageDistUrl}\", let's try another repository"
+  fi
+
+  ## Package URL is not provided: build it
+  # Build package URL
+  packageDistUrl=${requireBasePath}/${packageVersion}
+
+  # Download from HTTP
+  if [[ ${packageDistUrl} == "http"* ]]; then
+    ilog "  Download using package built url"
+    # Try tarball
+    downloadLibFromHttp "${packageDistUrl}.tar.gz" "${requireLocalPath}"
+    res=$? ; test "$res" == "0" && return 0
+    ilog "  Warning: cannot find \"${packageDistUrl}.tar.gz\", let's try with zip"
+    # Try archive
+    downloadLibFromHttp "${packageDistUrl}.zip" "${requireLocalPath}"
+    res=$? ; test "$res" == "0" && return 0
+    ilog "  Warning: cannot find \"${packageDistUrl}.zip\", let's try another repository"
+  fi
+
+  # Select the best version (if variadic version number provided)
   if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
     ilog "  Search matching version"
-    local selectedVersion=`ls ${requireBasePath} | getBestVersionNumber ${packageVersion}`
+    selectedVersion=$(ls "${requireBasePath}" | getBestVersionNumber "${packageVersion}")
     if [ -z "${selectedVersion}" ]; then
       echo "  Oups, no matching version for \"${packageVersion}\""
       return 2
@@ -768,74 +798,92 @@ downloadLibFromCp()
     packageVersion=${selectedVersion}
     echo "  Selected version: ${packageVersion}"
   fi
-
-  # Copy from tarball
-  local requirePath=${requireBasePath}/${packageVersion}
-  if [[ ${repositoryPath} == "http"* ]] || [[ ${packageDistUrl} == "http"* ]]; then
-    local archive=${packageVersion}.tar.gz
-    requirePath=${requireBasePath}/${archive}
-    if [ ! -z "${packageDistUrl}" ]; then
-      requirePath=${packageDistUrl}
-    fi
-    test "$IS_VERBOSE" == "1" && quiet=
-    ilog "  Download \"${requirePath}\" to \"${requireLocalPath}\""
-    wget ${requirePath} --directory-prefix=${requireLocalPath} \
-          >> ${C_LOG_FILENAME} 2>&1
-    local res="$?"
-    if [ "${res}" == "0" ]; then
-      ilog "  Extract library tarball"
-      tar -xf ${requireLocalPath}/${archive} --directory ${requireLocalPath} --overwrite --strip-components=1 \
-          >> ${C_LOG_FILENAME} 2>&1
-      res="$?"
-    elif [[ ${packageDistUrl} != "http"* ]]; then
-      ilog "  Error: there is no tarball, let's try with zip"
-      archive=${packageVersion}.zip
-      requirePath=${requireBasePath}/${archive}
-      ilog "  Download \"${requirePath}\" to \"${requireLocalPath}\""
-      wget ${requirePath} --directory-prefix=${requireLocalPath} \
-          >> ${C_LOG_FILENAME} 2>&1
-      res="$?"
-      if [ "$res" == "0" ]; then
-        ilog "  Extract library archive"
-        unzip -u ${requireLocalPath}/${archive} -d ${requireLocalPath} \
-          >> ${C_LOG_FILENAME} 2>&1
-        res="$?"
-        mv -f ${requireLocalPath}/${packageVersion}/* ${requireLocalPath}
-      fi
-    fi
-    if [ "$res" == "0" ]; then
-      ilog "  Delete archive \"${archive}\""
-      rm -f ${requireLocalPath}/${archive}*
-      ilog "  Move \"${requireLocalPath}/*lib_?*\" to \"${vendorDir}\""
-      cp -rf ${requireLocalPath}/lib_* ${vendorDir} \
-          && rm -rf ${requireLocalPath}/lib_* \
-          >> ${C_LOG_FILENAME} 2>&1
-      cp -rf ${requireLocalPath}/*lib ${vendorDir} \
-          >> ${C_LOG_FILENAME} 2>&1 \
-          && rm -rf ${requireLocalPath}/*lib ${vendorDir} \
-          >> ${C_LOG_FILENAME} 2>&1
-    fi
-    return $res
-  # Copy from directory
-  elif [ -d "${requirePath}" ]; then
-    ilog "  Copy \"${requirePath}/*lib_?*\" to \"${vendorDir}\""
-    cp -rf ${requirePath}/lib_* ${vendorDir} \
-        >> ${C_LOG_FILENAME} 2>&1
-    cp -rf ${requirePath}/*lib ${vendorDir} \
-        >> ${C_LOG_FILENAME} 2>&1
-    ilog "  Copy \"${requirePath}/include\" to \"${requireLocalPath}\""
-    cp -rf ${requirePath}/include ${requireLocalPath} \
-        >> ${C_LOG_FILENAME} 2>&1
-    cp -rf ${requirePath}/qompoter.* ${requireLocalPath} \
-        >> ${C_LOG_FILENAME} 2>&1
-    cp -rf ${requirePath}/*.md ${requireLocalPath} \
-        >> ${C_LOG_FILENAME} 2>&1
+  packageDistUrl=${requireBasePath}/${packageVersion}
+  # Download from CP
+  ilog "  Copy using package built url"
+  downloadLibFromCp "${packageDistUrl}" "${requireLocalPath}"
+  res=$?
+  if [ "$res" == "0" ]; then
     PACKAGE_VERSION=${packageVersion}
     return 0
   fi
-  rm -rf ${requireLocalPath}
-  echo "  Error: no library found \"${requirePath}\""
-  return 1
+
+  ## Clear if failed
+  rm -rf "${requireLocalPath}"
+  echo "  Error: no library found \"${packageDistUrl}\""
+  return $res
+}
+
+# Copy a tarball or an archive from HTTP
+downloadLibFromHttp()
+{
+  local packageDistUrl=$1
+  local requireLocalPath=$2
+  local archive
+  archive=$(echo "${packageDistUrl}" | cut -d@ -f2 | cut -d/ -f2- | cut -d? -f1 | sed 's/\///')
+
+  ilog "  Download \"${packageDistUrl}\" to \"${requireLocalPath}/${archive}\""
+  wget "${packageDistUrl}" --directory-prefix="${requireLocalPath}" \
+        >> ${C_LOG_FILENAME} 2>&1
+  local res="$?"
+  if [ "${res}" != "0" ]; then
+    return 1
+  fi
+
+  ilog "  Extract library tarball"
+  if [[ ${packageDistUrl} == *".tar.gz" ]]; then
+    tar -xf "${requireLocalPath}/${archive}" --directory "${requireLocalPath}" --overwrite --strip-components=1 \
+        >> ${C_LOG_FILENAME} 2>&1
+    res="$?"
+  elif [[ ${packageDistUrl} == *".zip" ]]; then
+    unzip -u "${requireLocalPath}/${archive}" -d "${requireLocalPath}" \
+      >> ${C_LOG_FILENAME} 2>&1
+    res="$?"
+    mv -f ${requireLocalPath}/${packageVersion}/* "${requireLocalPath}"
+  else
+    ilog "  Error: unknown archive packaging"
+    return 1
+  fi
+
+  if [ "$res" == "0" ]; then
+    ilog "  Delete archive \"${archive}\""
+    rm -f ${requireLocalPath}/${archive}*
+    ilog "  Move \"${requireLocalPath}/*lib_?*\" to \"${vendorDir}\""
+    cp -rf ${requireLocalPath}/lib_* ${vendorDir} \
+        && rm -rf ${requireLocalPath}/lib_* \
+        >> ${C_LOG_FILENAME} 2>&1
+    cp -rf ${requireLocalPath}/*lib ${vendorDir} \
+        >> ${C_LOG_FILENAME} 2>&1 \
+        && rm -rf ${requireLocalPath}/*lib ${vendorDir} \
+        >> ${C_LOG_FILENAME} 2>&1
+    PACKAGE_VERSION=${packageVersion}
+  fi
+  return $res
+}
+
+downloadLibFromCp()
+{
+  local packageDistUrl=$1
+  local requireLocalPath=$2
+
+  if [ ! -d "${packageDistUrl}" ]; then
+    return 1
+  fi
+
+  ilog "  Copy \"${packageDistUrl}/*lib_?*\" to \"${vendorDir}\""
+  cp -rf ${packageDistUrl}/lib_* ${vendorDir} \
+      >> ${C_LOG_FILENAME} 2>&1
+  cp -rf ${packageDistUrl}/*lib ${vendorDir} \
+      >> ${C_LOG_FILENAME} 2>&1
+  ilog "  Copy \"${packageDistUrl}/include\" to \"${requireLocalPath}\""
+  cp -rf ${packageDistUrl}/include ${requireLocalPath} \
+      >> ${C_LOG_FILENAME} 2>&1
+  cp -rf ${packageDistUrl}/qompoter.* ${requireLocalPath} \
+      >> ${C_LOG_FILENAME} 2>&1
+  cp -rf ${packageDistUrl}/*.md ${requireLocalPath} \
+      >> ${C_LOG_FILENAME} 2>&1
+  PACKAGE_VERSION=${packageVersion}
+  return 0
 }
 
 #**
@@ -1102,10 +1150,11 @@ getRelatedRepository()
   local qompoterFile=$1
   local requireName=$2/$3
   local repositoryPathFromQompoterFile
+  #~ TODO Let also accept repositories/<package name>/repository
   repositoryPathFromQompoterFile=`jsonh < "${qompoterFile}" \
    | grep -E "\[\"repositories\",\"${requireName}\"\]" \
    | sed -r "s/\"//g;s/\[repositories,.*\]\t*//g"`
-  if [ "${repositoryPathFromQompoterFile}" != "" ]; then
+  if [ "${repositoryPathFromQompoterFile}" != "" ] && [[ "${repositoryPathFromQompoterFile}" != "{url"* ]]; then
     echo "${repositoryPathFromQompoterFile}"
   else
     echo ${REPO_PATH}
