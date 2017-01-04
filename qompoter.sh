@@ -256,7 +256,6 @@ jsonh()
 #######################
 #######################
 
-
 C_LOG_FILENAME=qompoter.log
 QOMPOTER_FILENAME=qompoter.json
 INQLUDE_FILENAME=
@@ -413,7 +412,7 @@ defineReplace(setLibPath){
         }
       }
     }
-    
+
     export(LIBPATH)
     return($${LIBPATH})
 }
@@ -1004,11 +1003,10 @@ getProjectRequires()
   # Search for "require"
   # and remove quote ("), "[require,", "] "
   # replace space by slash
-  echo `cat ${qompoterFile} \
-   | jsonh \
+  jsonh < "${qompoterFile}" \
    | grep -E "\[\"require${IS_INCLUDE_DEV}\",\".*\"\]" \
    | sed -r "s/\"//g;s/\[require${IS_INCLUDE_DEV},//g;s/\]	/ /g" \
-   | tr ' ' '/'`
+   | tr ' ' '/'
 }
 
 #**
@@ -1022,11 +1020,10 @@ getProjectRequiresFromLock()
   # Search for "require"
   # and remove quote ("), "[require,", "] "
   # replace space by slash
-  echo `cat ${qompoterFile} \
-   | jsonh \
+  jsonh < "${qompoterFile}" \
    | grep -E "\[\"require${IS_INCLUDE_DEV}\",\".*\",\"version\"\]" \
    | sed -r "s/\"//g;s/\[require${IS_INCLUDE_DEV},//g;s/,version//g;s/\]	/ /g" \
-   | tr ' ' '/'`
+   | tr ' ' '/'
 }
 
 #**
@@ -1039,14 +1036,14 @@ getOnePackageNameFromLock()
 {
   local qompoterFile=$1
   local packageName=$2
-  
+
   # Search for "require"
   # and remove quote ("), "[require,", "] "
   # replace space by slash
-  echo `cat ${qompoterFile} \
+  jsonh < "${qompoterFile}" \
    | jsonh \
    | grep -E "\[\"require(-dev)?\",\".*/${packageName}\",\"version\"\]" \
-   | sed -r "s/\"//g;s/\[require(-dev)?,//g;s/,version//g;s/\]	.*//g"`
+   | sed -r "s/\"//g;s/\[require(-dev)?,//g;s/,version//g;s/\]	.*//g"
 }
 
 #**
@@ -1059,15 +1056,15 @@ getOnePackageFullNameFromLock()
 {
   local qompoterFile=$1
   local packageName=$2
-  
+
   # Search for "require"
   # and remove quote ("), "[require,", "] "
   # replace space by slash
-  echo `cat ${qompoterFile} \
+  jsonh < "${qompoterFile}" \
    | jsonh \
    | grep -E "\[\"require(-dev)?\",\".*/${packageName}\",\"version\"\]" \
    | sed -r "s/\"//g;s/\[require(-dev)?,//g;s/,version//g;s/\]	/ /g" \
-   | tr ' ' '/'`
+   | tr ' ' '/'
 }
 
 #**
@@ -1078,8 +1075,7 @@ getOnePackageFullNameFromLock()
 getProjectName()
 {
   local qompoterFile=$1
-  cat ${qompoterFile} \
-   | jsonh \
+  jsonh < "${qompoterFile}" \
    | grep -E "\[\"name\"\]" \
    | sed -e 's/"//g;s/\[name\]\s*//;s/.*\///'
 }
@@ -1093,8 +1089,7 @@ getProjectName()
 getProjectFullName()
 {
   local qompoterFile=$1
-  cat ${qompoterFile} \
-   | jsonh \
+  jsonh < "${qompoterFile}" \
    | grep -E "\[\"name\"\]" \
    | sed -e 's/"//g;s/\[name\]\s*//'
 }
@@ -1103,12 +1098,12 @@ getRelatedRepository()
 {
   local qompoterFile=$1
   local requireName=$2/$3
-  local repositoryPathFromQompoterFile=`cat ${qompoterFile} \
-   | jsonh \
+  local repositoryPathFromQompoterFile
+  repositoryPathFromQompoterFile=`jsonh < "${qompoterFile}" \
    | grep -E "\[\"repositories\",\"${requireName}\"\]" \
    | sed -r "s/\"//g;s/\[repositories,.*\]\t*//g"`
   if [ "${repositoryPathFromQompoterFile}" != "" ]; then
-    echo ${repositoryPathFromQompoterFile}
+    echo "${repositoryPathFromQompoterFile}"
   else
     echo ${REPO_PATH}
   fi
@@ -1118,11 +1113,11 @@ getRelatedUrl()
 {
   local qompoterFile=$1
   local requireName=$2/$3
-  local packageUrlFromQompoterFile=`cat ${qompoterFile} \
-   | jsonh \
+  local packageUrlFromQompoterFile
+  packageUrlFromQompoterFile=`jsonh < "${qompoterFile}" \
    | grep -E "\[\"repositories\",\"${requireName}\",\"url\"\]" \
    | sed -r "s/\"//g;s/\[repositories,.*,url\]\t*//g"`
-  echo ${packageUrlFromQompoterFile}
+  echo "${packageUrlFromQompoterFile}"
 }
 
 downloadQompoterFilePackages()
@@ -1130,7 +1125,8 @@ downloadQompoterFilePackages()
   local qompoterFile=$1
   local vendorDir=$2
   local globalRes=0
-  local requires=`getProjectRequires ${qompoterFile}`
+  local requires
+  requires=$(getProjectRequires "${qompoterFile}")
 
   for packageInfo in ${requires}; do
       local vendorName=`echo ${packageInfo} | cut -d'/' -f1`
@@ -1160,8 +1156,8 @@ updateVendorDirFromQompoterFile()
 {
   local qompoterFile=$1
   if [ -f "${qompoterFile}" ]; then
-    local vendorDirFromQompoterFile=`cat ${qompoterFile} \
-     | jsonh \
+    local vendorDirFromQompoterFile
+    vendorDirFromQompoterFile=`jsonh < "${qompoterFile}" \
      | grep -E "\[\"vendor-dir\"\]" \
      | sed -r "s/\"//g;s/\[vendor-dir\]//g"`
     if [ "${vendorDirFromQompoterFile}" != "" ]; then
@@ -1173,8 +1169,7 @@ updateVendorDirFromQompoterFile()
 minifyInqludeFile()
 {
   local inqludeAllFile=$1
-  cat ${inqludeAllFile} \
-    | jsonh \
+  jsonh < "${inqludeAllFile}" \
     | grep -e "name\"\]" -e "\"version\"\]" -e "\"summary\"\]" -e "\"licenses\"\]" -e "\"maturity\"\]" -e "\"platforms\"\]" -e "\"urls\",\"vcs\"\]" -e "\"packages\",\"source\"\]"
 }
 
@@ -1201,7 +1196,7 @@ getPackageInqludeUrl()
   local inqludePackages=${INQLUDE_ALL_MIN_CONTENT}
   if [ "${inqludeAllFile}" != "" ]; then
     if [ -f "${inqludeAllFile}" ]; then
-      inqludePackages=`minifyInqludeFile ${inqludeAllFile}`
+      inqludePackages=$(minifyInqludeFile "${inqludeAllFile}")
     fi
   fi
 
@@ -1243,14 +1238,15 @@ exportAction()
 {
   local qompoterFile=$1
 
-  checkQompoterFile ${qompoterFile} --quiet || return 100
-  local vendorBackup=`date +"%Y-%m-%d"`_`getProjectName ${qompoterFile}`_${VENDOR_DIR}.zip
+  checkQompoterFile "${qompoterFile}" --quiet || return 100
+  local vendorBackup
+  vendorBackup=$(date +"%Y-%m-%d")_$(getProjectName "${qompoterFile}")_${VENDOR_DIR}.zip
   if [ -f "${vendorBackup}" ]; then
-    rm ${vendorBackup}
+    rm "${vendorBackup}"
   fi
 
   if [ -d "${VENDOR_DIR}" ]; then
-    zip ${vendorBackup} -r ${VENDOR_DIR} \
+    zip "${vendorBackup}" -r "${VENDOR_DIR}" \
       >> ${C_LOG_FILENAME} 2>&1
     echo "Exported to ${vendorBackup}"
   else
@@ -1271,12 +1267,12 @@ initAction()
 
   echo "Init ${requireName} ${requireVersion}..."
   echo
-  
+
   local dirs=('src' 'test')
   for i in "${dirs[@]}"; do
     if [ ! -d "${i}" ]; then
       echo "* Create \"${i}\" dir"
-      mkdir ${i}
+      mkdir "${i}"
     else
       echo "* Do not override \"${i}\" dir"
     fi
@@ -1286,7 +1282,7 @@ initAction()
   for i in "${files[@]}"; do
     if [ ! -f "${i}" ]; then
       echo "* Create \"${i}\" file"
-      touch ${i}
+      touch "${i}"
     else
       echo "* Do not override \"${i}\" file"
     fi
@@ -1425,13 +1421,14 @@ inqludeMinifyAction()
 installAction()
 {
   local qompoterFile=$1
-  local qompoterLockFile=`echo ${qompoterFile} | cut -d'.' -f1`.lock
+  local qompoterLockFile
   local vendorDir=$2
   local globalRes=0
+  qompoterLockFile=$(echo "${qompoterFile}" | cut -d'.' -f1).lock
 
-  checkQompoterFile ${qompoterFile} || return 100
-  prepareVendorDir ${vendorDir}
-  prepareQompoterLock ${qompoterLockFile} `getProjectFullName ${qompoterFile}`
+  checkQompoterFile "${qompoterFile}" || return 100
+  prepareVendorDir "${vendorDir}"
+  prepareQompoterLock "${qompoterLockFile}" "$(getProjectFullName "${qompoterFile}")"
 
   local depth=0
   while [ "$depth" -lt "$DEPTH_SIZE" ] && [ -n "${NEW_SUBPACKAGES}" ]; do
@@ -1439,7 +1436,7 @@ installAction()
     local newSubpackages=${NEW_SUBPACKAGES}
     NEW_SUBPACKAGES=""
     for subQompoterFile in ${newSubpackages}; do
-      downloadQompoterFilePackages ${subQompoterFile} ${vendorDir}
+      downloadQompoterFilePackages "${subQompoterFile}" "${vendorDir}"
       #~ Exit on error if no force
       local returnCode=$?
       if [ "${returnCode}" != "0" ]; then
@@ -1452,20 +1449,20 @@ installAction()
       echo -e "${C_FAIL}WARNING${C_END} There are still packages to download but maximal recursive depth of $DEPTH_SIZE have been reached."
     fi
   done
-  
+
   return $globalRes
 }
 
 jsonhAction()
 {
   local qompoterFile=$1
-  cat ${qompoterFile} | jsonh
+  cat "${qompoterFile}" | jsonh
 }
 
 md5sumAction()
 {
   local projectDir=$1
-  getProjectMd5 ${projectDir}
+  getProjectMd5 "${projectDir}"
 }
 
 updateAction()
@@ -1478,8 +1475,8 @@ requireListAction()
 {
   local qompoterFile=$1
 
-  checkQompoterFile ${qompoterFile} || return 100
-  for packageInfo in `getProjectRequires ${qompoterFile}`; do
+  checkQompoterFile "${qompoterFile}" || return 100
+  for packageInfo in $(getProjectRequires "${qompoterFile}"); do
     echo "* ${packageInfo}"
   done
   echo
@@ -1494,20 +1491,21 @@ requireAction()
 repoExportAction()
 {
   local qompoterFile=$1
-  local qompoterLockFile=`echo ${qompoterFile} | cut -d'.' -f1`.lock
+  local qompoterLockFile
   local vendorDir=$2
-  
-  checkQompoterFile ${qompoterLockFile} || return 100
+  qompoterLockFile=$(echo "${qompoterFile}" | cut -d'.' -f1).lock
+
+  checkQompoterFile "${qompoterLockFile}" || return 100
   if [ ! -d "${vendorDir}" ]; then
     echo "Nothing to do: no '${VENDOR_DIR}' dir"
     return 0
   fi
-  
-  local packages=`ls ${vendorDir} | grep -v -e "\(lib_.*\|qompote\.pri\|vendor\.pri\)" `
+
+  local packages=$(ls "${vendorDir}" | grep -v -e "\(lib_.*\|qompote\.pri\|vendor\.pri\)")
   for projectName in ${packages}; do
     echo "* ${projectName}"
     local res=0
-    
+
     ## Git package
     if [ -d "${vendorDir}/${projectName}/.git" ]; then
       local remoteGitPath="${REPO_PATH}/`getOnePackageNameFromLock ${qompoterLockFile} ${projectName}`/${projectName}.git"
@@ -1539,7 +1537,7 @@ repoExportAction()
           && git gc >> ${C_LOG_FILENAME} 2>&1 \
           && cd - > /dev/null 2>&1 || ( echo "  Error: can not go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
       fi
-    
+
     ## Version or something else
     else
       local remotePath="${REPO_PATH}/`getOnePackageFullNameFromLock ${qompoterLockFile} ${projectName}`"
@@ -1564,7 +1562,7 @@ repoExportAction()
       echo
     fi
   done
-  
+
   ## Generate tarbal
   local repositoryBackup=`date +"%Y-%m-%d"`_`getProjectName ${qompoterFile}`_repository.tar.gz
   if [ -f "${repositoryBackup}" ]; then
