@@ -2,10 +2,11 @@
 
 readonly C_PROGNAME=$(basename $0)
 readonly C_PROGDIR=$(readlink -m $(dirname $0))
-readonly C_PROGVERSION="v0.3.2-alpha"
+readonly C_PROGVERSION="v0.3.2-beta"
 readonly C_ARGS="$@"
 C_OK="\e[1;32m"
 C_FAIL="\e[1;31m"
+C_SKIP="\e[1;33m"
 C_END="\e[0m"
 
 #######################
@@ -262,6 +263,7 @@ INQLUDE_FILENAME=
 VENDOR_DIR=vendor
 REPO_PATH=git@gitlab.lan.trialog.com:
 IS_INCLUDE_DEV=(-dev)?
+IS_BYPASS=0
 IS_FORCE=0
 IS_NO_QOMPOTE=0
 IS_STABLE_ONLY=0
@@ -280,54 +282,58 @@ usage()
 	Usage: $C_PROGNAME [action] [ --repo <repo> | other options ]
 
 	    action            Select an action:
-	                        export, init, inqlude, install, update, require
+	                        export, init, install, update, require
 	                      Other actions are useful for digging into Qompoter:
-	                        jsonh, md5sum
+	                        inqlude, jsonh, md5sum
 
 	Options:
-	    -d, --depth SIZE      Depth of the recursivity in the searching of
-                            subpackages [default = $DEPTH_SIZE]
+	        --by-pass         By-pass error and continue the process
+	                          Supported actions are: export --repo, install
 
-        --inqlude-file FILE Pick the provided file to search into the
-                            inqlude repository
+	    -d, --depth SIZE      Depth of the recursivity in the searching of
+	                          subpackages [default = $DEPTH_SIZE]
+
+	    --inqlude-file FILE   Pick the provided file to search into the
+	                          inqlude repository
 
 	    -f, --file FILE       Pick another Qompoter file [default = $QOMPOTER_FILENAME]
 
-	        --force           Force the action
-                            Supported action is: export, install
+	        --force           By-pass error by forcing the action to be taken
+	                          and continue the process
+	                          Supported actions are: export --repo, install
 
 	    -l, --list            List elements depending of the action
-                            Supported action is: require
+	                          Supported action is: require
 
 	        --minify          Minify the provided file
-                            Supported action is: inqlude
+	                          Supported action is: inqlude
 
 	        --no-color        Do not enable color on output [default = false]
 
 	        --no-dev          Do not retrieve dev dependencies listed
-                            in "require-dev" [default = false]
-                            Supported action is: install
+	                          in "require-dev" [default = false]
+	                          Supported action is: install
 
 	        --no-qompote      Do not generate any Qompoter specific stuffs
-                            like qompote.pri and vendor.pri [default = false]
-                            Supported actions are: init, install
+	                          like qompote.pri and vendor.pri [default = false]
+	                          Supported actions are: init, install
 
 	    -r, --repo DIR        Select a repository path as a location for
-                            dependency research. It is used in addition
-                            of the "repositories" provided in
-                            "qompoter.json".
-                            Supported actions are: export, install
+	                          dependency research. It is used in addition
+	                          of the "repositories" provided in
+	                          "qompoter.json".
+	                          Supported actions are: export, install
 
 	        --search PACKAGE  Search related packages in a repository
-                            Supported action is: inqlude
+	                          Supported action is: inqlude
 
 	        --stable-only     Do not select unstable versions [default = false]
-                            E.g. If "v1.*" is given to Qompoter, it will
-                            select "v1.0.3" and not "v1.0.4-RC1"
-                            Supported action is: install
+	                          E.g. If "v1.*" is given to Qompoter, it will
+	                          select "v1.0.3" and not "v1.0.4-RC1"
+	                          Supported action is: install
 
 	        --vendor-dir DIR  Pick another vendor directory [default = $VENDOR_DIR]
-                            Supported actions are: export, install
+	                          Supported actions are: export, install
 
 	    -V, --verbose         Enable more verbosity
 
@@ -669,8 +675,13 @@ downloadPackage()
       || result=1
   fi
 
+  # BY-PASS
+  if [ "$result" == "4" ]; then
+    echo -e "  ${C_SKIP}SKIPPED${C_END}"
+    echo
+    return 0
   # FAILURE
-  if [ "$result" != "0" ]; then
+  elif [ "$result" != "0" ]; then
     echo -e "  ${C_FAIL}FAILURE${C_END}"
     echo
     return 1
@@ -826,7 +837,10 @@ downloadLibFromCp()
 }
 
 #**
-# * @return 1 on generic error, 2 on git error, 3 on git warning (force required toby-pass and continue)
+# * @return 1 on generic error
+# * @return 2 on git error
+# * @return 3 on git warning (force required toby-pass and continue)
+# * @return 4 when action is by-passed
 # * @exit -1 on fatal issue
 #**
 downloadPackageFromGit()
@@ -869,11 +883,15 @@ downloadPackageFromGit()
   ilog "  git status -s"
   local hasChanged=`git status -s`
   if [ ! -z "${hasChanged}" ]; then
-    if [ "$IS_FORCE" != "1" ]; then
+    if [ "$IS_BYPASS" != "1" ] && [ "$IS_FORCE" != "1" ]; then
       echo "  Warning: there are manual updates on this project."
+      echo "  Use --by-pass to continue without modifying this package."
       echo "  Use --force to discard change and continue."
       cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
       return 3
+    elif [ "$IS_BYPASS" == "1" ]; then
+      echo "  Warning: there are manual updates on this project. Ignore and continue."
+      return 4
     else
       echo "  Warning: there were manual updates on this project. Update forced."
     fi
@@ -1128,7 +1146,7 @@ downloadQompoterFilePackages()
       local returnCode=$?
       if [ "${returnCode}" != "0" ]; then
         globalRes=${returnCode}
-        test "${IS_FORCE}" == "0" && return 1
+        test "${IS_BYPASS}" == "0" && test "${IS_FORCE}" == "0" && return 1
       fi
       DOWNLOADED_PACKAGES="${DOWNLOADED_PACKAGES} ${projectName} "
       if [ -f "${vendorDir}/${projectName}/qompoter.json" ]; then
@@ -1426,7 +1444,7 @@ installAction()
       local returnCode=$?
       if [ "${returnCode}" != "0" ]; then
         globalRes=${returnCode}
-        test "${IS_FORCE}" == "0" && return 1
+        test "${IS_BYPASS}" == "0" && test "${IS_FORCE}" == "0" && return 1
       fi
       IS_INCLUDE_DEV=
     done
@@ -1540,9 +1558,7 @@ repoExportAction()
     if [ "$res" != "0" ]; then
       echo -e "  ${C_FAIL}FAILURE${C_END}"
       echo
-      if [ "$IS_FORCE" != "1" ]; then
-        return 1
-      fi
+      test "${IS_BYPASS}" == "0" && test "${IS_FORCE}" == "0" && return 1
     else
       echo -e "  ${C_OK}done${C_END}"
       echo
@@ -1596,6 +1612,10 @@ cmdline()
   fi
   while [ "$1" != "" ]; do
   case $1 in
+    --by-pass )
+      IS_BYPASS=1
+      shift
+      ;;
     -d | --depth )
       shift
       DEPTH_SIZE=$1
