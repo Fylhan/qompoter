@@ -24,7 +24,7 @@ function checkVersion()
   local i=$1
   local testCase=$2
   local pattern=$3
-  
+
   if [ "$?" == "0" ]; then
     cd vendor/qompoter-test-package4git
     local res=`git status | grep "${pattern}"`
@@ -49,13 +49,36 @@ done
 
 i=$((i+1))
 TEST_CASE="cannot install a git package due to existing change"
-echo "whatever" >> vendor/qompoter-test-package4git/qompoter.json
+echo "whatever" >> vendor/qompoter-test-package4git/changelogs.md
 ../qompoter.sh install --no-color --file "$QOMPOTER_FILE" > 1
 if [ "$?" != "0" ]; then
   cd vendor/qompoter-test-package4git
   res=`git status | grep "9504ee4"`
   if [ ! -z "${res}" ]; then
-    res=`git status -sb | grep "M qompoter.json"`
+    res=`git status -sb | grep "M changelogs.md"`
+    if [ ! -z "${res}" ]; then
+      cd ../..
+      echo "ok ${i} - ${TEST_CASE}"
+    else
+      cd ../..
+      echo "not ok ${i} - ${TEST_CASE}"
+    fi
+  else
+    cd ../..
+    echo "not ok ${i} - ${TEST_CASE}"
+  fi
+else
+  echo "not ok ${i} - ${TEST_CASE}"
+fi
+
+i=$((i+1))
+TEST_CASE="install a git package but bys-pass existing change"
+../qompoter.sh install --no-color --file "$QOMPOTER_FILE" --by-pass > 1
+if [ "$?" == "0" ]; then
+  cd vendor/qompoter-test-package4git
+  res=`git status | grep "9504ee4"`
+  if [ ! -z "${res}" ]; then
+    res=`git status -sb | grep "M changelogs.md"`
     if [ ! -z "${res}" ]; then
       cd ../..
       echo "ok ${i} - ${TEST_CASE}"
@@ -78,7 +101,7 @@ if [ "$?" == "0" ]; then
   cd vendor/qompoter-test-package4git
   res=`git status | grep "9504ee4"`
   if [ ! -z "${res}" ]; then
-    res=`git status -sb | grep "M qompoter.json"`
+    res=`git status -sb | grep "M changelogs.md"`
     if [ -z "${res}" ]; then
       cd ../..
       echo "ok ${i} - ${TEST_CASE}"
