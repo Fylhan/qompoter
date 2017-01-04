@@ -3460,6 +3460,14 @@ INQLUDE_ALL_MIN_CONTENT='[0,"name"]	"adctl"
 [203,"licenses"]	["LGPLv3"]
 [203,"maturity"]	"stable"
 [203,"platforms"]	["Linux","OS X","Windows"]
-[203,"packages","source"]	"https://github.com/vlc-qt/vlc-qt/archive/1.0.0.tar.gz"'
+[203,"packages","source"]	"https://github.com/vlc-qt/vlc-qt/archive/1.0.0.tar.gz"
+[204,"name"]	"openv2g"
+[204,"display_name"]	"OpenV2G"
+[204,"version"]	"0.9.3-lib"
+[204,"summary"]	"OpenV2G, a DIN 70121 and ISO/IEC 15118-2 library"
+[204,"packages","source"]	"http://gitlab.lan.trialog.com/evplatform/openv2g-helper/uploads/43e332532da5bd940e16d81cacce5d37/v0.9.3-lib.tar.gz"
+[204,"licenses"]	["LGPLv3"]
+[204,"maturity"]	"stable"
+[204,"platforms"]	["Linux"]'
 
 main
