@@ -1,9 +1,0 @@
-{
-  "name": "install-ok/qompoter-inqlude",
-  "date": "2016-11-24T22:00:38+01:00",
-  "require": {
-    "laumaya/glc-lib": {"version": "master", "type": "git", "url": "", "md5sum": "e346149139660e833187ee08b3a0faef"},
-    "cp/fylhan": {"version": "v1.1", "type": "qompoter-fs", "url": "", "md5sum": "9d57702586a06dcd5de4d717d936c9d6"},
-    "kde/attica": {"version": "v5.25.0", "type": "git", "url": "", "md5sum": "a0b9fffa1fcb58b1c794198b42799c26"},
-  }
-}
