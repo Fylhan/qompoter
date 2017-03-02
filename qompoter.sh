@@ -674,6 +674,7 @@ downloadPackage()
     echo "  Downloading lib..."
     packageType="qompoter-fs"
     if [ -z "${packageDistUrl}" ] && [ ! -z "${inqludeBasePath}" ]; then # Use Inqlude binary if any
+      packageType="inqlude"
       packageDistUrl=${inqludeBasePath}
     fi
     downloadLibPackage "${repositoryPath}" "${vendorDir}" "${vendorName}" "${packageName}" "${PACKAGE_VERSION}" "${packageDistUrl}"
@@ -827,8 +828,15 @@ downloadLibFromHttp()
   wget "${packageDistUrl}" --directory-prefix="${requireLocalPath}" \
         >> ${C_LOG_FILENAME} 2>&1
   local res="$?"
+  if [ "${res}" == "127" ]; then
+    # wget missing, try with curl
+    curl "${packageDistUrl}" --fail > "${requireLocalPath}/${archive}" \
+          2>&1
+    res="$?"
+  fi
+  # Download fail
   if [ "${res}" != "0" ]; then
-    return 1
+    return ${res}
   fi
 
   ilog "  Extract library tarball"
