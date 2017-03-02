@@ -2,7 +2,7 @@
 
 readonly C_PROGNAME=$(basename $0)
 readonly C_PROGDIR=$(readlink -m $(dirname $0))
-readonly C_PROGVERSION="v0.3.2-beta3"
+readonly C_PROGVERSION="v0.3.3-nightly"
 readonly C_ARGS="$@"
 C_OK="\e[1;32m"
 C_FAIL="\e[1;31m"
@@ -633,6 +633,7 @@ downloadPackage()
   mkdir -p "${requireLocalPath}"
 
   # Search in Inqlude repository
+  checkPackageInqludeVersion "${vendorName}" "${packageName}" "${requireVersion}" "${INQLUDE_FILENAME}"
   inqludeBasePath=$(getPackageInqludeUrl "${vendorName}" "${packageName}" "${requireVersion}" "${INQLUDE_FILENAME}")
   if [ ! -z "${inqludeBasePath}" ]; then
     ilog "  Use inqlude package \"${packageName}\" (${inqludeBasePath})"
@@ -1237,12 +1238,15 @@ getInqludeId()
   echo ${packageId}
 }
 
-getPackageInqludeUrl()
+checkPackageInqludeVersion()
 {
   local vendorName=$1
   local packageName=$2
-  local requireVersion=$3
+  local packageVersion=$3
   local inqludeAllFile=$3
+  local packageId
+  local packagePath
+  local existingVersion
 
   #~ Load inqlude repository
   local inqludePackages=${INQLUDE_ALL_MIN_CONTENT}
@@ -1253,11 +1257,50 @@ getPackageInqludeUrl()
   fi
 
   #~ Search ${packageName}
-  local packageId=`getInqludeId ${packageName} "${inqludePackages}"`
+  packageId=$(getInqludeId "${packageName}" "${inqludePackages}")
+  test -z "${packageId}" && return 3
+  existingVersion=$(getPackageInqludeData "${packageId}" "version" "${inqludePackages}")
+
+  # Select the best version (if variadic version number provided)
+  if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
+    local selectedVersion
+    selectedVersion=$(echo "v${existingVersion}" | grep -e "${packageVersion}")
+    if [ -z "${selectedVersion}" ]; then
+      return 2
+    fi
+    packageVersion=${selectedVersion}
+    echo "  Selected version: ${packageVersion}"
+  fi
+  if [ "v${existingVersion}" != "${packageVersion}" ]; then
+    echo "  Warning: there may be no such inqlude package as ${packageVersion}, try v${existingVersion} if it fails"
+    return 1
+  fi
+  return 0
+}
+
+getPackageInqludeUrl()
+{
+  local vendorName=$1
+  local packageName=$2
+  local packageVersion=$3
+  local inqludeAllFile=$3
+  local packageId
+  local packagePath
+
+  #~ Load inqlude repository
+  local inqludePackages=${INQLUDE_ALL_MIN_CONTENT}
+  if [ "${inqludeAllFile}" != "" ]; then
+    if [ -f "${inqludeAllFile}" ]; then
+      inqludePackages=$(minifyInqludeFile "${inqludeAllFile}")
+    fi
+  fi
+
+  #~ Search ${packageName}
+  packageId=$(getInqludeId "${packageName}" "${inqludePackages}")
   test -z "${packageId}" && return 3
 
   #~ Search VCS URL for ${packageId}
-  local packagePath=`getPackageInqludeData ${packageId} "urls/vcs" "${inqludePackages}"`
+  packagePath=$(getPackageInqludeData "${packageId}" "urls/vcs" "${inqludePackages}")
   if [[ "${packagePath}" != "" ]]; then
     if [[ "${packagePath}" == *"projects.kde.org"* ]]; then
       packagePath="git://anongit.kde.org/${packageName}"
@@ -1265,14 +1308,14 @@ getPackageInqludeUrl()
       packagePath="https://anongit.freedesktop.org/git/${vendorName}/${packageName}"
     fi
 
-    isGitRepositories ${packagePath} && \
+    isGitRepositories "${packagePath}" && \
       echo ${packagePath} && return
   fi
 
   #~ Search source URL for ${packageName}
-  packagePath=`getPackageInqludeData ${packageId} "packages/source" "${inqludePackages}"`
+  packagePath=$(getPackageInqludeData "${packageId}" "packages/source" "${inqludePackages}")
   test -z "${packagePath}" && return 3
-  echo ${packagePath}
+  echo "${packagePath}"
 }
 
 getPackageInqludeData()

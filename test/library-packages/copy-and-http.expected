@@ -13,7 +13,7 @@ Qompoter
 
 * fylhan/qompoter-test-package v1.0-lib
   Downloading lib...
-  Warning: cannot find provided "https:///wrong-uri.tar.gz", let's try another repository
+  Warning: cannot find provided "https://wrong-uri.tar.gz", let's try another repository
   Warning: no 'qompoter.pri' found for this package
   done
 

@@ -59,4 +59,5 @@ Future versions
 * [ ] Check Windows support
 * [ ] JSON schema for qompoter.json
 * [ ] Translate doc into french
+* [ ] Regarder http://www.pkgsrc.org/
 * [ ] Better documentation
