@@ -674,7 +674,7 @@ downloadPackage()
   else
     echo "  Downloading lib..."
     packageType="qompoter-fs"
-    if [ -z "${packageDistUrl}" ] && [ ! -z "${inqludeBasePath}" ]; then # Use Inqlude binary if any
+    if [ -z "${packageDistUrl}" ] || [ ! -z "${inqludeBasePath}" ]; then # Use Inqlude binary if any
       packageType="inqlude"
       packageDistUrl=${inqludeBasePath}
     fi
@@ -823,7 +823,9 @@ downloadLibFromHttp()
   local packageDistUrl=$1
   local requireLocalPath=$2
   local archive
-  archive=$(echo "${packageDistUrl}" | cut -d@ -f2 | cut -d/ -f2- | cut -d? -f1 | sed 's/\///')
+  # archive=$(echo "${packageDistUrl}" | cut -d@ -f2 | cut -d/ -f2- | cut -d? -f1 | sed 's/\///')
+  archive=${packageDistUrl##*/}
+  archive=${archive%%\?*}
 
   ilog "  Download \"${packageDistUrl}\" to \"${requireLocalPath}/${archive}\""
   wget "${packageDistUrl}" --directory-prefix="${requireLocalPath}" \
@@ -1306,14 +1308,25 @@ checkPackageInqludeVersion()
   return 0
 }
 
+#**
+# * Retrieve project URL in the Inqlude repository
+# * @param Vendor name
+# * @param Project name
+# * @param Project version
+# * @param Inqlude repository file
+# * @return 3 not found
+# * @return 4 package found but is lib but source is requested (or vice versa)
+# * @return package url
+#**
 getPackageInqludeUrl()
 {
   local vendorName=$1
   local packageName=$2
   local packageVersion=$3
-  local inqludeAllFile=$3
+  local inqludeAllFile=$4
   local packageId
   local packagePath
+  local existingVersion
 
   #~ Load inqlude repository
   local inqludePackages=${INQLUDE_ALL_MIN_CONTENT}
@@ -1326,6 +1339,11 @@ getPackageInqludeUrl()
   #~ Search ${packageName}
   packageId=$(getInqludeId "${packageName}" "${inqludePackages}")
   test -z "${packageId}" && return 3
+  existingVersion=$(getPackageInqludeData "${packageId}" "version" "${inqludePackages}")
+  # Check that Inqlude does not store a lib version when a source version is required
+  if [[ "$existingVersion" == *"lib" ]] && [[ "$packageVersion" != *"lib" ]]; then
+      return 4
+  fi
 
   #~ Search VCS URL for ${packageId}
   packagePath=$(getPackageInqludeData "${packageId}" "urls/vcs" "${inqludePackages}")
@@ -3763,6 +3781,14 @@ INQLUDE_ALL_MIN_CONTENT='[0,"name"]	"adctl"
 [204,"packages","source"]	"http://gitlab.lan.trialog.com/evplatform/openv2g-helper/uploads/43e332532da5bd940e16d81cacce5d37/v0.9.3-lib.tar.gz"
 [204,"licenses"]	["LGPLv3"]
 [204,"maturity"]	"stable"
-[204,"platforms"]	["Linux"]'
+[204,"platforms"]	["Linux"]
+[205,"name"]	"tcanp-helper"
+[205,"display_name"]	"TCanP Helper"
+[205,"version"]	"2.1.1-lib"
+[205,"summary"]	"Helper for TCanP, a high-level API for CAN communications over TCP"
+[205,"packages","source"]	"http://gitlab.lan.trialog.com/vedecom/tcanp-helper/uploads/521848bed8cd673667a77cfd831419cf/v2.1.1-lib.tar.gz"
+[205,"licenses"]	["VEDECOM", "TRIALOG"]
+[205,"maturity"]	"stable"
+[205,"platforms"]	["Linux"]'
 
 main
