@@ -1,6 +1,10 @@
 Qompoter Roadmap
 ================
 
+Version 0.1
+-----------
+Proof of concept.
+
 Version 0.2 - released 2016, october
 -----------
 
@@ -14,26 +18,30 @@ Version 0.2 - released 2016, october
 Version 0.3
 -----------
 
+* [x] Installation: create npm package
 * [x] Fix Git based package issue: branch, tag, commit ; first install or update
 * [x] Fix: download lib does not failed properly
-* [*] New action: qompoter init
-* [*] New action: qompoter export --repo
-* [*] New action: qompoter install / update (md5sum + qompoter.lock)
+* [x] New action: qompoter init
+* [x] New action: qompoter export --repo
+* [x] Nex action: qompoter inspect (list modified packages)
+* [x] Feature: let qompoter install generates md5sum + qompoter.lock
 * [x] Feature: Prevent from overriding manual changes for Git packages in vendor (git status)
-* [ ] Feature: Prevent from overriding manual changes for all packages in vendor (md5sum)
-* [*] Feature: Install packages from tarball (this will also preserve symbolic links and reduce space)
-* [*] Feature: Download packages using HTTP
-* [*] Enhancement: qompoter export with compression / optimization
+* [x] Feature: Install packages from tarball (this will also preserve symbolic links and reduce space)
+* [x] Feature: Download packages using HTTP
 * [ ] Clean documentation and release
 
 Version 0.4
 -----------
 
 * [ ] New action: qompoter release
+* [*] New action: qompoter install / update (use qompoter.lock)
+* [ ] New action: qompoter require packagename
+* [ ] Feature: Prevent from overriding manual changes for all packages in vendor (md5sum)
+* [ ] Feature: improve qompoter inspect
 * [ ] Feature: Cache downloaded packages
 * [ ] Feature: Integrate automaticly inqlude packages if possible (generate qompoter.pri, ... ?)
 * [ ] Feature: Update automaticaly the inqlude repository data
-* [ ] Installation: create npm package
+* [*] Feature: improve qompoter export with compression / optimization
 * [ ] Clean documentation and release
 
 Future versions
@@ -43,7 +51,6 @@ Future versions
 * [ ] Installation: create other Linux package
 * [ ] Installation: qompoter self-update (from Github)
 * [ ] Installation: install Qompoter though the "Qt Maintenance Tool"
-* [ ] New action: qompoter require packagename
 * [ ] Feature: Allow soft version management v2 (e.g. ^v1.0 etc)
 * [ ] Feature: Search in other package manager repositories (QPM, CPM, ...)
 * [ ] Feature: Increase security by checkin integrity of packages (md5sum)

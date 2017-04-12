@@ -281,7 +281,7 @@ usage()
 	Usage: $C_PROGNAME [action] [ --repo <repo> | other options ]
 
 	    action            Select an action:
-	                        export, init, install, update, require
+	                        export, init, inspect, install, update, require
 	                      Other actions are useful for digging into Qompoter:
 	                        inqlude, jsonh, md5sum
 
@@ -588,7 +588,8 @@ updateQompoterLock()
   local version=$4
   local type=$5
   local url=$6
-  local md5sum=`getProjectMd5 ${VENDOR_DIR}/$packageName`
+  local md5sum
+  md5sum=$(getProjectMd5 "${VENDOR_DIR}/$packageName")
   local packageFullName=$vendorName/$packageName
 
   local jsonData="\"${packageFullName}\": {";
@@ -598,7 +599,7 @@ updateQompoterLock()
   jsonData+="\"md5sum\": \"${md5sum}\""
   jsonData+="}"
   insertAfter ${qompoterLockFile} '  "require": {' "    ${jsonData},"
-  sed -i -z "s/},\n  }/}\n  }/g" ${qompoterLockFile}
+  sed -i -z "s/},\n  }/}\n  }/g" "${qompoterLockFile}"
 }
 
 downloadPackage()
@@ -1087,6 +1088,25 @@ getProjectRequiresFromLock()
 }
 
 #**
+# * Retrieve a project MD5 sum from Qompoter lockfile
+# * @param Qompoter file name
+# * @param Project full name <vendor name>/<project name>
+# * @return <md5 value>
+#**
+getProjectMd5FromLock()
+{
+  local qompoterFile=$1
+  local projectFullName=$2
+  # Search for "require"
+  # and remove quote ("), "[require,", "] "
+  # replace space by slash
+  jsonh < "${qompoterFile}" \
+   | grep -E "\[\"require${IS_INCLUDE_DEV}\",\"${projectFullName}\",\"md5sum\"\]" \
+   | sed -r "s/\"//g;s/\[require${IS_INCLUDE_DEV},//g;s/,md5sum//g;s/\]	/ /g" \
+   | tr ' ' '/'
+}
+
+#**
 # * Retrieve package info from Qompoter lockfile
 # * @param Qompoter file name
 # * @param Searched package info
@@ -1521,6 +1541,50 @@ inqludeMinifyAction()
   echo
 }
 
+inspectAction()
+{
+  local qompoterFile=$1
+  local qompoterLockFile
+  local vendorDir=$2
+  local globalRes=0
+  qompoterLockFile=$(echo "${qompoterFile}" | cut -d'.' -f1).lock
+
+  # Check
+  checkQompoterFile "${qompoterLockFile}" || return 100
+  if [ ! -d "${vendorDir}" ]; then
+    echo "Nothing to do: no '${VENDOR_DIR}' dir"
+    return 0
+  fi
+
+  # Loop over lock file
+  local requires
+  requires=$(getProjectRequiresFromLock "${qompoterLockFile}")
+  for packageInfo in ${requires}; do
+    local vendorName
+    vendorName=$(echo "${packageInfo}" | cut -d'/' -f1)
+    local projectName
+    projectName=$(echo "${packageInfo}" | cut -d'/' -f2)
+    local projectFullName="${vendorName}/${projectName}"
+    local version
+    version=$(echo "${packageInfo}" | cut -d'/' -f3)
+    local expectedMd5Sum
+    expectedMd5Sum=$(getProjectMd5FromLock "${qompoterLockFile}" "${projectFullName}" | cut -d'/' -f3)
+    local actualMd5Sum
+    actualMd5Sum=$(getProjectMd5 "${vendorDir}/${projectName}")
+    local differs=
+    test "${actualMd5Sum}" != "${expectedMd5Sum}" && differs=" *"
+    # local repo=`getRelatedRepository ${qompoterFile} ${vendorName} ${projectName}`
+    # local url=`getRelatedUrl ${qompoterFile} ${vendorName} ${projectName}`
+    echo "* ${projectFullName} (${version}${differs})"
+    if [ -d "${vendorDir}/${projectName}/.git" ]; then
+      cd "${vendorDir}/${projectName}" || ( echo "  Error: can not go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+      git status -sb
+      cd ../../ || ( echo "  Error: can not go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+    fi
+    echo
+  done
+}
+
 installAction()
 {
   local qompoterFile=$1
@@ -1893,6 +1957,9 @@ main()
       elif [ "${SUB_ACTION}" == "minify" ]; then
         inqludeMinifyAction ${INQLUDE_FILENAME}
       fi
+      ;;
+    "inspect")
+      inspectAction ${QOMPOTER_FILENAME} ${VENDOR_DIR}
       ;;
     "install")
       installAction ${QOMPOTER_FILENAME} ${VENDOR_DIR}
