@@ -1337,7 +1337,7 @@ getPackageInqludeUrl()
     fi
 
     isGitRepositories "${packagePath}" && \
-      echo ${packagePath} && return
+      echo "${packagePath}" && return
   fi
 
   #~ Search source URL for ${packageName}
@@ -1387,6 +1387,7 @@ initAction()
   local qompoterFile=$4
   local qtProFile="${packageName}.pro"
   local qtGlobalPriFile='.qmake.conf'
+  local gitlabciFile='.gitlab-ci.yml'
 
   echo "Init ${requireName} ${requireVersion}..."
   echo
@@ -1411,16 +1412,15 @@ initAction()
     fi
   done
 
-  local qtFiles=("${qtProFile}" "${qtGlobalPriFile}")
+  local qtFiles=("${qtProFile}" "${qtGlobalPriFile}" "src/src.pro" "test/test.pro")
   local qompoterFiles=('${qompoterFile}')
   local qompoterLibFiles=('qompoter.pri')
   # qompoter.json
-  if [ "$IS_FORCE" == "1" ] || [ ! -f "${qompoterFile}" ]; then
+  if [ "${IS_FORCE}" == "1" ] || [ ! -f "${qompoterFile}" ]; then
     echo "* Create \"${qompoterFile}\" file"
-    cat <<- EOF > ${qompoterFile}
+    cat <<- EOF > "${qompoterFile}"
 {
-  "name": "${requireName}",
-  "version": "${requireVersion}"
+    "name": "${requireName}"
 }
 EOF
   else
@@ -1428,29 +1428,110 @@ EOF
   fi
 
   # *.pro
-  if [ "$IS_FORCE" == "1" ] || [ ! -f "${packageName}.pro" ]; then
-    echo "* Create \"${packageName}.pro\" file"
-    cat <<- EOF > ${packageName}.pro
+  if [ "${IS_FORCE}" == "1" ] || [ ! -f "${qtProFile}" ]; then
+    echo "* Create \"${qtProFile}\" file"
+    cat <<- EOF > "${qtProFile}"
 TEMPLATE = subdirs
 
-SUBDIRS += src
-SUBDIRS += test
+!testcase {
+    SUBDIRS += src
+}
+testcase {
+    SUBDIRS += test
+}
 
 OTHER_FILES += \\
+    .gitlab-ci.yml \\
     .qmake.conf \\
-    build.xml \\
-    build.properties \\
-    build.properties.dist \\
     qompoter.json \\
+    qompoter.pri \\
     README.md \\
     changelogs.md \\
-
-include(\$\$PWD/vendor/qompote.pri)
-\$\$setBuildDir()
-message("\$\$APPNAME [ build folder is \$\$OBJECTS_DIR ]")
 EOF
   else
-    echo "* Do not override \"${qompoterFile}\" file"
+    echo "* Do not override \"${qtProFile}\" file"
+  fi
+  # src.pro
+  if [ "${IS_FORCE}" == "1" ] || [ ! -f "src/src.pro" ]; then
+    echo "* Create \"src/src.pro\" file"
+    cat <<- EOF > src/src.pro
+INCLUDEPATH += \$\$PWD
+
+# Please check ".qmake.conf" file to update app name or version number
+TARGET = \$\${APPNAME}
+VERSION = \$\${APPVERSION}
+TEMPLATE = app
+
+# Dependencies
+CONFIG += c++11
+QT += network
+#CONFIG += ui
+ui {
+    greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+}
+else {
+    QT -= gl gui
+    LIBS -= -lQt5GUI -lGL
+}
+
+include(\$\$PWD/../vendor/vendor.pri)
+\$\$setBuildDir()
+message("\$\${APPNAME} [ build folder is \$\${OBJECTS_DIR} ]")
+EOF
+  else
+    echo "* Do not override \"src/src.pro\" file"
+  fi
+  # test.pro
+  if [ "${IS_FORCE}" == "1" ] || [ ! -f "test/test.pro" ]; then
+    echo "* Create \"test/test.pro\" file"
+    cat <<- EOF > test/test.pro
+DEPENDPATH += \$\$PWD \$\$PWD/testcase
+
+CONFIG += autotester
+include(\$\$PWD/../src/src.pro)
+TARGET = \$\${APPNAME}-test
+
+#HEADERS += \\
+
+SOURCES += \\
+    \$\$PWD/TestRunner.cpp \\
+
+# Skip install
+target.path = \$\${OUT_PWD}
+INSTALLS = target
+EOF
+  else
+    echo "* Do not override \"test/test.pro\" file"
+  fi
+  # qompoter.pri
+  if [ "${IS_FORCE}" == "1" ] || [ ! -f "qompoter.pri" ]; then
+    echo "* Create \"qompoter.pri\" file"
+    cat <<- EOF > qompoter.pri
+${packageName}-lib {
+    LIBNAME = ${packageName}
+    IMPORT_INCLUDEPATH = \$\$PWD/\$\$LIBNAME/include
+    IMPORT_LIBPATH = \$\$PWD/\$\$LIBPATH
+    INCLUDEPATH += \$\$IMPORT_INCLUDEPATH
+    LIBS += -L\$\$IMPORT_LIBPATH -l\$\$getLibName(\$\${LIBNAME}, "Qt")
+    DEFINES += QOMP_$(echo "${packageName}" | tr /a-z/ /A-Z/)
+}
+
+${packageName} {
+    #HEADERS += \\
+    #    \$\$PWD/${packageName}/src/....h \\
+
+    #SOURCES += \\
+    #    \$\$PWD/${packageName}/src/....cpp \\
+
+    INCLUDEPATH += \\
+        \$\$PWD/${packageName} \\
+        \$\$PWD/${packageName}/src \\
+
+    DEFINES += QOMP_$(echo "${packageName}" | tr /a-z/ /A-Z/)
+}
+EOF
+  else
+    echo "* Do not override \"qompoter.pri\" file"
   fi
 
   # .qmake.conf
@@ -1473,6 +1554,50 @@ DEFINES += BUILDDATE=\\\\\\"\$\${BUILDDATE}\\\\\\"
 EOF
   else
     echo "* Do not override \"${qtGlobalPriFile}\" file"
+  fi
+
+  # .gitlab-ci.yml
+  if [ "$IS_FORCE" == "1" ] || [ ! -f "${gitlabciFile}" ]; then
+    echo "* Create \"${gitlabciFile}\" file"
+    cat <<- EOF > ${gitlabciFile}
+image: gcc
+
+before_script:
+#  - sudo yum --enablerepo=extras install epel-release
+#  - sudo yum install -y qt5-qtbase qt5-qtbase-devel
+#  - sudo yum install npm
+#  - sudo npm install -g qompoter
+
+build:
+  stage: build
+  script:
+    - qompoter install --repo http://gitlab-ci-token:\${CI_BUILD_TOKEN}@gitlab.lan.trialog.com
+    - mkdir ../build && cd ../build
+    - qmake-qt5 ../\${CI_PROJECT_NAME}/\${CI_PROJECT_NAME}.pro
+    - make
+EOF
+  else
+    echo "* Do not override \"${gitlabciFile}\" file"
+  fi
+
+  # .gitignore
+  if [ "$IS_FORCE" == "1" ] || [ ! -f ".gitignore" ]; then
+    echo "* Create \".gitignore\" file"
+    cat <<- EOF > .gitignore
+.user
+*.un~
+*.swp
+*.zip
+*.tar*
+*.log
+*.lock
+*.pdf
+Thumbs.db
+build-*
+vendor
+EOF
+  else
+    echo "* Do not override \".gitignore\" file"
   fi
 
   echo
