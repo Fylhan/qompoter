@@ -6,6 +6,7 @@ readonly C_PROGVERSION="v0.3.3-nightly"
 readonly C_ARGS="$@"
 C_OK="\e[1;32m"
 C_FAIL="\e[1;31m"
+C_INFO="\e[1;35m"
 C_SKIP="\e[1;33m"
 C_END="\e[0m"
 
@@ -1700,6 +1701,7 @@ inspectAction()
   fi
 
   # Loop over lock file
+  local changes=0
   local requires
   requires=$(getProjectRequiresFromLock "${qompoterLockFile}")
   for packageInfo in ${requires}; do
@@ -1715,10 +1717,10 @@ inspectAction()
     local actualMd5Sum
     actualMd5Sum=$(getProjectMd5 "${vendorDir}/${projectName}")
     local differs=
-    test "${actualMd5Sum}" != "${expectedMd5Sum}" && differs=" *"
+    test "${actualMd5Sum}" != "${expectedMd5Sum}" && let changes=${changes}+1 && differs="${C_INFO} *${C_END}"
     # local repo=`getRelatedRepository ${qompoterFile} ${vendorName} ${projectName}`
     # local url=`getRelatedUrl ${qompoterFile} ${vendorName} ${projectName}`
-    echo "* ${projectFullName} (${version}${differs})"
+    echo -e "* ${projectFullName} (${version}${differs})"
     if [ -d "${vendorDir}/${projectName}/.git" ]; then
       cd "${vendorDir}/${projectName}" || ( echo "  Error: can not go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
       git status -sb
@@ -1726,6 +1728,15 @@ inspectAction()
     fi
     echo
   done
+
+  if [ "${changes}" == "0" ]; then
+      echo -e "${C_OK}Great! There is no manual change${C_END}"
+  elif [ "${changes}" == "1" ]; then
+      echo -e "Take care, there is ${C_INFO}1${C_END} manual change"
+  else
+    echo -e "Take care, there are ${C_INFO}${changes}${C_END} manual changes"
+  fi
+  echo
 }
 
 installAction()
