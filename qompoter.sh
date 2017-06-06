@@ -2,7 +2,7 @@
 
 readonly C_PROGNAME=$(basename $0)
 readonly C_PROGDIR=$(readlink -m $(dirname $0))
-readonly C_PROGVERSION="v0.3.3-nightly"
+readonly C_PROGVERSION="v0.3.4-nightly2"
 readonly C_ARGS="$@"
 C_OK="\e[1;32m"
 C_FAIL="\e[1;31m"
@@ -3789,7 +3789,7 @@ INQLUDE_ALL_MIN_CONTENT='[0,"name"]	"adctl"
 [204,"display_name"]	"OpenV2G"
 [204,"version"]	"0.9.3-lib"
 [204,"summary"]	"OpenV2G, a DIN 70121 and ISO/IEC 15118-2 library"
-[204,"packages","source"]	"http://gitlab.lan.trialog.com/evplatform/openv2g-helper/uploads/43e332532da5bd940e16d81cacce5d37/v0.9.3-lib.tar.gz"
+[204,"packages","source"]	"http://gitlab.lan.trialog.com/openv2g/openv2g/uploads/54261b1cf873ba8ee93b6be7f63a90ef/v0.9.3-7-lib.tar.gz"
 [204,"licenses"]	["LGPLv3"]
 [204,"maturity"]	"stable"
 [204,"platforms"]	["Linux"]
