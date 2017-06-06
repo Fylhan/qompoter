@@ -968,9 +968,9 @@ downloadPackageFromGit()
   # Select the best version (if variadic version number provided)
   if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
     ilog "  git tag --list"
-    ilog "    "$(git tag --list --sort="v:refname")
+    ilog "    "$(git tag --list | LC_ALL=C sort --version-sort)
     local selectedVersion
-    selectedVersion=$(git tag --list --sort="v:refname" | getBestVersionNumber "${packageVersion}")
+    selectedVersion=$(git tag --list | LC_ALL=C sort --version-sort | getBestVersionNumber "${packageVersion}")
     if [ -z "${selectedVersion}" ]; then
       echo "  Oups, no matching version for \"${requireVersion}\""
       cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
