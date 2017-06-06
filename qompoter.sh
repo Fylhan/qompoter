@@ -729,7 +729,7 @@ downloadPackageFromCp()
  # Select the best version (if variadic version number provided)
   if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
     ilog "  Search matching version"
-    selectedVersion=$(ls "${requireBasePath}" | getBestVersionNumber "$packageVersion")
+    selectedVersion=$(ls "${requireBasePath}" | LC_ALL=C sort --version-sort | getBestVersionNumber "$packageVersion")
     if [ -z "${selectedVersion}" ]; then
       echo "  Oups, no matching version for \"${packageVersion}\""
       return 2
@@ -794,7 +794,7 @@ downloadLibPackage()
   # Select the best version (if variadic version number provided)
   if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
     ilog "  Search matching version"
-    selectedVersion=$(ls "${requireBasePath}" | getBestVersionNumber "${packageVersion}")
+    selectedVersion=$(ls "${requireBasePath}" | LC_ALL=C sort --version-sort | getBestVersionNumber "${packageVersion}")
     if [ -z "${selectedVersion}" ]; then
       echo "  Oups, no matching version for \"${packageVersion}\""
       return 2
@@ -968,8 +968,9 @@ downloadPackageFromGit()
   # Select the best version (if variadic version number provided)
   if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
     ilog "  git tag --list"
-    ilog "    "`git tag --list`
-    local selectedVersion=`git tag --list | getBestVersionNumber ${packageVersion}`
+    ilog "    "$(git tag --list --sort="v:refname")
+    local selectedVersion
+    selectedVersion=$(git tag --list --sort="v:refname" | getBestVersionNumber "${packageVersion}")
     if [ -z "${selectedVersion}" ]; then
       echo "  Oups, no matching version for \"${requireVersion}\""
       cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
@@ -1039,9 +1040,9 @@ getBestVersionNumber()
   local versionPattern=$1
   #~ FIXME Sort version number using natural sort (v1.10 > v1.3)
     if [ "${IS_STABLE_ONLY}" == "1" ]; then
-      LC_ALL=C sort | grep "v\?${versionPattern}\$" | grep -v -e "-\(alpha\|beta\|RC[0-9]*\|[0-9]*\)$" | tail -1
+      grep "v\?${versionPattern}\$" | grep -v -e "-\(alpha\|beta\|RC[0-9]*\|[0-9]*\)$" | tail -1
     else
-      LC_ALL=C sort | grep "v\?${versionPattern}\$" | tail -1
+      grep "v\?${versionPattern}\$" | tail -1
     fi
 }
 
@@ -1051,7 +1052,7 @@ getProjectMd5()
   local projectDir=$1
   (find "${projectDir}" -type f -not -path "*.git*" \
       | while read f; do md5sum "$f"; done; find "${projectDir}" -type d -not -path "*.git*" ) \
-    | LC_ALL=C sort \
+    | LC_ALL=C sort --version-sort \
     | md5sum \
     | sed -e 's/ *- *//'
 }
