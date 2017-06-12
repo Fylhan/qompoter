@@ -3796,9 +3796,9 @@ INQLUDE_ALL_MIN_CONTENT='[0,"name"]	"adctl"
 [204,"platforms"]	["Linux"]
 [205,"name"]	"tcanp-helper"
 [205,"display_name"]	"TCanP Helper"
-[205,"version"]	"2.1.1-lib"
+[205,"version"]	"2.1.2-lib"
 [205,"summary"]	"Helper for TCanP, a high-level API for CAN communications over TCP"
-[205,"packages","source"]	"http://gitlab.lan.trialog.com/vedecom/tcanp-helper/uploads/521848bed8cd673667a77cfd831419cf/v2.1.1-lib.tar.gz"
+[205,"packages","source"]	"http://gitlab.lan.trialog.com/vedecom/tcanp-helper/uploads/adfe227ce07060aa20fd33f3e8df8bab/v2.1.2-lib.tar.gz"
 [205,"licenses"]	["VEDECOM", "TRIALOG"]
 [205,"maturity"]	"stable"
 [205,"platforms"]	["Linux"]'
