@@ -2,7 +2,7 @@
 
 readonly C_PROGNAME=$(basename $0)
 readonly C_PROGDIR=$(readlink -m $(dirname $0))
-readonly C_PROGVERSION="v0.3.4-nightly2"
+readonly C_PROGVERSION="v0.3.5-nightly"
 readonly C_ARGS="$@"
 C_OK="\e[1;32m"
 C_FAIL="\e[1;31m"
@@ -638,7 +638,7 @@ downloadPackage()
   checkPackageInqludeVersion "${vendorName}" "${packageName}" "${requireVersion}" "${INQLUDE_FILENAME}"
   inqludeBasePath=$(getPackageInqludeUrl "${vendorName}" "${packageName}" "${requireVersion}" "${INQLUDE_FILENAME}")
   if [ ! -z "${inqludeBasePath}" ]; then
-    ilog "  Use inqlude package \"${packageName}\" (${inqludeBasePath})"
+    logDebug "  Use inqlude package \"${packageName}\" (${inqludeBasePath})"
     requireBasePath=${inqludeBasePath}
   fi
 
@@ -652,7 +652,7 @@ downloadPackage()
     isGitRepositories "${requireBasePath}" && gitPath=${requireBasePath}.git
     if [ ! -z "${gitPath}" ]; then
       echo "  Downloading sources from Git..."
-      test `echo "${gitPath}" | grep "${REPO_PATH}"` && packageDistUrl=${gitPath}
+      test $(echo "${gitPath}" | grep "${REPO_PATH}") && packageDistUrl=${gitPath}
       packageType="git"
       downloadPackageFromGit "${gitPath}" "${vendorDir}" "${packageName}" "${requireVersion}"
       result=$?
@@ -662,14 +662,13 @@ downloadPackage()
     if [ "${result}" == "1" ] || [ "${result}" == "2" ]; then
       if [ ! -z "${gitPath}" ]; then
         echo "  Warning: error with Git, Qompoter will try downloading sources from scratch..."
-        mkdir -p ${requireLocalPath}
+        mkdir -p "${requireLocalPath}"
       else
         echo "  Downloading sources..."
       fi
       packageType="qompoter-fs"
-      downloadPackageFromCp ${repositoryPath} ${vendorDir} ${vendorName} ${packageName} ${requireVersion} \
-        && result=0 \
-        || result=1
+      downloadPackageFromCp "${repositoryPath}" "${vendorDir}" "${vendorName}" "${packageName}" "${requireVersion}"
+      result=$?
     fi
   # Lib
   else
@@ -679,7 +678,7 @@ downloadPackage()
       packageType="inqlude"
       packageDistUrl=${inqludeBasePath}
     fi
-    downloadLibPackage "${repositoryPath}" "${vendorDir}" "${vendorName}" "${packageName}" "${PACKAGE_VERSION}" "${packageDistUrl}"
+    downloadLibPackage "${repositoryPath}" "${vendorDir}" "${vendorName}" "${packageName}" "${requireVersion}" "${packageDistUrl}"
     result=$?
   fi
 
@@ -705,7 +704,7 @@ downloadPackage()
     fi
 
     # Update qompoter.lock
-     updateQompoterLock ${qompoterLockFile} "${vendorName}" "${packageName}" "${PACKAGE_VERSION}" "${packageType}" "${packageDistUrl}"
+     updateQompoterLock "${qompoterLockFile}" "${vendorName}" "${packageName}" "${PACKAGE_VERSION}" "${packageType}" "${packageDistUrl}"
 
     echo -e "  ${C_OK}done${C_END}"
     echo
@@ -728,7 +727,7 @@ downloadPackageFromCp()
 
  # Select the best version (if variadic version number provided)
   if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
-    ilog "  Search matching version"
+    logDebug "  Search matching version"
     selectedVersion=$(ls "${requireBasePath}" | LC_ALL=C sort --version-sort | getBestVersionNumber "$packageVersion")
     if [ -z "${selectedVersion}" ]; then
       echo "  Oups, no matching version for \"${packageVersion}\""
@@ -741,7 +740,7 @@ downloadPackageFromCp()
   # Copy
   local packageDistUrl=${requireBasePath}/${packageVersion}
   if [ -d "${packageDistUrl}" ]; then
-    ilog "  Copy \"${packageDistUrl}\" to \"${requireLocalPath}\""
+    logDebug "  Copy \"${packageDistUrl}\" to \"${requireLocalPath}\""
     cp -rf ${packageDistUrl}/* ${requireLocalPath} \
       >> ${C_LOG_FILENAME} 2>&1
     PACKAGE_VERSION=${packageVersion}
@@ -768,7 +767,7 @@ downloadLibPackage()
   ## Package URL is provided
   # Download from HTTP
   if [[ ! -z ${packageDistUrl} ]] && [[ ${packageDistUrl} == "http"* ]]; then
-    ilog "  Download using package provided url"
+    logDebug "  Download using package provided url"
     downloadLibFromHttp "${packageDistUrl}" "${requireLocalPath}"
     res=$? ; test "$res" == "0" && return 0
     echo "  Warning: cannot find provided \"${packageDistUrl}\", let's try another repository"
@@ -780,20 +779,20 @@ downloadLibPackage()
 
   # Download from HTTP
   if [[ ${packageDistUrl} == "http"* ]]; then
-    ilog "  Download using package built url"
+    logDebug "  Download using package built url"
     # Try tarball
     downloadLibFromHttp "${packageDistUrl}.tar.gz" "${requireLocalPath}"
     res=$? ; test "$res" == "0" && return 0
-    ilog "  Warning: cannot find \"${packageDistUrl}.tar.gz\", let's try with zip"
+    logDebug "  Warning: cannot find \"${packageDistUrl}.tar.gz\", let's try with zip"
     # Try archive
     downloadLibFromHttp "${packageDistUrl}.zip" "${requireLocalPath}"
     res=$? ; test "$res" == "0" && return 0
-    ilog "  Warning: cannot find \"${packageDistUrl}.zip\", let's try another repository"
+    logDebug "  Warning: cannot find \"${packageDistUrl}.zip\", let's try another repository"
   fi
 
   # Select the best version (if variadic version number provided)
   if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
-    ilog "  Search matching version"
+    logDebug "  Search matching version"
     selectedVersion=$(ls "${requireBasePath}" | LC_ALL=C sort --version-sort | getBestVersionNumber "${packageVersion}")
     if [ -z "${selectedVersion}" ]; then
       echo "  Oups, no matching version for \"${packageVersion}\""
@@ -804,7 +803,7 @@ downloadLibPackage()
   fi
   packageDistUrl=${requireBasePath}/${packageVersion}
   # Download from CP
-  ilog "  Copy using package built url"
+  logDebug "  Copy using package built url"
   downloadLibFromCp "${packageDistUrl}" "${requireLocalPath}"
   res=$?
   if [ "$res" == "0" ]; then
@@ -828,7 +827,7 @@ downloadLibFromHttp()
   archive=${packageDistUrl##*/}
   archive=${archive%%\?*}
 
-  ilog "  Download \"${packageDistUrl}\" to \"${requireLocalPath}/${archive}\""
+  logDebug "  Download \"${packageDistUrl}\" to \"${requireLocalPath}/${archive}\""
   wget "${packageDistUrl}" --directory-prefix="${requireLocalPath}" \
         >> ${C_LOG_FILENAME} 2>&1
   local res="$?"
@@ -843,7 +842,7 @@ downloadLibFromHttp()
     return ${res}
   fi
 
-  ilog "  Extract library tarball"
+  logDebug "  Extract library tarball"
   if [[ ${packageDistUrl} == *".tar.gz" ]]; then
     tar -xf "${requireLocalPath}/${archive}" --directory "${requireLocalPath}" --overwrite --strip-components=1 \
         >> ${C_LOG_FILENAME} 2>&1
@@ -854,14 +853,14 @@ downloadLibFromHttp()
     res="$?"
     mv -f ${requireLocalPath}/${packageVersion}/* "${requireLocalPath}"
   else
-    ilog "  Error: unknown archive packaging"
+    logDebug "  Error: unknown archive packaging"
     return 1
   fi
 
   if [ "$res" == "0" ]; then
-    ilog "  Delete archive \"${archive}\""
+    logDebug "  Delete archive \"${archive}\""
     rm -f ${requireLocalPath}/${archive}*
-    ilog "  Move \"${requireLocalPath}/*lib_?*\" to \"${vendorDir}\""
+    logDebug "  Move \"${requireLocalPath}/*lib_?*\" to \"${vendorDir}\""
     cp -rf ${requireLocalPath}/lib_* ${vendorDir} \
         && rm -rf ${requireLocalPath}/lib_* \
         >> ${C_LOG_FILENAME} 2>&1
@@ -883,12 +882,12 @@ downloadLibFromCp()
     return 1
   fi
 
-  ilog "  Copy \"${packageDistUrl}/*lib_?*\" to \"${vendorDir}\""
+  logDebug "  Copy \"${packageDistUrl}/*lib_?*\" to \"${vendorDir}\""
   cp -rf ${packageDistUrl}/lib_* ${vendorDir} \
       >> ${C_LOG_FILENAME} 2>&1
   cp -rf ${packageDistUrl}/*lib ${vendorDir} \
       >> ${C_LOG_FILENAME} 2>&1
-  ilog "  Copy \"${packageDistUrl}/include\" to \"${requireLocalPath}\""
+  logDebug "  Copy \"${packageDistUrl}/include\" to \"${requireLocalPath}\""
   cp -rf ${packageDistUrl}/include ${requireLocalPath} \
       >> ${C_LOG_FILENAME} 2>&1
   cp -rf ${packageDistUrl}/qompoter.* ${requireLocalPath} \
@@ -916,6 +915,7 @@ downloadPackageFromGit()
   local requireLocalPath=${vendorDir}/${packageName}
   local isSource=1
   local gitError=0
+  local hasChanged=0
 
   # Parse commit number in version
   if [[ $4 == "#"* ]]; then
@@ -931,20 +931,21 @@ downloadPackageFromGit()
 
   # Does not exist yet: clone
   if [ ! -d "${requireLocalPath}/.git" ]; then
-    ilog "  git clone ${gitPath} ${requireLocalPath}"
-    if ! git clone ${gitPath} ${requireLocalPath} >> ${C_LOG_FILENAME} 2>&1; then
-      ilog "  Oups, cannot clone the project"
+    logTrace "git clone ${gitPath} ${requireLocalPath}"
+    if ! git clone ${gitPath} ${requireLocalPath} > ${C_LOG_FILENAME} 2>&1; then
+      logGitTrace $(cat "${C_LOG_FILENAME_PACKAGE}")
+      logDebug "  Oups, cannot clone the project"
       return 2
     fi
   fi
-  ilog "  cd ${requireLocalPath}"
-  cd ${requireLocalPath} || ( echo "  Error: can not go to ${requireLocalPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+  logDebug "  cd ${requireLocalPath}"
+  cd "${requireLocalPath}" || ( echo "  Error: can not go to ${requireLocalPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
   local C_LOG_FILENAME_PACKAGE=../../${C_LOG_FILENAME}
 
   # Verify no manual changes and warning otherwize
-  #~ TODO Use also last commit number
-  ilog "  git status -s"
-  local hasChanged=`git status -s`
+  #~ FIXME Use also last commit number
+  logTrace "    git status -s"
+  hasChanged=$(git status -s)
   if [ ! -z "${hasChanged}" ]; then
     if [ "$IS_BYPASS" != "1" ] && [ "$IS_FORCE" != "1" ]; then
       echo "  Warning: there are manual updates on this project."
@@ -961,14 +962,15 @@ downloadPackageFromGit()
   fi
 
   # Update
-  ilog "  git fetch"
-  git fetch \
-    >> ${C_LOG_FILENAME_PACKAGE} 2>&1
+  logTrace "git fetch"
+  git fetch > ${C_LOG_FILENAME_PACKAGE} 2>&1
+  logGitTrace $(cat "${C_LOG_FILENAME_PACKAGE}")
 
   # Select the best version (if variadic version number provided)
   if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
-    ilog "  git tag --list"
-    ilog "    "$(git tag --list | LC_ALL=C sort --version-sort)
+    logDebug "  Search matching version"
+    logTrace "git tag --list"
+    logGitTrace "$(git tag --list | LC_ALL=C sort --version-sort)"
     local selectedVersion
     selectedVersion=$(git tag --list | LC_ALL=C sort --version-sort | getBestVersionNumber "${packageVersion}")
     if [ -z "${selectedVersion}" ]; then
@@ -984,25 +986,27 @@ downloadPackageFromGit()
   # TODO Verify version availability?
 
   # Retrieve
-  ilog "  git checkout -f ${packageVersion}"
-  if ! git checkout -f ${packageVersion} >> ${C_LOG_FILENAME_PACKAGE} 2>&1; then
+  logTrace "git checkout -f ${packageVersion}"
+  if ! git checkout -f ${packageVersion} > ${C_LOG_FILENAME_PACKAGE} 2>&1; then
+    logGitTrace $(cat "${C_LOG_FILENAME_PACKAGE}")
     echo "  Oups, \"${packageVersion}\" does not exist"
     cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
     return 2
   fi
   if [ "${requireBranch}" != "" ]; then
-    ilog "  git pull origin ${requireBranch}"
-    if ! git pull origin ${requireBranch} >> ${C_LOG_FILENAME_PACKAGE} 2>&1; then
+    logTrace "git pull origin ${requireBranch}"
+    if ! git pull origin ${requireBranch} > ${C_LOG_FILENAME_PACKAGE} 2>&1; then
+      logGitTrace $(cat "${C_LOG_FILENAME_PACKAGE}")
       echo "  Oups, cannot pull... Is \"${requireBranch}\" really existing?"
       cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
       return 2
     fi
   fi
   # Reset
-  ilog "  Reset any local modification just to be sure"
-  ilog "  git reset --hard ${packageVersion}"
-  git reset --hard ${packageVersion} \
-    >> ${C_LOG_FILENAME_PACKAGE} 2>&1
+  logDebug "  Reset any local modification just to be sure"
+  logTrace "git reset --hard ${packageVersion}"
+  git reset --hard "${packageVersion}" > ${C_LOG_FILENAME_PACKAGE} 2>&1
+  logGitTrace $(cat "${C_LOG_FILENAME_PACKAGE}")
 
   cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
 
@@ -1125,7 +1129,6 @@ getOnePackageNameFromLock()
   # and remove quote ("), "[require,", "] "
   # replace space by slash
   jsonh < "${qompoterFile}" \
-   | jsonh \
    | grep -E "\[\"require(-dev)?\",\".*/${packageName}\",\"version\"\]" \
    | sed -r "s/\"//g;s/\[require(-dev)?,//g;s/,version//g;s/\]	.*//g"
 }
@@ -1145,7 +1148,6 @@ getOnePackageFullNameFromLock()
   # and remove quote ("), "[require,", "] "
   # replace space by slash
   jsonh < "${qompoterFile}" \
-   | jsonh \
    | grep -E "\[\"require(-dev)?\",\".*/${packageName}\",\"version\"\]" \
    | sed -r "s/\"//g;s/\[require(-dev)?,//g;s/,version//g;s/\]	/ /g" \
    | tr ' ' '/'
@@ -1295,6 +1297,7 @@ checkPackageInqludeVersion()
 
   # Select the best version (if variadic version number provided)
   if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
+    logDebug "  Search matching version"
     local selectedVersion
     selectedVersion=$(echo "v${existingVersion}" | grep -e "${packageVersion}")
     if [ -z "${selectedVersion}" ]; then
@@ -1632,13 +1635,13 @@ inqludeSearchAction()
   local requireName=${vendorName}/${packageName}
   local inqludeAllFile=$4
 
-  ilog "  Inqlude repository last update: ${INQLUDE_ALL_CONTENT_LAST_UPDATE}"
-  ilog "  Load inqlude repository"
-  ilog
+  logDebug "  Inqlude repository last update: ${INQLUDE_ALL_CONTENT_LAST_UPDATE}"
+  logDebug "  Load inqlude repository"
+  logDebug
   local inqludePackages=${INQLUDE_ALL_MIN_CONTENT}
   if [ "${inqludeAllFile}" != "" ]; then
     if [ -f "${inqludeAllFile}" ]; then
-      ilog "  Prepare the provided inqlude repository file"
+      logDebug "  Prepare the provided inqlude repository file"
       inqludePackages=`minifyInqludeFile ${inqludeAllFile}`
     else
       echo "  No such file \"${inqludeAllFile}\""
@@ -1649,15 +1652,15 @@ inqludeSearchAction()
 
   echo "* ${requireName} ${requireVersion}"
 
-  ilog "  Search ${packageName}"
+  logDebug "  Search ${packageName}"
   local packageId=`getInqludeId ${packageName} "${inqludePackages}"`
   if [ -z "${packageId}" ]; then
-    ilog "  Not found"
+    logDebug "  Not found"
     echo
     return 3
   fi
 
-  ilog "  Search info about ${packageName} (${packageId})"
+  logDebug "  Search info about ${packageName} (${packageId})"
   local name=`getPackageInqludeData ${packageId} "display_name" "${inqludePackages}"`
   local version=`getPackageInqludeData ${packageId} "version" "${inqludePackages}"`
   local summary=`getPackageInqludeData ${packageId} "summary" "${inqludePackages}"`
@@ -1815,6 +1818,7 @@ repoExportAction()
   local qompoterFile=$1
   local qompoterLockFile
   local vendorDir=$2
+  local packages
   qompoterLockFile=$(echo "${qompoterFile}" | cut -d'.' -f1).lock
 
   checkQompoterFile "${qompoterLockFile}" || return 100
@@ -1823,61 +1827,84 @@ repoExportAction()
     return 0
   fi
 
-  local packages=$(ls "${vendorDir}" | grep -v -e "\(lib_.*\|qompote\.pri\|vendor\.pri\)")
+  packages=$(ls "${vendorDir}" | grep -v -e "\(lib_.*\|qompote\.pri\|vendor\.pri\)")
   for projectName in ${packages}; do
     echo "* ${projectName}"
     local res=0
 
     ## Git package
     if [ -d "${vendorDir}/${projectName}/.git" ]; then
-      local remoteGitPath="${REPO_PATH}/`getOnePackageNameFromLock ${qompoterLockFile} ${projectName}`/${projectName}.git"
+      logDebug "  Export Git package"
+      local remoteGitPath
+      remoteGitPath="${REPO_PATH}/$(getOnePackageNameFromLock "${qompoterLockFile}" "${projectName}")/${projectName}.git"
       # Existing remote Git package: push new version
       if [ -d "${remoteGitPath}" ]; then
-        cd ${vendorDir}/${projectName} || ( echo "  Error: can not go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+        cd "${vendorDir}/${projectName}" || ( echo "  Error: can not go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+        logDebug "  Clean package in vendor"
+        git gc >> ${C_LOG_FILENAME} 2>&1
+        logTrace "git gc"
+        logGitTrace $(cat "${C_LOG_FILENAME}")
         # Git remote not already set
-        if [[ -z `git remote -v | grep "${remoteGitPath}"` ]]; then
-          if [[ ! -z `git remote -v | grep "qompoter"` ]]; then
-            ilog "  Change \"qompoter\" remote to \"${remoteGitPath}\""
-            git remote set-url qompoter ${remoteGitPath} >> ${C_LOG_FILENAME} 2>&1 \
+        logTrace "git remote -v"
+        logGitTrace $(git remote -v)
+        if [[ -z $(git remote -v | grep "../../${remoteGitPath}") ]]; then
+          if [[ ! -z $(git remote -v | grep "qompoter") ]]; then
+            logDebug "  Change \"qompoter\" remote to \"../../${remoteGitPath}\""
+            logTrace "git remote set-url qompoter "../../${remoteGitPath}""
+            git remote set-url qompoter "../../${remoteGitPath}" >> ${C_LOG_FILENAME} 2>&1 \
               || res=1
           else
-            ilog "  Add \"${remoteGitPath}\" as \"qompoter\" remote"
-            git remote add qompoter ${remoteGitPath} >> ${C_LOG_FILENAME} 2>&1 \
+            logDebug "  Add \"../../${remoteGitPath}\" as \"qompoter\" remote"
+            logTrace "git remote add qompoter "../../${remoteGitPath}""
+            git remote add qompoter "../../${remoteGitPath}" >> ${C_LOG_FILENAME} 2>&1 \
               || res=1
           fi
         fi
-        ilog "  Push to remote"
-        git push qompoter --all >> ${C_LOG_FILENAME} 2>&1 \
+        logDebug "  Push to remote ${remoteGitPath}"
+        git push qompoter --all > ${C_LOG_FILENAME} 2>&1 \
           || res=1
+        logGitTrace $(cat "${C_LOG_FILENAME}")
         cd - > /dev/null 2>&1 || ( echo "  Error: can not go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
       # Not remote git package: clone --bare
       else
-        ilog "  Clone to remote"
-        git clone --bare ${vendorDir}/${projectName} ${remoteGitPath} >> ${C_LOG_FILENAME} 2>&1 \
-          && cd ${remoteGitPath} || ( echo "  Error: can not go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1) \
+        logDebug "  Clone to remote ${remoteGitPath}"
+        git clone --bare "${vendorDir}/${projectName}" "${remoteGitPath}" >> ${C_LOG_FILENAME} 2>&1 \
           || res=1 \
-          && git gc >> ${C_LOG_FILENAME} 2>&1 \
-          && cd - > /dev/null 2>&1 || ( echo "  Error: can not go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+        logGitTrace $(cat "${C_LOG_FILENAME}")
       fi
 
     ## Version or something else
     else
-      local remotePath="${REPO_PATH}/`getOnePackageFullNameFromLock ${qompoterLockFile} ${projectName}`"
-      if [ ! -d "${remotePath}" ]; then
-        ilog "  Create remote dir \"${remotePath}\""
-        mkdir -p ${remotePath}
+      logDebug "  Export source package"
+      local remotePath
+      remotePath="${REPO_PATH}/$(getOnePackageFullNameFromLock "${qompoterLockFile}" "${projectName}")"
+      # Not available or rrror in lock file: warning and ignore
+      if [ "${remotePath}" == "${REPO_PATH}/" ]; then
+        logWarning "\"${projectName}\" has not been found in lock file"
+        res=1
+      else
+        # First export of this package: create dir
+        if [ ! -d "${remotePath}" ]; then
+          logDebug "  Create remote dir \"${remotePath}\""
+          mkdir -p "${remotePath}"
+        fi
+        logDebug "  Copy package files to ${remotePath}"
+        cp -rf ${vendorDir}/${projectName}/* "${remotePath}" \
+          || res=1
+        logDebug "  Copy any package libraries to ${remotePath}"
+        # FIXME Check rsync error
+        rsync -avR ${vendorDir}/./lib_*/*${projectName}* "${remotePath}" >> ${C_LOG_FILENAME} 2>&1
       fi
-      ilog "  Copy package files"
-      cp -rf ${vendorDir}/${projectName}/* ${remotePath} \
-        || res=1
-      ilog "  Copy package libraries"
-      rsync -avR ${vendorDir}/./lib_*/*${projectName}* ${remotePath} >> ${C_LOG_FILENAME} 2>&1 \
-        || res=1
     fi
 
     if [ "$res" != "0" ]; then
-      echo -e "  ${C_FAIL}FAILURE${C_END}"
-      echo
+      if [ "${IS_BYPASS}" == "1" ]; then
+        echo -e "  ${C_SKIP}SKIPPED${C_END}"
+        echo
+      else
+        echo -e "  ${C_FAIL}FAILURE${C_END}"
+        echo
+      fi
       test "${IS_BYPASS}" == "0" && test "${IS_FORCE}" == "0" && return 1
     else
       echo -e "  ${C_OK}done${C_END}"
@@ -1891,7 +1918,7 @@ repoExportAction()
     rm ${repositoryBackup}
   fi
   if [ -d "${REPO_PATH}" ]; then
-    ilog "Generate tarball"
+    logDebug "Generate tarball"
     local currentPath=`pwd`
     (cd ${REPO_PATH} ; tar czf ${currentPath}/${repositoryBackup} *)
     if [ "$?" == "0" ]; then
@@ -1913,10 +1940,29 @@ insertAfter()
    sed -i -e "/^$line$/a"$'\\\n'"$newText"$'\n' "$file"
 }
 
-ilog()
+logWarning()
 {
-  if [ "$IS_VERBOSE" == "1" ]; then
+  echo "  Warning: $@"
+}
+
+logDebug()
+{
+  if [ "$IS_VERBOSE" == "1" ] || [ "$IS_VERBOSE" == "2" ] || [ "$IS_VERBOSE" == "3" ]; then
     echo "$@"
+  fi
+}
+
+logTrace()
+{
+  if [ "$IS_VERBOSE" == "2" ] || [ "$IS_VERBOSE" == "3" ]; then
+    echo "    $@"
+  fi
+}
+
+logGitTrace()
+{
+  if [ "$IS_VERBOSE" == "3" ]; then
+    echo "      $@"
   fi
 }
 
@@ -1989,6 +2035,14 @@ cmdline()
       ;;
     -V | --verbose )
       IS_VERBOSE=1
+      shift
+      ;;
+    -VV )
+      IS_VERBOSE=2
+      shift
+      ;;
+    -VVV )
+      IS_VERBOSE=3
       shift
       ;;
     -h | --help )
