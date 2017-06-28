@@ -23,7 +23,7 @@ Version 0.3
 * [x] Fix: download lib does not failed properly
 * [x] New action: qompoter init
 * [x] New action: qompoter export --repo
-* [x] Nex action: qompoter inspect (list modified packages)
+* [x] New action: qompoter inspect (list modified packages)
 * [x] Feature: let qompoter install generates md5sum + qompoter.lock
 * [x] Feature: Prevent from overriding manual changes for Git packages in vendor (git status)
 * [x] Feature: Install packages from tarball (this will also preserve symbolic links and reduce space)
@@ -33,20 +33,21 @@ Version 0.3
 Version 0.4
 -----------
 
-* [ ] New action: qompoter release
-* [*] New action: qompoter install / update (use qompoter.lock)
+* [ ] Support CMake
+* [ ] New action: qompoter install / update (use qompoter.lock)
 * [ ] New action: qompoter require packagename
 * [ ] Feature: Prevent from overriding manual changes for all packages in vendor (md5sum)
-* [ ] Feature: improve qompoter inspect
+* [ ] Feature: Improve qompoter inspect
 * [ ] Feature: Cache downloaded packages
 * [ ] Feature: Integrate automaticly inqlude packages if possible (generate qompoter.pri, ... ?)
 * [ ] Feature: Update automaticaly the inqlude repository data
-* [*] Feature: improve qompoter export with compression / optimization
+* [ ] Feature: Improve qompoter export with compression / optimization
 * [ ] Clean documentation and release
 
 Future versions
 -----------
 
+* [ ] New action: qompoter release
 * [ ] Installation: create Debian package
 * [ ] Installation: create other Linux package
 * [ ] Installation: qompoter self-update (from Github)
@@ -62,7 +63,6 @@ Future versions
 * [ ] Split qompoter.sh into several files and add build step to create qompoter.sh
 * [ ] Describe and implement a "Packagist" like server for Qompoter
 * [ ] Use QT += package instead of CONFIG which leverage the usage of include(vendor.pri)
-* [ ] Support CMake
 * [ ] Check Windows support
 * [ ] JSON schema for qompoter.json
 * [ ] Translate doc into french
