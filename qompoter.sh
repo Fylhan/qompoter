@@ -2,7 +2,7 @@
 
 readonly C_PROGNAME=$(basename $0)
 readonly C_PROGDIR=$(readlink -m $(dirname $0))
-readonly C_PROGVERSION="v0.3.5-nightly"
+readonly C_PROGVERSION="v0.3.6-nightly"
 readonly C_ARGS="$@"
 C_OK="\e[1;32m"
 C_FAIL="\e[1;31m"
@@ -623,12 +623,9 @@ downloadPackage()
     isSource=0
   fi
   local requireBasePath=${repositoryPath}/${requireName}
-  if [ -z "${packageDistUrl}" ]; then
-    packageDistUrl=${requireBasePath}/${requireVersion}
-  fi
   local requireLocalPath=${vendorDir}/${packageName}
   local qompoterPriFile=${requireLocalPath}/qompoter.pri
-  local inqludeBasePath
+  local inqludeDistUrl
 
   echo "* ${requireName} ${requireVersion}"
 
@@ -636,36 +633,69 @@ downloadPackage()
 
   # Search in Inqlude repository
   checkPackageInqludeVersion "${vendorName}" "${packageName}" "${requireVersion}" "${INQLUDE_FILENAME}"
-  inqludeBasePath=$(getPackageInqludeUrl "${vendorName}" "${packageName}" "${requireVersion}" "${INQLUDE_FILENAME}")
-  if [ ! -z "${inqludeBasePath}" ]; then
-    logDebug "  Use inqlude package \"${packageName}\" (${inqludeBasePath})"
-    requireBasePath=${inqludeBasePath}
-  fi
+  inqludeDistUrl=$(getPackageInqludeUrl "${vendorName}" "${packageName}" "${requireVersion}" "${INQLUDE_FILENAME}")
+  # if [ -z "${packageDistUrl}" ] && [ ! -z "${inqludeDistUrl}" ]; then
+  #   logDebug "  Use inqlude package \"${packageName}\" (${inqludeDistUrl})"
+  #   packageDistUrl=${inqludeDistUrl}
+  # elif [ -z "${packageDistUrl}" ]; then
+  #   packageDistUrl=${requireBasePath}/${requireVersion}
+  # fi
 
   # Sources
   if [ "${isSource}" -eq 1 ]; then
     # Git
-    local gitPath=
-    if [ -d "${requireBasePath}/${packageName}.git" ]; then
-      gitPath=${requireBasePath}/${packageName}.git
-    fi
-    isGitRepositories "${requireBasePath}" && gitPath=${requireBasePath}.git
-    if [ ! -z "${gitPath}" ]; then
+    if [ ! -z "${packageDistUrl}" ] && isGitRepositories "${packageDistUrl}"; then
+      packageDistUrl=${packageDistUrl}.git
       echo "  Downloading sources from Git..."
-      test $(echo "${gitPath}" | grep "${REPO_PATH}") && packageDistUrl=${gitPath}
+      logDebug "URL has been provided (${packageDistUrl})"
       packageType="git"
-      downloadPackageFromGit "${gitPath}" "${vendorDir}" "${packageName}" "${requireVersion}"
+      downloadPackageFromGit "${repositoryPath}" "${vendorDir}" "${vendorName}" "${packageName}" "${requireVersion}" "${packageDistUrl}"
       result=$?
+      if [ "${result}" == "1" ] || [ "${result}" == "2" ]; then
+        logWarning "error with Git, Qompoter will try downloading sources from scratch..."
+      fi
+    fi
+    if [ "${result}" != "0" ] && [ "${result}" != "3" ] && [ "${result}" != "4" ] && [ ! -z "${inqludeDistUrl}" ] && isGitRepositories "${inqludeDistUrl}"; then
+      packageDistUrl=${inqludeDistUrl}
+      echo "  Downloading sources from Git..."
+      logDebug "Found in Inqlude repository (${packageDistUrl})"
+      packageType="git"
+      downloadPackageFromGit "${repositoryPath}" "${vendorDir}" "${vendorName}" "${packageName}" "${requireVersion}" "${packageDistUrl}"
+      result=$?
+      if [ "${result}" == "1" ] || [ "${result}" == "2" ]; then
+        logWarning "error with Git, Qompoter will try downloading sources from scratch..."
+      fi
+    fi
+    if [ "${result}" != "0" ] && [ "${result}" != "3" ] && [ "${result}" != "4" ] && isGitRepositories "${requireBasePath}.git"; then
+      packageDistUrl="${requireBasePath}.git"
+      echo "  Downloading sources from Git..."
+      logDebug "Found in repository (${packageDistUrl})"
+      packageType="git"
+      downloadPackageFromGit "${repositoryPath}" "${vendorDir}" "${vendorName}" "${packageName}" "${requireVersion}" "${packageDistUrl}"
+      result=$?
+      if [ "${result}" == "1" ] || [ "${result}" == "2" ]; then
+        logWarning "error with Git, Qompoter will try downloading sources from scratch..."
+      fi
+    fi
+    # FIXME Check if requireBasePath does not already contain REPO_PATH
+    if [ "${result}" != "0" ] && [ "${result}" != "3" ] && [ "${result}" != "4" ] && [[ "${requireBasePath}" != "${REPO_PATH}"* ]] && isGitRepositories "${REPO_PATH}/${requireName}/${packageName}.git"; then
+      packageDistUrl="${REPO_PATH}/${requireName}/${packageName}.git"
+      echo "  Downloading sources from Git..."
+      logDebug "Found in base repository (${packageDistUrl})"
+      packageType="git"
+      downloadPackageFromGit "${repositoryPath}" "${vendorDir}" "${vendorName}" "${packageName}" "${requireVersion}" "${packageDistUrl}"
+      result=$?
+      if [ "${result}" == "1" ] || [ "${result}" == "2" ]; then
+        logWarning "error with Git, Qompoter will try downloading sources from scratch..."
+      fi
     fi
 
     # Copy (also done if Git failed)
     if [ "${result}" == "1" ] || [ "${result}" == "2" ]; then
-      if [ ! -z "${gitPath}" ]; then
-        echo "  Warning: error with Git, Qompoter will try downloading sources from scratch..."
+      if [ ! -d "${requireLocalPath}" ]; then
         mkdir -p "${requireLocalPath}"
-      else
-        echo "  Downloading sources..."
       fi
+      echo "  Downloading sources..."
       packageType="qompoter-fs"
       downloadPackageFromCp "${repositoryPath}" "${vendorDir}" "${vendorName}" "${packageName}" "${requireVersion}"
       result=$?
@@ -674,9 +704,10 @@ downloadPackage()
   else
     echo "  Downloading lib..."
     packageType="qompoter-fs"
-    if [ -z "${packageDistUrl}" ] || [ ! -z "${inqludeBasePath}" ]; then # Use Inqlude binary if any
+    if [ -z "${packageDistUrl}" ] && [ ! -z "${inqludeDistUrl}" ]; then # Use Inqlude binary if any
+      logDebug "  Use inqlude package \"${packageName}\" (${inqludeDistUrl})"
       packageType="inqlude"
-      packageDistUrl=${inqludeBasePath}
+      packageDistUrl=${inqludeDistUrl}
     fi
     downloadLibPackage "${repositoryPath}" "${vendorDir}" "${vendorName}" "${packageName}" "${requireVersion}" "${packageDistUrl}"
     result=$?
@@ -770,7 +801,7 @@ downloadLibPackage()
     logDebug "  Download using package provided url"
     downloadLibFromHttp "${packageDistUrl}" "${requireLocalPath}"
     res=$? ; test "$res" == "0" && return 0
-    echo "  Warning: cannot find provided \"${packageDistUrl}\", let's try another repository"
+    logWarning "cannot find provided \"${packageDistUrl}\", let's try another repository"
   fi
 
   ## Package URL is not provided: build it
@@ -907,24 +938,26 @@ downloadLibFromCp()
 #**
 downloadPackageFromGit()
 {
-  local gitPath=$1
+  local repositoryPath=$1
   local vendorDir=$2
-  local packageName=$3
-  local packageVersion=$4
-  local requireBranch=$4
+  local vendorName=$3
+  local packageName=$4
+  local packageVersion=$5
+  local requireBranch=$5
+  local gitPath=$6
   local requireLocalPath=${vendorDir}/${packageName}
   local isSource=1
   local gitError=0
   local hasChanged=0
 
   # Parse commit number in version
-  if [[ $4 == "#"* ]]; then
-    packageVersion=`echo ${4} | cut -d'#' -f2`
+  if [[ ${packageVersion} == "#"* ]]; then
+    packageVersion=$(echo "${packageVersion}" | cut -d'#' -f2)
     requireBranch=
   fi
   # Parse branch name in version
-  if [[ $4 == "dev-"* ]]; then
-    packageVersion=`echo ${4} | sed 's/dev-//'`
+  if [[ ${packageVersion} == "dev-"* ]]; then
+    packageVersion=$(echo "${packageVersion}" | sed 's/dev-//')
     requireBranch=${packageVersion}
     test "${requireBranch}" == "" && requireBranch="master"
   fi
@@ -932,45 +965,71 @@ downloadPackageFromGit()
   # Does not exist yet: clone
   if [ ! -d "${requireLocalPath}/.git" ]; then
     logTrace "git clone ${gitPath} ${requireLocalPath}"
-    if ! git clone ${gitPath} ${requireLocalPath} > ${C_LOG_FILENAME} 2>&1; then
-      logGitTrace $(cat "${C_LOG_FILENAME_PACKAGE}")
+    if ! git clone "${gitPath}" "${requireLocalPath}" > ${C_LOG_FILENAME} 2>&1; then
+      logGitTrace $(cat "${C_LOG_FILENAME}")
       logDebug "  Oups, cannot clone the project"
       return 2
     fi
   fi
-  logDebug "  cd ${requireLocalPath}"
+  logTrace "cd ${requireLocalPath}"
   cd "${requireLocalPath}" || ( echo "  Error: can not go to ${requireLocalPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
   local C_LOG_FILENAME_PACKAGE=../../${C_LOG_FILENAME}
 
+  #~ FIXME Update remote
+  # Git remote not already set
+  logTrace "git remote -v"
+  logGitTrace $(git remote -v)
+  if [[ -z $(git remote -v | grep "${gitPath}") ]]; then
+    if [[ ! -z $(git remote -v | grep "origin") ]]; then
+      logDebug "  Change \"origin\" remote to \"${gitPath}\""
+      logTrace "git remote set-url origin ${gitPath}"
+      if ! git remote set-url origin "${gitPath}" > ${C_LOG_FILENAME_PACKAGE} 2>&1; then
+        logGitTrace $(cat "${C_LOG_FILENAME_PACKAGE}")
+        res=1
+      fi
+    else
+      logDebug "  Add \"${gitPath}\" as \"origin\" remote"
+      logTrace "git remote add origin ${gitPath}"
+      if ! git remote add origin "${gitPath}" > ${C_LOG_FILENAME_PACKAGE} 2>&1; then
+        logGitTrace $(cat "${C_LOG_FILENAME_PACKAGE}")
+        res=1
+      fi
+    fi
+  fi
+
   # Verify no manual changes and warning otherwize
   #~ FIXME Use also last commit number
-  logTrace "    git status -s"
+  logTrace "git status -s"
   hasChanged=$(git status -s)
   if [ ! -z "${hasChanged}" ]; then
     if [ "$IS_BYPASS" != "1" ] && [ "$IS_FORCE" != "1" ]; then
-      echo "  Warning: there are manual updates on this project."
+      logWarning "there are manual updates on this project."
       echo "  Use --by-pass to continue without modifying this package."
       echo "  Use --force to discard change and continue."
       cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
       return 3
     elif [ "$IS_BYPASS" == "1" ]; then
-      echo "  Warning: there are manual updates on this project. Ignore and continue."
+      logWarning "there are manual updates on this project. Ignore and continue."
       return 4
     else
-      echo "  Warning: there were manual updates on this project. Update forced."
+      logWarning "there were manual updates on this project. Update forced."
     fi
   fi
 
   # Update
   logTrace "git fetch"
-  git fetch > ${C_LOG_FILENAME_PACKAGE} 2>&1
-  logGitTrace $(cat "${C_LOG_FILENAME_PACKAGE}")
+  if ! git fetch > ${C_LOG_FILENAME_PACKAGE} 2>&1; then
+    logGitTrace $(cat "${C_LOG_FILENAME_PACKAGE}")
+    echo "  Oups, cannot fetch \"${gitPath}\"..."
+    cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+    return 2
+  fi
 
   # Select the best version (if variadic version number provided)
   if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
     logDebug "  Search matching version"
     logTrace "git tag --list"
-    logGitTrace "$(git tag --list | LC_ALL=C sort --version-sort)"
+    logGitTrace $(git tag --list | LC_ALL=C sort --version-sort)
     local selectedVersion
     selectedVersion=$(git tag --list | LC_ALL=C sort --version-sort | getBestVersionNumber "${packageVersion}")
     if [ -z "${selectedVersion}" ]; then
@@ -987,7 +1046,7 @@ downloadPackageFromGit()
 
   # Retrieve
   logTrace "git checkout -f ${packageVersion}"
-  if ! git checkout -f ${packageVersion} > ${C_LOG_FILENAME_PACKAGE} 2>&1; then
+  if ! git checkout -f "${packageVersion}" > ${C_LOG_FILENAME_PACKAGE} 2>&1; then
     logGitTrace $(cat "${C_LOG_FILENAME_PACKAGE}")
     echo "  Oups, \"${packageVersion}\" does not exist"
     cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
@@ -995,7 +1054,7 @@ downloadPackageFromGit()
   fi
   if [ "${requireBranch}" != "" ]; then
     logTrace "git pull origin ${requireBranch}"
-    if ! git pull origin ${requireBranch} > ${C_LOG_FILENAME_PACKAGE} 2>&1; then
+    if ! git pull origin "${requireBranch}" > ${C_LOG_FILENAME_PACKAGE} 2>&1; then
       logGitTrace $(cat "${C_LOG_FILENAME_PACKAGE}")
       echo "  Oups, cannot pull... Is \"${requireBranch}\" really existing?"
       cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
@@ -1029,10 +1088,19 @@ checkQompoterFile()
 
 isGitRepositories()
 {
+  local gitUrlOrRepository=$1
+  # Empty? Abort
+  if [ -z "${gitUrlOrRepository}" ]; then
+    return 1;
+  fi
+  # Existing Git repository in file system: ok
+  if [ -d "${gitUrlOrRepository}" ]; then
+    return 0
+  fi
   local gitRepositories=("github" "git.kde" "gitlab" "gitorious" "code.qt.io" "git.freedesktop" "framagit")
-  local repository=$1
+  # Repository path confirms it is a well-known Git repository: ok
   for i in "${gitRepositories[@]}"; do
-    if [[ "${repository}" == *"$i"* ]]; then
+    if [[ "${gitUrlOrRepository}" == *"$i"* ]]; then
       return 0;
     fi
   done
@@ -1222,9 +1290,11 @@ downloadQompoterFilePackages()
       #~ Skip if already installed
       test "${DOWNLOADED_PACKAGES#* $projectName }" != "$DOWNLOADED_PACKAGES" && continue
       #~ Download
-      local repo=`getRelatedRepository ${qompoterFile} ${vendorName} ${projectName}`
-      local url=`getRelatedUrl ${qompoterFile} ${vendorName} ${projectName}`
-      downloadPackage ${repo} ${vendorDir} ${vendorName} ${projectName} ${version} ${qompoterLockFile} "${url}"
+      local repo
+      local url
+      repo=$(getRelatedRepository "${qompoterFile}" "${vendorName}" "${projectName}")
+      url=$(getRelatedUrl "${qompoterFile}" "${vendorName}" "${projectName}")
+      downloadPackage "${repo}" "${vendorDir}" "${vendorName}" "${projectName}" "${version}" "${qompoterLockFile}" "${url}"
       #~ Exit on error if no force
       local returnCode=$?
       if [ "${returnCode}" != "0" ]; then
