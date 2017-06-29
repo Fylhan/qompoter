@@ -3,27 +3,28 @@
 fails=0
 i=0
 offline=$1
-tests=`ls install-ok/*${offline}.json | wc -l`
+tests=$(ls require/*"${offline}".json | wc -l)
 echo "1..${tests##* }"
-for input in install-ok/*${offline}.json
+for input in require/*${offline}.json
 do
   i=$((i+1))
   mkdir vendor
   mkdir vendor/test
   touch vendor/qompote.pri
   touch vendor/vendor.pri
-  input_file_name=`echo $input | cut -d'/' -f2 | cut -d'.' -f1`
+  input_file_name=$(echo "$input" | cut -d'/' -f2 | cut -d'.' -f1)
   if ! ../qompoter.sh export --no-color --file "$input" > /dev/null 2>&1
   then
     echo "not ok $i - $input - error during export"
     fails=$((fails+1))
   else
-    if [ ! -f "`date +"%Y-%m-%d"`_${input_file_name}_vendor.zip" ]; then
-      echo "not ok $i - $input - no archive"
+    if [ ! -f "$(date +"%Y-%m-%d")_${input_file_name}_vendor.zip" ]; then
+      echo "error: no archive \"$(date +"%Y-%m-%d")_${input_file_name}_vendor.zip\""
+      echo "not ok $i - $(echo "$input" | tr '-' ' ' | sed 's/.json//')"
       fails=$((fails+1))
     else
-      echo "ok $i - $input"
-      rm "`date +"%Y-%m-%d"`_${input_file_name}_vendor.zip"
+      echo "ok $i - $(echo "$input" | tr '-' ' ' | sed 's/.json//')"
+      rm "$(date +"%Y-%m-%d")_${input_file_name}_vendor.zip"
     fi
   fi
   rm -rf vendor

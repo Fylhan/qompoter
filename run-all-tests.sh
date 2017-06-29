@@ -43,6 +43,5 @@ else
   exitcode=1
 fi
 rm -- *.lock
-rm -- *.log
 echo "$passed / $tests"
 exit $exitcode

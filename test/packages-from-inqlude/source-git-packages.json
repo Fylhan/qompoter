@@ -1,5 +1,5 @@
 {
-	"name": "install-ok/qompoter-inqlude",
+	"name": "packages-from-inqlude/source-git-packages",
 	"authors": [
 		{
 			"name": "Fylhan",
@@ -8,6 +8,7 @@
 	],
 	"require": {
 		"kde/attica": "v5.25.0",
+		"kde/bluez-qt": "v5.24.*",
 		"cp/fylhan": "v1.1"
 	},
 	"require-dev": {

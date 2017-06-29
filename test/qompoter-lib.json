@@ -1,0 +1,11 @@
+{
+    "name": "trialog/test-lib",
+    "require": {
+        "vedecom/tcanp-helper": "v2.1.*-lib",
+        "nodejs/http-parser": "v2.7.0"
+    },
+    "repositories": {
+        "nodejs/http-parser": "https://github.comds",
+        "trialog-qt/qcomponent": "https//github.com"
+    }
+}

@@ -6,11 +6,18 @@ Qompoter
   Warning: no 'qompoter.pri' found for this package
   done
 
+* kde/bluez-qt v5.24.*
+  Downloading sources from Git...
+  Selected version: v5.24.0-rc1
+  Warning: no 'qompoter.pri' found for this package
+  done
+
 * cp/fylhan v1.1
   Downloading sources...
   done
 
 * laumaya/glc-lib dev-master
+  Warning: there may be no such inqlude package as dev-master, try v2.5.2 if it fails
   Downloading sources from Git...
   Warning: no 'qompoter.pri' found for this package
   done

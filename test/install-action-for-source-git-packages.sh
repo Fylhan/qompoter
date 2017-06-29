@@ -12,10 +12,15 @@ QOMPOTER_FILE='qompoter-test4git.json'
 qompoterBranch='{ "name": "install-git/git", "require": { "fylhan/qompoter-test-package4git": "dev-mybranch" }, "repositories": { "fylhan/qompoter-test-package4git": "https://github.com" }}'
 qompoterVersion='{ "name": "install-git/git", "require": { "fylhan/qompoter-test-package4git": "v1.0" }, "repositories": { "fylhan/qompoter-test-package4git": "https://github.com" }}'
 qompoterVersionStar='{ "name": "install-git/git", "require": { "fylhan/qompoter-test-package4git": "v1.*" }, "repositories": { "fylhan/qompoter-test-package4git": "https://github.com" }}'
+qompoterVersionStarOrderNaturally='{ "name": "install-git/git", "require": { "fylhan/qompoter-test-package4git": "v2.*" }, "repositories": { "fylhan/qompoter-test-package4git": "https://github.com" }}'
 qompoterCommit='{ "name": "install-git/git", "require": { "fylhan/qompoter-test-package4git": "#9504ee4" }, "repositories": { "fylhan/qompoter-test-package4git": "https://github.com" }}'
-QOMPOTER_FILES=("${qompoterBranch}" "${qompoterVersionStar}" "${qompoterVersion}" "${qompoterCommit}")
-TEST_CASE_NAMES=("install a git package at a given branch" "install a git package at a given soft version" "install a git package at a given version" "install a git package at a given commit number")
-TEST_CASE_EXPECTED_RESULTS=("mybranch" "v1.1-alpha" "v1.0" "9504ee4")
+QOMPOTER_FILES=("${qompoterBranch}" "${qompoterVersionStar}" "${qompoterVersion}" "${qompoterVersionStarOrderNaturally}" "${qompoterCommit}")
+TEST_CASE_NAMES=("install a git package with given branch" \
+                "install a git package with a given variadic version v1.* -> v1.1-alpha" \
+                "install a git package with a given version" \
+                "install a git package with a given variadic version v2.* -> v2.0.10 (whereas v2.0.1 exists)" \
+                "install a git package with a given commit number")
+TEST_CASE_EXPECTED_RESULTS=("mybranch" "v1.1-alpha" "v1.0" "v2.0.10" "9504ee4")
 
 echo "1..$((${#QOMPOTER_FILES[*]}+3))"
 
@@ -62,6 +67,7 @@ if [ "$?" != "0" ]; then
     else
       cd ../..
       echo "not ok ${i} - ${TEST_CASE}"
+      FAILS=$((FAILS+1))
     fi
   else
     cd ../..
@@ -69,6 +75,7 @@ if [ "$?" != "0" ]; then
   fi
 else
   echo "not ok ${i} - ${TEST_CASE}"
+  FAILS=$((FAILS+1))
 fi
 
 i=$((i+1))
@@ -84,14 +91,19 @@ if [ "$?" == "0" ]; then
       echo "ok ${i} - ${TEST_CASE}"
     else
       cd ../..
+      echo "there is a change on changelogs.md file in the package: $(cat 1)"
       echo "not ok ${i} - ${TEST_CASE}"
     fi
   else
     cd ../..
+    echo "the expected commit number is not #9504ee4 for the package: $(cat 1)"
     echo "not ok ${i} - ${TEST_CASE}"
+    FAILS=$((FAILS+1))
   fi
 else
+  echo "qompoter install has failed: $(cat 1)"
   echo "not ok ${i} - ${TEST_CASE}"
+  FAILS=$((FAILS+1))
 fi
 
 i=$((i+1))
@@ -108,6 +120,7 @@ if [ "$?" == "0" ]; then
     else
       cd ../..
       echo "not ok ${i} - ${TEST_CASE}"
+      FAILS=$((FAILS+1))
     fi
   else
     cd ../..
@@ -115,6 +128,7 @@ if [ "$?" == "0" ]; then
   fi
 else
   echo "not ok ${i} - ${TEST_CASE}"
+  FAILS=$((FAILS+1))
 fi
 
 i=$((i+1))
@@ -125,6 +139,5 @@ checkVersion "${i}" "${TEST_CASE}" "v1.1"
 
 rm 1
 rm $QOMPOTER_FILE
-rm qompoter.log
 rm -rf vendor
 exit $FAILS
