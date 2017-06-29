@@ -19,15 +19,17 @@ Version 0.3
 -----------
 
 * [x] Installation: create npm package
-* [x] Fix Git based package issue: branch, tag, commit ; first install or update
-* [x] Fix: download lib does not failed properly
+* [x] Fix: Git based package if changing from a branch to a tag or commit, now we first install otherwize update
+* [x] Fix: Error during lib downloading was not failing properly
+* [x] Fix: v1.1.3 was higher than v1.1.10
 * [x] New action: qompoter init
-* [x] New action: qompoter export --repo
+* [x] New action: qompoter export --repo (export vendor as a re-usable Qompoter repository, nice!)
 * [x] New action: qompoter inspect (list modified packages)
-* [x] Feature: let qompoter install generates md5sum + qompoter.lock
+* [x] Feature: Let qompoter install generates md5sum + qompoter.lock
 * [x] Feature: Prevent from overriding manual changes for Git packages in vendor (git status)
 * [x] Feature: Install packages from tarball (this will also preserve symbolic links and reduce space)
 * [x] Feature: Download packages using HTTP
+* [x] Feature: More verbosity levels
 * [ ] Clean documentation and release
 
 Version 0.4

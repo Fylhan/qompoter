@@ -2196,16 +2196,16 @@ main()
   esac
   local status=$?
 
+  if [ "$IS_VERBOSE" == "0" ]; then
+    rm ${C_LOG_FILENAME}
+  fi
+
   if [ "$status" != "0" ]; then
     echo -e "${C_FAIL}FAILURE${C_END}"
     return 1
   else
     echo -e "${C_OK}done${C_END}"
     return 0
-  fi
-
-  if [ "$IS_VERBOSE" == "0" ]; then
-    rm ${C_LOG_FILENAME}
   fi
 }
 
