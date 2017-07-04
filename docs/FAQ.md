@@ -17,7 +17,7 @@ Table of Contents
 Can I use Qompoter in production?
 ---------------------
 
-The Qompoter project has started at the end of 2014 and reached version 0.2 in the end of 2016. This is still a young project with some known bugs, however the main command line options and "qompoter.json" structure should not change a lot in the future and stay stable. I have a small amount of time to improve this tool, but I have it several time a week which allow me to fix things quite quickly, and to improve stuff step by step.
+The Qompoter project has started at the end of 2014, reached version 0.2 in the end of 2016. and 0.3 in the middle of 2017. This is still a young project with some known bugs, however the main command line options and "qompoter.json" structure should not change a lot in the future and stay stable. I have a small amount of time to improve this tool, but I have it several time a week which allows me to fix things quite quickly, and to improve stuff step by step.
 
 Today, Qompoter is used in production by a small team, it really ease the sharing and repetability of the build between several people.
 It is up to you! Please, share your experience.
@@ -33,6 +33,11 @@ Is Qompoter open source?
 
 Oh yes, Qompoter is open source and also free as in free beer! It is distributed under the [LGPL3+](LICENSE) license: *you can freely use it in any projects, even closed ones. Just keep in mind that if you modify Qompoter, you shall provide these updates as open source. Thanks!* The project is hosted on GitHub.
 
+Can I use SVN or Mercurial with Qompoter?
+---------------------
+
+Nope, sorry, only Git at the moment. A basic support of SVN might be added in the future.
+
 I ran `qompoter install` but one of the Git based package has not been updated...
 ---------------------
 
@@ -40,9 +45,11 @@ If you project targets a commit number (e.g. #82bbdf9) or a tag which have been 
 
 Until this is fixed, the tricks is to backup the "vendor" directory, delete it and run `qompoter install` again. Like this:
 
-    qompoter export
-    rm -rf vendor
-    qompoter install
+```bash
+qompoter export
+rm -rf vendor
+qompoter install
+```
 
 If everything is ok, wait some times to be sure, you could delete the backup archive.
 

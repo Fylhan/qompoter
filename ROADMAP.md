@@ -15,7 +15,7 @@ Version 0.2 - released 2016, october
 * [x] Add "--no-qompote" flag
 * [x] Clean documentation and release
 
-Version 0.3
+Version 0.3 - planned release 2017, summer
 -----------
 
 * [x] Installation: create npm package
@@ -56,7 +56,7 @@ Future versions
 * [ ] Installation: install Qompoter though the "Qt Maintenance Tool"
 * [ ] Feature: Allow soft version management v2 (e.g. ^v1.0 etc)
 * [ ] Feature: Search in other package manager repositories (QPM, CPM, ...)
-* [ ] Feature: Increase security by checkin integrity of packages (md5sum)
+* [ ] Feature: Increase security by checkin integrity of packages (md5sum or SHA1, SHA-256, ...)
 * [ ] Feature: qompoter install --repo vendor.zip
 * [ ] Feature: add qompoter install --local / --global
 * [ ] Support extension using qompoter-command available in PATH
@@ -66,7 +66,8 @@ Future versions
 * [ ] Describe and implement a "Packagist" like server for Qompoter
 * [ ] Use QT += package instead of CONFIG which leverage the usage of include(vendor.pri)
 * [ ] Check Windows support
+* [ ] Support SVN based packages
 * [ ] JSON schema for qompoter.json
 * [ ] Translate doc into french
-* [ ] Regarder http://www.pkgsrc.org/
+* [ ] Take a look http://www.pkgsrc.org/
 * [ ] Better documentation

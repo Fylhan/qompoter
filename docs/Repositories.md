@@ -26,16 +26,18 @@ To check the availability of a package in Inqlude, use `qompoter inqlude --searc
 
 Example:
 
-    $ qompoter inqlude --search attica
-    Qompoter
-    ======== inqlude
+```bash
+$ qompoter inqlude --search attica
+Qompoter
+======== inqlude
 
-    * attica/attica 
-    Attica 5.25.0
-    VCS: https://projects.kde.org/projects/frameworks/attica/repository
-    Download: http://download.kde.org/stable/frameworks/5.25/attica-5.25.0.tar.xz
+* attica/attica
+Attica 5.25.0
+VCS: https://projects.kde.org/projects/frameworks/attica/repository
+Download: http://download.kde.org/stable/frameworks/5.25/attica-5.25.0.tar.xz
 
-    done
+done
+```
 
 Under the hood, Qompoter caches the [inqlude-all.json file](http://inqlude.org/inqlude-all.json) listing all Qt packages known by Inqlude. You can check, this file is included at the end of the "[qompoter.sh file](https://github.com/Fylhan/qompoter/blob/master/qompoter.sh#L1298)". This way, Qompoter can know really quickly if a package is available in the Inqlude repository and retrieve how to download and install it locally to your project. However, this list has to be updated... At the moment, this is only done when a new version of Qompoter pops up. This can be done better. If you really need an up to date Inqlude listing, download the last [inqlude-all.json file](http://inqlude.org/inqlude-all.json) and use the following command line: `qompoter install --inqlude-file inqlude-all.json`. It may take some time to parse the Inqlude file.
 
@@ -48,10 +50,12 @@ In order to use a forge as the repository for all required packages of a project
 
 If you prefer to use it only for one package (or some of them), add the following to the "qompoter.json" file of the project:
 
-    "repositories": {
-        "vendor-name/project-name": "https://framagit.org",
-        "fylhan/posibrain": "https://github.com"
-    }
+```json
+"repositories": {
+    "vendor-name/project-name": "https://framagit.org",
+    "fylhan/posibrain": "https://github.com"
+}
+```
 
 Qompoter is able to recognize the download mechanism as Git for several forges based on the URL: github, git.kde, gitkde, gitorious, code.qt.io, git.freedesktop and framagit. There is actually no way to provide the repository type of other forges at the moment, this is a missing feature.
 

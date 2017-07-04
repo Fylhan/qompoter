@@ -10,6 +10,25 @@ C_INFO="\e[1;35m"
 C_SKIP="\e[1;33m"
 C_END="\e[0m"
 
+C_LOG_FILENAME=qompoter.log
+QOMPOTER_FILENAME=qompoter.json
+INQLUDE_FILENAME=
+VENDOR_DIR=vendor
+REPO_PATH=git@gitlab.lan.trialog.com:
+IS_INCLUDE_DEV=(-dev)?
+IS_BYPASS=0
+IS_FORCE=0
+IS_NO_QOMPOTE=0
+IS_STABLE_ONLY=0
+IS_VERBOSE=0
+DEPTH_SIZE=10
+DOWNLOADED_PACKAGES=
+NEW_SUBPACKAGES=${QOMPOTER_FILENAME}
+VENDOR_NAME=
+PROJECT_NAME=
+# Version of the current package
+PACKAGE_VERSION=
+
 #######################
 # JSON.H              #
 #######################
@@ -257,36 +276,19 @@ jsonh()
 #######################
 #######################
 
-C_LOG_FILENAME=qompoter.log
-QOMPOTER_FILENAME=qompoter.json
-INQLUDE_FILENAME=
-VENDOR_DIR=vendor
-REPO_PATH=git@gitlab.lan.trialog.com:
-IS_INCLUDE_DEV=(-dev)?
-IS_BYPASS=0
-IS_FORCE=0
-IS_NO_QOMPOTE=0
-IS_STABLE_ONLY=0
-IS_VERBOSE=0
-DEPTH_SIZE=10
-DOWNLOADED_PACKAGES=
-NEW_SUBPACKAGES=${QOMPOTER_FILENAME}
-VENDOR_NAME=
-PROJECT_NAME=
-# Version of the current package
-PACKAGE_VERSION=
-
 usage()
 {
 	cat <<- EOF
 	Usage: $C_PROGNAME [action] [ --repo <repo> | other options ]
 
-	    action            Select an action:
-	                        export, init, inspect, install, update, require
-	                      Other actions are useful for digging into Qompoter:
-	                        inqlude, jsonh, md5sum
+	    action               Select an action:
+	                          export, init, inspect, install, require
+
+	                         Other actions are useful for digging into Qompoter:
+	                          inqlude, jsonh, md5sum
 
 	Options:
+
 	        --by-pass         By-pass error and continue the process
 	                          Supported actions are: export --repo, install
 
@@ -298,7 +300,7 @@ usage()
 
 	        --file FILE       Pick another Qompoter file [default = $QOMPOTER_FILENAME]
 
-      -f, --force           By-pass error by forcing the action to be taken
+	    -f, --force           By-pass error by forcing the action to be taken
 	                          and continue the process
 	                          Supported actions are: export --repo, install
 
@@ -319,8 +321,8 @@ usage()
 	                          Supported actions are: init, install
 
 	    -r, --repo DIR        Select a repository path as a location for
-	                          dependency research. It is used in addition
-	                          of the "repositories" provided in
+	                          dependency research or export. It is used in
+	                          addition of the "repositories" provided in
 	                          "qompoter.json".
 	                          Supported actions are: export, install
 
@@ -329,36 +331,48 @@ usage()
 
 	        --stable-only     Do not select unstable versions [default = false]
 	                          E.g. If "v1.*" is given to Qompoter, it will select
-                            "v1.0.3" and not "v1.0.4-RC1"
+	                          "v1.0.3" and not "v1.0.4-RC1"
 	                          Supported action is: install
 
 	        --vendor-dir DIR  Pick another vendor directory [default = $VENDOR_DIR]
-	                          Supported actions are: export, install
+	                          Supported actions are: export, inspect, install,
+	                          md5sum
 
 	    -V, --verbose         Enable more verbosity
+
+	    -VV                   Enable really more verbosity
+
+	    -VVV                  Enable really really more verbosity
 
 	    -h, --help            Display this help
 
 	    -v, --version         Display the version
 
 	Examples:
+
 	    Install all dependencies:
-	    $C_PROGNAME install --repo ~/qompoter-repo
+	      $C_PROGNAME install --repo ~/qompoter-repo
 
 	    Install only nominal and stable dependencies:
-	    $C_PROGNAME install --no-dev --stable-only --repo ~/qompoter-repo
+	      $C_PROGNAME install --no-dev --stable-only --repo ~/qompoter-repo
 
 	    List required dependencies for this project:
-	    $C_PROGNAME require --list
+	      $C_PROGNAME require --list
+
+	    List manually modified dependencies for this project:
+	      $C_PROGNAME inspect
 
 	    Export vendor directory:
-	    $C_PROGNAME export
+	      $C_PROGNAME export
 
 	    Export vendor directory as a qompotist-fs repository:
-	    $C_PROGNAME export --repo ~/other-qompoter-repo
+	      $C_PROGNAME export --repo ~/other-qompoter-repo
 
 	    Search dependency in the inqlude repository:
-	    $C_PROGNAME inqlude --search vogel/injeqt
+	      $C_PROGNAME inqlude --search vogel/injeqt
+
+	    Generate boilerplate for the "old/yoda" package starting from version 900.0
+	      $C_PROGNAME init old/yoda v900.0
 
 	EOF
 }
@@ -2153,8 +2167,8 @@ cmdline()
         shift
       elif [ "${ACTION}" == "inqlude"  ] || [ "${ACTION}" == "init" ]; then
         if [ "${VENDOR_NAME}" == ""  ]; then
-          VENDOR_NAME=`echo ${1} | cut -d'/' -f1`
-          PROJECT_NAME=`echo ${1} | cut -d'/' -f2`
+          VENDOR_NAME=$(echo "${1}" | cut -d'/' -f1)
+          PROJECT_NAME=$(echo "${1}" | cut -d'/' -f2)
           shift
         elif [ "${PACKAGE_VERSION}" == ""  ]; then
           PACKAGE_VERSION=$1
