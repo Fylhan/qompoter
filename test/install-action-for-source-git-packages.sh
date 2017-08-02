@@ -47,7 +47,7 @@ function checkVersion()
 
 for qompoterFileData in "${QOMPOTER_FILES[@]}"; do
   echo $qompoterFileData > $QOMPOTER_FILE
-  ../qompoter.sh install --no-color --file "$QOMPOTER_FILE" > 1
+  ../qompoter.sh install --no-color --file "$QOMPOTER_FILE" > /dev/null 2>&1
   checkVersion "$((i+1))" "${TEST_CASE_NAMES[$i]}" "${TEST_CASE_EXPECTED_RESULTS[$i]}"
   i=$((i+1))
 done
@@ -55,7 +55,7 @@ done
 i=$((i+1))
 TEST_CASE="cannot install a git package due to existing change"
 echo "whatever" >> vendor/qompoter-test-package4git/changelogs.md
-../qompoter.sh install --no-color --file "$QOMPOTER_FILE" > 1
+../qompoter.sh install --no-color --file "$QOMPOTER_FILE" > /dev/null 2>&1
 if [ "$?" != "0" ]; then
   cd vendor/qompoter-test-package4git
   res=`git status | grep "9504ee4"`
@@ -80,7 +80,7 @@ fi
 
 i=$((i+1))
 TEST_CASE="install a git package but bys-pass existing change"
-../qompoter.sh install --no-color --file "$QOMPOTER_FILE" --by-pass > 1
+../qompoter.sh install --no-color --file "$QOMPOTER_FILE" --by-pass > /dev/null 2>&1
 if [ "$?" == "0" ]; then
   cd vendor/qompoter-test-package4git
   res=`git status | grep "9504ee4"`
@@ -108,7 +108,7 @@ fi
 
 i=$((i+1))
 TEST_CASE="install a git package by forcing overriding existing change"
-../qompoter.sh install --no-color --file "$QOMPOTER_FILE" --force > 1
+../qompoter.sh install --no-color --file "$QOMPOTER_FILE" --force > /dev/null 2>&1
 if [ "$?" == "0" ]; then
   cd vendor/qompoter-test-package4git
   res=`git status | grep "9504ee4"`
@@ -134,10 +134,9 @@ fi
 i=$((i+1))
 TEST_CASE="install a git package at a given soft version stable only"
 echo $qompoterVersionStar > $QOMPOTER_FILE
-../qompoter.sh install --no-color --file "$QOMPOTER_FILE" --stable-only > 1
+../qompoter.sh install --no-color --file "$QOMPOTER_FILE" --stable-only > /dev/null 2>&1
 checkVersion "${i}" "${TEST_CASE}" "v1.1"
 
-rm 1
 rm $QOMPOTER_FILE
 rm -rf vendor
 exit $FAILS

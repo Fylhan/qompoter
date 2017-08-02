@@ -664,10 +664,11 @@ downloadPackage()
   # Sources
   if [ "${isSource}" -eq 1 ]; then
     # Git
+    # Provided URL
     if [ ! -z "${packageDistUrl}" ] && isGitRepositories "${packageDistUrl}"; then
       packageDistUrl=${packageDistUrl}.git
       echo "  Downloading sources from Git..."
-      logDebug "URL has been provided (${packageDistUrl})"
+      logDebug "  URL has been provided (${packageDistUrl})"
       packageType="git"
       downloadPackageFromGit "${repositoryPath}" "${vendorDir}" "${vendorName}" "${packageName}" "${requireVersion}" "${packageDistUrl}"
       result=$?
@@ -675,10 +676,11 @@ downloadPackage()
         logWarning "error with Git, Qompoter will try downloading sources from scratch..."
       fi
     fi
+    # Inqlude
     if [ "${result}" != "0" ] && [ "${result}" != "3" ] && [ "${result}" != "4" ] && [ ! -z "${inqludeDistUrl}" ] && isGitRepositories "${inqludeDistUrl}"; then
       packageDistUrl=${inqludeDistUrl}
       echo "  Downloading sources from Git..."
-      logDebug "Found in Inqlude repository (${packageDistUrl})"
+      logDebug "  Found in Inqlude repository (${packageDistUrl})"
       packageType="git"
       downloadPackageFromGit "${repositoryPath}" "${vendorDir}" "${vendorName}" "${packageName}" "${requireVersion}" "${packageDistUrl}"
       result=$?
@@ -686,10 +688,11 @@ downloadPackage()
         logWarning "error with Git, Qompoter will try downloading sources from scratch..."
       fi
     fi
+    # Mostly HTTP URL
     if [ "${result}" != "0" ] && [ "${result}" != "3" ] && [ "${result}" != "4" ] && isGitRepositories "${requireBasePath}.git"; then
       packageDistUrl="${requireBasePath}.git"
       echo "  Downloading sources from Git..."
-      logDebug "Found in repository (${packageDistUrl})"
+      logDebug "  Found in repository (${packageDistUrl})"
       packageType="git"
       downloadPackageFromGit "${repositoryPath}" "${vendorDir}" "${vendorName}" "${packageName}" "${requireVersion}" "${packageDistUrl}"
       result=$?
@@ -697,11 +700,12 @@ downloadPackage()
         logWarning "error with Git, Qompoter will try downloading sources from scratch..."
       fi
     fi
-    # FIXME Check if requireBasePath does not already contain REPO_PATH
-    if [ "${result}" != "0" ] && [ "${result}" != "3" ] && [ "${result}" != "4" ] && [[ "${requireBasePath}" != "${REPO_PATH}"* ]] && isGitRepositories "${REPO_PATH}/${requireName}/${packageName}.git"; then
+    # FIXME Check if requireBasePath does not already contain REPO_PATH with && [[ "${requireBasePath}" != "${REPO_PATH}"* ]]  but this is sometimes useful
+    # Qompotist-fs
+    if [ "${result}" != "0" ] && [ "${result}" != "3" ] && [ "${result}" != "4" ] && isGitRepositories "${REPO_PATH}/${requireName}/${packageName}.git"; then
       packageDistUrl="${REPO_PATH}/${requireName}/${packageName}.git"
       echo "  Downloading sources from Git..."
-      logDebug "Found in base repository (${packageDistUrl})"
+      logDebug "  Found in base repository (${packageDistUrl})"
       packageType="git"
       downloadPackageFromGit "${repositoryPath}" "${vendorDir}" "${vendorName}" "${packageName}" "${requireVersion}" "${packageDistUrl}"
       result=$?
@@ -749,7 +753,7 @@ downloadPackage()
     # Qompoter.pri
     if [ "${IS_NO_QOMPOTE}" == "0" ]; then
       if [ -f "${qompoterPriFile}" ]; then
-        cat ${qompoterPriFile} >> ${vendorDir}/vendor.pri
+        cat "${qompoterPriFile}" >> ${vendorDir}/vendor.pri
       else
         echo "  Warning: no 'qompoter.pri' found for this package"
       fi
@@ -780,6 +784,7 @@ downloadPackageFromCp()
  # Select the best version (if variadic version number provided)
   if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
     logDebug "  Search matching version"
+    logTrace $(ls "${requireBasePath}" | LC_ALL=C sort --version-sort) # noquote for oneline
     selectedVersion=$(ls "${requireBasePath}" | LC_ALL=C sort --version-sort | getBestVersionNumber "$packageVersion")
     if [ -z "${selectedVersion}" ]; then
       echo "  Oups, no matching version for \"${packageVersion}\""
@@ -845,6 +850,7 @@ downloadLibPackage()
   # Select the best version (if variadic version number provided)
   if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
     logDebug "  Search matching version"
+    logTrace $(ls "${requireBasePath}" | LC_ALL=C sort --version-sort) # noquote for oneline
     selectedVersion=$(ls "${requireBasePath}" | LC_ALL=C sort --version-sort | getBestVersionNumber "${packageVersion}")
     if [ -z "${selectedVersion}" ]; then
       echo "  Oups, no matching version for \"${packageVersion}\""
@@ -1050,7 +1056,7 @@ downloadPackageFromGit()
   if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
     logDebug "  Search matching version"
     logTrace "git tag --list"
-    logGitTrace $(git tag --list | LC_ALL=C sort --version-sort)
+    logGitTrace $(git tag --list | LC_ALL=C sort --version-sort) # noquote for oneline
     local selectedVersion
     selectedVersion=$(git tag --list | LC_ALL=C sort --version-sort | getBestVersionNumber "${packageVersion}")
     if [ -z "${selectedVersion}" ]; then
@@ -1389,6 +1395,7 @@ checkPackageInqludeVersion()
   # Select the best version (if variadic version number provided)
   if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
     logDebug "  Search matching version"
+    logTrace "${packageVersion}"
     local selectedVersion
     selectedVersion=$(echo "v${existingVersion}" | grep -e "${packageVersion}")
     if [ -z "${selectedVersion}" ]; then
