@@ -8,7 +8,7 @@ An attempt of dependency manager for Qt / C++, because I am sick of managing eac
 
 The current version is still a work in progress but it is now usable for non-critical projects!
 
-Check the [FAQ](docs/FAQ.md) to understand "Why Qompoter?", but here is what **Qompoter is good to:**
+Check the [FAQ](docs/FAQ.md) to understand "Why Qompoter?", but here is what **Qompoter is good for**:
 
 * easily share the required source dependencies of your Qt / C++ project with a team
   * describe them in a "qompoter.json" file
@@ -16,14 +16,21 @@ Check the [FAQ](docs/FAQ.md) to understand "Why Qompoter?", but here is what **Q
 * share C++ code to the [inqlude](https://inqlude.org/) repository, a development forge (like Github) or any [local or remote Qompotist-fs repository](docs/Repositories.md)
 * ease the repetability of the build
 * work with several platforms (Linux, Windows, Mac, ...)
-* be simple
+* keep it simple
 
-Qompoter is also useful to share *library* (or binary) dependencies of you Qt / C++ project, but keep in mind it is not that simple, it requires to precompile somewhere these dependencies for all the required targets.
+Qompoter is also useful to share *library* (or binary) dependencies of you Qt / C++ project. However, keep in mind this is not that simple, this requires precompiling these dependencies somewhere for all the required targets (x86, x86_64, ARM, ...).
 
 Installation
 -------------
 
-Using `npm`:
+### Requirements
+
+Qompoter requires Bash, Git, sed. Other tools like rsync, curl (or wget) and tar (or zip) may be useful for some advanced cases.
+
+It works on Linux and Windows (using [Git bash](https://git-scm.com/)).
+It should also work on Mac, FreeBSD and more widely on Windows (Cygwin or Mysys command line) because it is Bash based, but I did not test it yet.
+
+### Using [npm](https://www.npmjs.com/)
 
 ```bash
 $ npm install -g qompoter
@@ -32,7 +39,9 @@ Qompoter v0.3.2-alpha
 Dependency manager for C++/Qt by Fylhan
 ```
 
-Or download it from Github and move it to a place accessible in the `PATH`:
+### From scratch
+
+Download it from Github and move it to a place accessible in the `PATH`:
 
 ```bash
 $ wget https://github.com/Fylhan/qompoter/blob/d9fe5cf/qompoter.sh -O qompoter.sh && sudo mv qompoter.sh /usr/bin/qompoter
@@ -49,12 +58,7 @@ sudo mv qompoter_bash_completion.sh /usr/share/bash-completion/completions/qompo
 echo "test [ -f /usr/share/bash-completion/completions/qompoter ]; source /usr/share/bash-completion/completions/qompoter" >> ~/.bashrc
 ```
 
-Qompoter requires Bash, Git, sed. Other tools like rsync, curl (or wget) and tar (or zip) may be useful for some advanced cases.
-
-It works on Linux and Windows (using [Git bash](https://git-scm.com/)).
-It should also work on Mac, FreeBSD and more widely on Windows (Cygwin or Mysys command line) because it is Bash based, but I did not test it yet.
-
-Usage
+Getting Started
 -------------
 
 In your project, create a qompoter.json file:
@@ -92,12 +96,18 @@ qompoter install
 
 *For more information about the command line options, use `qompoter --help` or check the [online help](docs/Command-line.md).*
 
-That's it! You can now include `vendor.pri` in the `.pro` file of your project, and use the dependencies that you required:
+That's it! Qompoter has downloaded all required dependencies into the `vendor` directory and you can now include `vendor.pri` in the `.pro` file of your project, and use the dependencies that you required:
 
 ```qmake
 CONFIG += luke leia yoda han
 include(vendor/vendor.pri)
 ```
+
+Let's start coding!
+
+During development, if you want to change / upgrade the version of an existing package, add or remove packages: update the `qompoter.json` file accordingly and run again `qompoter install`.
+
+If you reached a milestone of your project and wanted to provide a backup of your project's dependencies, run `qompoter export` to create an archive file of the `vendor` directory, or `qompoter export --repo <path to a directory>` to create a Qompotist-fs repository on which you can run `qompoter install`. You may want to use `qompoter inspect` before to check you did not modified manually any packages in the `vendor` directory.
 
 Documentation
 -------------
@@ -111,16 +121,6 @@ Documentation
 * [Command line interface](docs/Command-line.md)
 * [Contribution guide](CONTRIBUTING.md)
 * [FAQ](docs/FAQ.md)
-
-Releases
--------------
-
-Qompoter is released under 2 versions:
-
-* The current version is a proof-of-concept developed in bash, useful to kickoff the project without involving big development. It is actually working quite well and is now more than just a proof-of-concept.
-* A more complete implementation has been started in C++/Qt and should provide more portability and robustness if the project grows. The development of this version is currently paused because Bash is actually suffisant at the moment.
-
-In order to simplify numerotation, v0.1 to v0.6 are reserved for "qompoter.sh". Therefore, the first "qompoter" (C++/Qt) version is v0.7. This may change in the future.
 
 There is a previsional [roadmap](ROADMAP.md).
 

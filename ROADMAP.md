@@ -25,25 +25,25 @@ Version 0.3 - planned release 2017, summer
 * [x] New action: qompoter init
 * [x] New action: qompoter export --repo (export vendor as a re-usable Qompoter repository, nice!)
 * [x] New action: qompoter inspect (list modified packages)
-* [x] Feature: Let qompoter install generates md5sum + qompoter.lock
+* [x] Feature: Let "qompoter install" generates md5sum + qompoter.lock
 * [x] Feature: Prevent from overriding manual changes for Git packages in vendor (git status)
 * [x] Feature: Install packages from tarball (this will also preserve symbolic links and reduce space)
 * [x] Feature: Download packages using HTTP
 * [x] Feature: More verbosity levels
-* [ ] Clean documentation and release
+* [x] Clean documentation and release
 
 Version 0.4
 -----------
 
-* [ ] Support CMake
+* [ ] Installation: create Ubuntu/Snap package
+* [ ] Fix: url field is not always filled in lock file
 * [ ] New action: qompoter install / update (use qompoter.lock)
 * [ ] New action: qompoter require packagename
 * [ ] Feature: Prevent from overriding manual changes for all packages in vendor (md5sum)
-* [ ] Feature: Improve qompoter inspect
-* [ ] Feature: Cache downloaded packages
-* [ ] Feature: Integrate automaticly inqlude packages if possible (generate qompoter.pri, ... ?)
+* [ ] Feature: Improve qompoter inspect (show only modified packages...)
 * [ ] Feature: Update automaticaly the inqlude repository data
 * [ ] Feature: Improve qompoter export with compression / optimization
+* [ ] Feature: Support CMake
 * [ ] Clean documentation and release
 
 Future versions
@@ -54,6 +54,8 @@ Future versions
 * [ ] Installation: create other Linux package
 * [ ] Installation: qompoter self-update (from Github)
 * [ ] Installation: install Qompoter though the "Qt Maintenance Tool"
+* [ ] Feature: Cache downloaded packages
+* [ ] Feature: Integrate automaticly inqlude packages if possible (generate qompoter.pri, ... ?)
 * [ ] Feature: Allow soft version management v2 (e.g. ^v1.0 etc)
 * [ ] Feature: Search in other package manager repositories (QPM, CPM, ...)
 * [ ] Feature: Increase security by checkin integrity of packages (md5sum or SHA1, SHA-256, ...)

@@ -1,15 +1,29 @@
 Qompoter Changelogs
 ===================
+
 Version 0.3
 -----------
-In progress...
+* Installation: create npm package
+* Fix: Git based package if changing from a branch to a tag or commit, now we first install otherwize update
+* Fix: Error during lib downloading was not failing properly
+* Fix: v1.1.3 was higher than v1.1.10
+* Fix: Remove usage of "sed -z" not supported in older version of sed, and "sed -i" not supported by Solaris
+* New action: qompoter init
+* New action: qompoter export --repo (export vendor as a re-usable Qompoter repository, nice!)
+* New action: qompoter inspect (list modified packages)
+* Feature: Let qompoter install generates md5sum + qompoter.lock
+* Feature: Prevent from overriding manual changes for Git packages in vendor (git status)
+* Feature: Install packages from tarball (this will also preserve symbolic links and reduce space)
+* Feature: Download packages using HTTP
+* Feature: More verbosity levels
+* Clean documentation
 
 Version 0.2
 -----------
 * Update qompote.pri with new qmake functions
 * vendor.pri now also contains qompote.pri to avoid double inclusion
 * Manage recursive dependencies
-* Allow version number with star (e.g. v0.3.*), flag "--stable-only" allows to select only stable releases (e.g. v0.3.2 instead of v0.3.3-RC1)
+* Allow version number with star (e.g. `v0.3.*`), flag "--stable-only" allows to select only stable releases (e.g. v0.3.2 instead of v0.3.3-RC1)
 * Search in the inqlude repository and download Git packages
 * Create auto-completion script, oh yeah!
 * /!\ Breaking changes: The concept of "action" have been introduced into the command line, you should now use `qompoter install` instead of just `qompoter`
