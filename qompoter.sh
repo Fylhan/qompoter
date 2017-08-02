@@ -583,7 +583,8 @@ prepareVendorDir()
 
 prepareQompoterLock()
 {
-  local qompoterLockFile=$1
+  LAST_QOMPOTERLOCK_PART='  "require": {'
+  local qompoterLockFile=$1.tmp
   local packageFullName=$2
   cat <<- EOF > ${qompoterLockFile}
 {
@@ -597,7 +598,7 @@ EOF
 
 updateQompoterLock()
 {
-  local qompoterLockFile=$1
+  local qompoterLockFile=$1.tmp
   local vendorName=$2
   local packageName=$3
   local version=$4
@@ -607,14 +608,19 @@ updateQompoterLock()
   md5sum=$(getProjectMd5 "${VENDOR_DIR}/$packageName")
   local packageFullName=$vendorName/$packageName
 
-  local jsonData="\"${packageFullName}\": {";
+  local jsonData="    ";
+  if [ "${LAST_QOMPOTERLOCK_PART}" != '  "require": {' ]; then
+    jsonData+=","
+  fi
+  jsonData+="\"${packageFullName}\": { ";
   jsonData+="\"version\": \"${version}\", "
   jsonData+="\"type\": \"${type}\", "
   jsonData+="\"url\": \"${url}\", "
   jsonData+="\"md5sum\": \"${md5sum}\""
-  jsonData+="}"
-  insertAfter ${qompoterLockFile} '  "require": {' "    ${jsonData},"
-  sed -i -z "s/},\n  }/}\n  }/g" "${qompoterLockFile}"
+  jsonData+=" }"
+  insertAfter "${qompoterLockFile}" "${LAST_QOMPOTERLOCK_PART}" "${jsonData}"
+  LAST_QOMPOTERLOCK_PART="\"${md5sum}\" }"
+  # FIXME Add require-dev to lock file
 }
 
 downloadPackage()
@@ -713,6 +719,7 @@ downloadPackage()
       packageType="qompoter-fs"
       downloadPackageFromCp "${repositoryPath}" "${vendorDir}" "${vendorName}" "${packageName}" "${requireVersion}"
       result=$?
+      packageDistUrl=${requireBasePath}/${PACKAGE_VERSION}
     fi
   # Lib
   else
@@ -749,7 +756,7 @@ downloadPackage()
     fi
 
     # Update qompoter.lock
-     updateQompoterLock "${qompoterLockFile}" "${vendorName}" "${packageName}" "${PACKAGE_VERSION}" "${packageType}" "${packageDistUrl}"
+    updateQompoterLock "${qompoterLockFile}" "${vendorName}" "${packageName}" "${PACKAGE_VERSION}" "${packageType}" "${packageDistUrl}"
 
     echo -e "  ${C_OK}done${C_END}"
     echo
@@ -1388,6 +1395,7 @@ checkPackageInqludeVersion()
       return 2
     fi
     packageVersion=${selectedVersion}
+    PACKAGE_VERSION=$packageVersion
     echo "  Selected version: ${packageVersion}"
   fi
   if [ "v${existingVersion}" != "${packageVersion}" ]; then
@@ -1850,7 +1858,7 @@ installAction()
       local returnCode=$?
       if [ "${returnCode}" != "0" ]; then
         globalRes=${returnCode}
-        test "${IS_BYPASS}" == "0" && test "${IS_FORCE}" == "0" && return 1
+        test "${IS_BYPASS}" == "0" && test "${IS_FORCE}" == "0" && rm "${qompoterLockFile}.tmp" && return 1
       fi
       IS_INCLUDE_DEV=
     done
@@ -1859,6 +1867,11 @@ installAction()
     fi
   done
 
+  if [ "${globalRes}" == 0 ]; then
+    mv "${qompoterLockFile}.tmp" "${qompoterLockFile}"
+  else
+    rm "${qompoterLockFile}.tmp"
+  fi
   return $globalRes
 }
 
@@ -2021,7 +2034,11 @@ insertAfter()
    local file="$1"
    local line="$2"
    local newText="$3"
-   sed -i -e "/^$line$/a"$'\\\n'"$newText"$'\n' "$file"
+   # sed -i not supported by Solaris
+   # sed -i -e "/$line$/a"$'\\\n'"$newText"$'\n' "$file"
+   sed -e "/$line$/a"$'\\\n'"$newText"$'\n' "$file" > "$file".tmp && mv "$file".tmp "$file"
+   # Use following to match exact line
+   # sed -e "/^$line$/a"$'\\\n'"$newText"$'\n' "$file" > "$file".tmp && mv "$file".tmp "$file"
 }
 
 logWarning()
