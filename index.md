@@ -1,13 +1,13 @@
-Qompoter: an attempt of dependency manager for Qt / C++, because I am sick of managing each C++ piece of code separately!
+Qompoter is an attempt of dependency manager for Qt / C++, because I am sick of managing each C++ piece of code separately!
 
 The current version is still a work in progress but it is now usable for non-critical projects!
 
-Check the [FAQ](docs/FAQ.md) to understand "Why Qompoter?", but here is what **Qompoter is good for**:
+Check the [FAQ](../docs/FAQ.md) to understand "Why Qompoter?", but here is what **Qompoter is good for**:
 
 * easily share the required source dependencies of your Qt / C++ project with a team
   * describe them in a "qompoter.json" file
   * let Qompoter search and download them for you into a "vendor" directory
-* share C++ code to the [inqlude](https://inqlude.org/) repository, a development forge (like Github) or any [local or remote Qompotist-fs repository](docs/Repositories.md)
+* share C++ code to the [inqlude](https://inqlude.org/) repository, a development forge (like Github) or any [local or remote Qompotist-fs repository](../docs/Repositories.md)
 * ease the repetability of the build
 * work with several platforms (Linux, Windows, Mac, ...)
 * keep it simple
@@ -87,7 +87,7 @@ Then, download and install dependencies listed in your `qompoter.json` using:
 qompoter install
 ```
 
-*For more information about the command line options, use `qompoter --help` or check the [online help](docs/Command-line.md).*
+*For more information about the command line options, use `qompoter --help` or check the [online help](../docs/Command-line.md).*
 
 That's it! Qompoter has downloaded all required dependencies into the `vendor` directory and you can now include `vendor.pri` in the `.pro` file of your project, and use the dependencies that you required:
 
@@ -105,15 +105,15 @@ If you reached a milestone of your project and wanted to provide a backup of you
 Documentation
 -------------
 
-* [Concept of packages](docs/Packages.md)
-* [Concept of repositories](docs/Repositories.md)
-* [Concept of package's versions](docs/Qompoter-json-file.md#require)
-* [How to create a Qompoter.json file?](docs/Qompoter-json-file.md)
-* [How to create a Qompoter.pri file?](docs/Qompoter-pri-file.md)
-* [What is this qompote.pri file?](docs/Home-made-qompote.md)
-* [Command line interface](docs/Command-line.md)
+* [Concept of packages](../docs/Packages.md)
+* [Concept of repositories](../docs/Repositories.md)
+* [Concept of package's versions](../docs/Qompoter-json-file.md#require)
+* [How to create a Qompoter.json file?](../docs/Qompoter-json-file.md)
+* [How to create a Qompoter.pri file?](../docs/Qompoter-pri-file.md)
+* [What is this qompote.pri file?](../docs/Home-made-qompote.md)
+* [Command line interface](../docs/Command-line.md)
 * [Contribution guide](CONTRIBUTING.md)
-* [FAQ](docs/FAQ.md)
+* [FAQ](../docs/FAQ.md)
 
 There is a previsional [roadmap](ROADMAP.md).
 
