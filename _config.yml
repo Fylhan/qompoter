@@ -1,0 +1,8 @@
+title: Qompoter
+description: Dependency manager for Qt / C++
+google_analytics: 
+show_downloads: true
+theme: jekyll-theme-architect
+
+gems:
+  - jekyll-mentions
