@@ -15,7 +15,7 @@ Version 0.2 - released 2016, october
 * [x] Add "--no-qompote" flag
 * [x] Clean documentation and release
 
-Version 0.3 - planned release 2017, summer
+Version 0.3 - released 2017, august
 -----------
 
 * [x] Installation: create npm package
