@@ -570,13 +570,13 @@ EOF
 prepareVendorDir()
 {
   local vendorDir=$1
-  mkdir -p ${vendorDir}
+  mkdir -p "${vendorDir}"
   if [ "${IS_NO_QOMPOTE}" == "0" ]; then
     createQompotePri ${vendorDir}/qompote.pri
     cat ${vendorDir}/qompote.pri > ${vendorDir}/vendor.pri
     echo '' >> ${vendorDir}/vendor.pri
     echo 'INCLUDEPATH += $$PWD' >> ${vendorDir}/vendor.pri
-    echo '$$setLibPath()' >> ${vendorDir}/vendor.pri
+    echo ' $$setLibPath()' >> ${vendorDir}/vendor.pri
     echo '' >> ${vendorDir}/vendor.pri
   fi
 }
@@ -3963,6 +3963,24 @@ INQLUDE_ALL_MIN_CONTENT='[0,"name"]	"adctl"
 [205,"packages","source"]	"http://gitlab.lan.trialog.com/vedecom/tcanp-helper/uploads/adfe227ce07060aa20fd33f3e8df8bab/v2.1.2-lib.tar.gz"
 [205,"licenses"]	["VEDECOM", "TRIALOG"]
 [205,"maturity"]	"stable"
-[205,"platforms"]	["Linux"]'
+[205,"platforms"]	["Linux"]
+[206,"name"]	"http-parser-wrapper"
+[206,"display_name"]	"HTTP Parser"
+[206,"version"]	"2.7.1"
+[206,"summary"]	"Qompoter wrapper for nodejs/http-parser"
+[206,"urls","vcs"]	"https://github.com/qompoter/http-parser-wrapper"
+[206,"packages","source"]	"https://github.com/qompoter/http-parser-wrapper/archive/v2.7.1.tar.gz"
+[206,"licenses"]	["MIT"]
+[206,"maturity"]	"stable"
+[206,"platforms"]	["Linux", "OS X", "Windows"]
+[207,"name"]	"qhttp-wrapper"
+[207,"display_name"]	"QHttp"
+[207,"version"]	"3.1.2"
+[207,"summary"]	"Qompoter wrapper for azadkuh/qhttp and oliviermaridat/qhttp "
+[207,"urls","vcs"]	"https://github.com/qompoter/qhttp-wrapper"
+[207,"packages","source"]	"https://github.com/qompoter/http-parser-wrapper/archive/v3.1.2.tar.gz"
+[207,"licenses"]	["MIT"]
+[207,"maturity"]	"stable"
+[207,"platforms"]	["Linux", "OS X", "Windows"]'
 
 main
