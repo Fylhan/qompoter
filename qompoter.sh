@@ -1005,7 +1005,7 @@ downloadPackageFromGit()
   fi
   # Parse branch name in version
   if [[ ${packageVersion} == "dev-"* ]]; then
-    packageVersion=$(echo "${packageVersion}" | sed 's/dev-//')
+    packageVersion=${packageVersion/dev-/}
     requireBranch=${packageVersion}
     test "${requireBranch}" == "" && requireBranch="master"
   fi
@@ -1050,13 +1050,13 @@ downloadPackageFromGit()
   logTrace "git status -s"
   hasChanged=$(git status -s)
   if [ ! -z "${hasChanged}" ]; then
-    if [ "$IS_BYPASS" != "1" ] && [ "$IS_FORCE" != "1" ]; then
+    if [ "${IS_BYPASS}" != "1" ] && [ "${IS_FORCE}" != "1" ]; then
       logWarning "there are manual updates on this project."
       echo "  Use --by-pass to continue without modifying this package."
       echo "  Use --force to discard change and continue."
       cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
       return 3
-    elif [ "$IS_BYPASS" == "1" ]; then
+    elif [ "${IS_BYPASS}" == "1" ]; then
       logWarning "there are manual updates on this project. Ignore and continue."
       return 4
     else
@@ -1121,6 +1121,7 @@ downloadPackageFromGit()
     gitError=1
   fi
   PACKAGE_VERSION=${packageVersion}
+  PACKAGE_DIST_URL=${gitPath}
   return $gitError
 }
 
@@ -1423,7 +1424,7 @@ checkPackageInqludeVersion()
       return 2
     fi
     packageVersion=${selectedVersion}
-    PACKAGE_VERSION=$packageVersion
+    PACKAGE_VERSION=${packageVersion}
     echo "  Selected version: ${packageVersion}"
   fi
   if [ "v${existingVersion}" != "${packageVersion}" ]; then
@@ -1773,7 +1774,8 @@ inqludeSearchAction()
   echo "* ${requireName} ${requireVersion}"
 
   logDebug "  Search ${packageName}"
-  local packageId=`getInqludeId ${packageName} "${inqludePackages}"`
+  local packageId
+  packageId=$(getInqludeId "${packageName}" "${inqludePackages}")
   if [ -z "${packageId}" ]; then
     logDebug "  Not found"
     echo
@@ -2261,7 +2263,6 @@ cmdline()
     exit -1
   fi
 
-  VENDOR_PATH=${PWD}/${VENDOR_DIR}
   return 0
 }
 
@@ -2277,46 +2278,46 @@ main()
   echo "======== ${ACTION}"
   echo
 
-  updateVendorDirFromQompoterFile ${QOMPOTER_FILENAME}
+  updateVendorDirFromQompoterFile "${QOMPOTER_FILENAME}"
   case ${ACTION} in
     "export")
       if [ "${SUB_ACTION}" == "repo" ]; then
-        repoExportAction ${QOMPOTER_FILENAME} ${VENDOR_DIR}
+        repoExportAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
       else
-        exportAction ${QOMPOTER_FILENAME} ${VENDOR_DIR}
+        exportAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
       fi
       ;;
     "init")
-      initAction ${VENDOR_NAME} ${PROJECT_NAME} "${PACKAGE_VERSION}" ${QOMPOTER_FILENAME}
+      initAction "${VENDOR_NAME}" "${PROJECT_NAME}" "${PACKAGE_VERSION}" "${QOMPOTER_FILENAME}"
       ;;
     "inqlude")
       if [ "${SUB_ACTION}" == "search" ]; then
-        inqludeSearchAction ${VENDOR_NAME} ${PROJECT_NAME} ${PACKAGE_VERSION} ${INQLUDE_FILENAME}
+        inqludeSearchAction "${VENDOR_NAME}" "${PROJECT_NAME}" "${PACKAGE_VERSION}" "${INQLUDE_FILENAME}"
       elif [ "${SUB_ACTION}" == "minify" ]; then
-        inqludeMinifyAction ${INQLUDE_FILENAME}
+        inqludeMinifyAction "${INQLUDE_FILENAME}"
       fi
       ;;
     "inspect")
-      inspectAction ${QOMPOTER_FILENAME} ${VENDOR_DIR}
+      inspectAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
       ;;
     "install")
-      installAction ${QOMPOTER_FILENAME} ${VENDOR_DIR}
+      installAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
       ;;
     "jsonh")
-      jsonhAction ${QOMPOTER_FILENAME}
+      jsonhAction "${QOMPOTER_FILENAME}"
       ;;
     "md5sum")
-      md5sumAction ${VENDOR_NAME}
+      md5sumAction "${VENDOR_NAME}"
       ;;
     "require")
       if [ "${SUB_ACTION}" == "list" ]; then
-        requireListAction ${QOMPOTER_FILENAME}
+        requireListAction "${QOMPOTER_FILENAME}"
       else
-        requireAction ${QOMPOTER_FILENAME}
+        requireAction "${QOMPOTER_FILENAME}"
       fi
       ;;
     "update")
-      updateAction ${QOMPOTER_FILENAME} ${VENDOR_DIR}
+      updateAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
       ;;
     *)
       echo -e "${C_FAIL}FAILURE${C_END} Unknown action '${ACTION}'"
