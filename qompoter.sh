@@ -2,7 +2,7 @@
 
 readonly C_PROGNAME=$(basename $0)
 readonly C_PROGDIR=$(readlink -m $(dirname $0))
-readonly C_PROGVERSION="v0.3.6"
+readonly C_PROGVERSION="v0.4.0-alpha"
 readonly C_ARGS="$@"
 C_OK="\e[1;32m"
 C_FAIL="\e[1;31m"
@@ -26,8 +26,9 @@ DOWNLOADED_PACKAGES=
 NEW_SUBPACKAGES=${QOMPOTER_FILENAME}
 VENDOR_NAME=
 PROJECT_NAME=
-# Version of the current package
+# Version and path of the current package
 PACKAGE_VERSION=
+PACKAGE_DIST_URL=
 
 #######################
 # JSON.H              #
@@ -720,7 +721,7 @@ downloadPackage()
         mkdir -p "${requireLocalPath}"
       fi
       echo "  Downloading sources..."
-      packageType="qompoter-fs"
+      packageType="qompotist-fs"
       downloadPackageFromCp "${repositoryPath}" "${vendorDir}" "${vendorName}" "${packageName}" "${requireVersion}"
       result=$?
       packageDistUrl=${requireBasePath}/${PACKAGE_VERSION}
@@ -728,7 +729,7 @@ downloadPackage()
   # Lib
   else
     echo "  Downloading lib..."
-    packageType="qompoter-fs"
+    packageType="qompotist-fs"
     if [ -z "${packageDistUrl}" ] && [ ! -z "${inqludeDistUrl}" ]; then # Use Inqlude binary if any
       logDebug "  Use inqlude package \"${packageName}\" (${inqludeDistUrl})"
       packageType="inqlude"
@@ -760,7 +761,7 @@ downloadPackage()
     fi
 
     # Update qompoter.lock
-    updateQompoterLock "${qompoterLockFile}" "${vendorName}" "${packageName}" "${PACKAGE_VERSION}" "${packageType}" "${packageDistUrl}"
+    updateQompoterLock "${qompoterLockFile}" "${vendorName}" "${packageName}" "${PACKAGE_VERSION}" "${packageType}" "${PACKAGE_DIST_URL}"
 
     echo -e "  ${C_OK}done${C_END}"
     echo
@@ -798,9 +799,10 @@ downloadPackageFromCp()
   local packageDistUrl=${requireBasePath}/${packageVersion}
   if [ -d "${packageDistUrl}" ]; then
     logDebug "  Copy \"${packageDistUrl}\" to \"${requireLocalPath}\""
-    cp -rf ${packageDistUrl}/* ${requireLocalPath} \
+    cp -rf ${packageDistUrl}/* "${requireLocalPath}" \
       >> ${C_LOG_FILENAME} 2>&1
     PACKAGE_VERSION=${packageVersion}
+    PACKAGE_DIST_URL=${packageDistUrl}
     return 0
   fi
   rm -rf "${requireLocalPath}"
@@ -826,7 +828,12 @@ downloadLibPackage()
   if [[ ! -z ${packageDistUrl} ]] && [[ ${packageDistUrl} == "http"* ]]; then
     logDebug "  Download using package provided url"
     downloadLibFromHttp "${packageDistUrl}" "${requireLocalPath}"
-    res=$? ; test "$res" == "0" && return 0
+    res=$?
+    if [ "$res" == "0" ]; then
+      PACKAGE_VERSION=${packageVersion}
+      PACKAGE_DIST_URL=${packageDistUrl}
+      return 0
+    fi
     logWarning "cannot find provided \"${packageDistUrl}\", let's try another repository"
   fi
 
@@ -839,11 +846,22 @@ downloadLibPackage()
     logDebug "  Download using package built url"
     # Try tarball
     downloadLibFromHttp "${packageDistUrl}.tar.gz" "${requireLocalPath}"
-    res=$? ; test "$res" == "0" && return 0
+    res=$?
+    if [ "$res" == "0" ]; then
+      PACKAGE_VERSION=${packageVersion}
+      PACKAGE_DIST_URL=${packageDistUrl}.tar.gz
+      return 0
+    fi
     logDebug "  Warning: cannot find \"${packageDistUrl}.tar.gz\", let's try with zip"
-    # Try archive
+
+    # Try zip archive
     downloadLibFromHttp "${packageDistUrl}.zip" "${requireLocalPath}"
-    res=$? ; test "$res" == "0" && return 0
+    res=$?
+    if [ "$res" == "0" ]; then
+      PACKAGE_VERSION=${packageVersion}
+      PACKAGE_DIST_URL=${packageDistUrl}.zip
+      return 0
+    fi
     logDebug "  Warning: cannot find \"${packageDistUrl}.zip\", let's try another repository"
   fi
 
@@ -866,6 +884,7 @@ downloadLibPackage()
   res=$?
   if [ "$res" == "0" ]; then
     PACKAGE_VERSION=${packageVersion}
+    PACKAGE_DIST_URL=${packageDistUrl}
     return 0
   fi
 
@@ -927,6 +946,7 @@ downloadLibFromHttp()
         && rm -rf ${requireLocalPath}/*lib ${vendorDir} \
         >> ${C_LOG_FILENAME} 2>&1
     PACKAGE_VERSION=${packageVersion}
+    PACKAGE_DIST_URL=${packageDistUrl}
   fi
   return $res
 }
@@ -953,6 +973,7 @@ downloadLibFromCp()
   cp -rf ${packageDistUrl}/*.md ${requireLocalPath} \
       >> ${C_LOG_FILENAME} 2>&1
   PACKAGE_VERSION=${packageVersion}
+  PACKAGE_DIST_URL=${packageDistUrl}
   return 0
 }
 
