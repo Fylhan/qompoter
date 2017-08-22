@@ -3990,19 +3990,19 @@ INQLUDE_ALL_MIN_CONTENT='[0,"name"]	"adctl"
 [206,"display_name"]	"HTTP Parser"
 [206,"version"]	"2.7.1"
 [206,"summary"]	"Qompoter wrapper for nodejs/http-parser"
-[206,"urls","vcs"]	"https://github.com/qompoter/http-parser-wrapper"
+[206,"urls","vcs"]	"https://github.com/qompoter/http-parser-wrapper.git"
 [206,"packages","source"]	"https://github.com/qompoter/http-parser-wrapper/archive/v2.7.1.tar.gz"
 [206,"licenses"]	["MIT"]
 [206,"maturity"]	"stable"
-[206,"platforms"]	["Linux", "OS X", "Windows"]
+[206,"platforms"]	["Linux", "OSX", "Windows"]
 [207,"name"]	"qhttp-wrapper"
 [207,"display_name"]	"QHttp"
 [207,"version"]	"3.1.2"
 [207,"summary"]	"Qompoter wrapper for azadkuh/qhttp and oliviermaridat/qhttp "
-[207,"urls","vcs"]	"https://github.com/qompoter/qhttp-wrapper"
+[207,"urls","vcs"]	"https://github.com/qompoter/qhttp-wrapper.git"
 [207,"packages","source"]	"https://github.com/qompoter/http-parser-wrapper/archive/v3.1.2.tar.gz"
 [207,"licenses"]	["MIT"]
 [207,"maturity"]	"stable"
-[207,"platforms"]	["Linux", "OS X", "Windows"]'
+[207,"platforms"]	["Linux", "OSX", "Windows"]'
 
 main
