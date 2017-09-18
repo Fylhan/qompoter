@@ -37,8 +37,9 @@ Version 0.4
 
 * [ ] Installation: create Ubuntu/Snap package
 * [ ] Fix: url field is not always filled in lock file
-* [ ] New action: qompoter install / update (use qompoter.lock)
-* [ ] New action: qompoter require packagename
+* [ ] New action: qompoter install / update (using qompoter.lock)
+* [ ] New action: qompoter install <packagename>
+* [ ] Feature: add aliases for most used actions e=export, i=install, u=update
 * [ ] Feature: Prevent from overriding manual changes for all packages in vendor (md5sum)
 * [ ] Feature: Improve qompoter inspect (show only modified packages...)
 * [ ] Feature: Update automaticaly the inqlude repository data

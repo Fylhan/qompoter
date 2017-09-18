@@ -2237,6 +2237,16 @@ cmdline()
   esac
   done
 
+  # Aliases
+  if [ "${ACTION}" == "e"  ]; then
+    ACTION="export"
+  elif [ "${ACTION}" == "i"  ]; then
+    ACTION="install"
+  elif [ "${ACTION}" == "u"  ]; then
+    ACTION="update"
+  fi
+
+  # Specific usage
   if [[ "${ACTION}" == "init" ]] && [[ ${PROJECT_NAME} == "" ]]; then
     echo -e "${C_FAIL}FAILURE${C_END} missing parameters for action '${ACTION}'"
     echo "Usage: $C_PROGNAME ${ACTION} <vendor/packagename> [<version>]"
