@@ -571,14 +571,27 @@ EOF
 prepareVendorDir()
 {
   local vendorDir=$1
+  local vendorFilepath=${vendorDir}/vendor.pri.tmp
+  local qompoterPriFilepath=${vendorDir}/qompote.pri
   mkdir -p "${vendorDir}"
   if [ "${IS_NO_QOMPOTE}" == "0" ]; then
-    createQompotePri ${vendorDir}/qompote.pri
-    cat ${vendorDir}/qompote.pri > ${vendorDir}/vendor.pri
-    echo '' >> ${vendorDir}/vendor.pri
-    echo 'INCLUDEPATH += $$PWD' >> ${vendorDir}/vendor.pri
-    echo ' $$setLibPath()' >> ${vendorDir}/vendor.pri
-    echo '' >> ${vendorDir}/vendor.pri
+    createQompotePri "${qompoterPriFilepath}"
+    cat "${qompoterPriFilepath}" >  "${vendorFilepath}"
+    { echo ''; echo 'INCLUDEPATH += $$PWD'; echo ' $$setLibPath()'; echo ''; } >> "${vendorFilepath}"
+  fi
+}
+
+updateVendorPri()
+{
+  local vendorDir=$1
+  local qompoterPriFile=$2
+  local vendorFilepath=${vendorDir}/vendor.pri.tmp
+  if [ "${IS_NO_QOMPOTE}" == "0" ]; then
+    if [ -f "${qompoterPriFile}" ]; then
+      cat "${qompoterPriFile}" >> "${vendorFilepath}"
+    else
+      logWarning "no 'qompoter.pri' found for this package"
+    fi
   fi
 }
 
@@ -587,10 +600,10 @@ prepareQompoterLock()
   LAST_QOMPOTERLOCK_PART='  "require": {'
   local qompoterLockFile=$1.tmp
   local packageFullName=$2
-  cat <<- EOF > ${qompoterLockFile}
+  cat <<- EOF > "${qompoterLockFile}"
 {
   "name": "${packageFullName}",
-  "date": "`date --iso-8601=sec`",
+  "date": "$(date --iso-8601=sec)",
   "require": {
   }
 }
@@ -751,18 +764,8 @@ downloadPackage()
     return 1
   # DONE
   else
-    # Qompoter.pri
-    if [ "${IS_NO_QOMPOTE}" == "0" ]; then
-      if [ -f "${qompoterPriFile}" ]; then
-        cat "${qompoterPriFile}" >> ${vendorDir}/vendor.pri
-      else
-        echo "  Warning: no 'qompoter.pri' found for this package"
-      fi
-    fi
-
-    # Update qompoter.lock
+    updateVendorPri "${vendorDir}" "${qompoterPriFile}"
     updateQompoterLock "${qompoterLockFile}" "${vendorName}" "${packageName}" "${PACKAGE_VERSION}" "${packageType}" "${PACKAGE_DIST_URL}"
-
     echo -e "  ${C_OK}done${C_END}"
     echo
   fi
@@ -1333,9 +1336,12 @@ downloadQompoterFilePackages()
   requires=$(getProjectRequires "${qompoterFile}")
 
   for packageInfo in ${requires}; do
-      local vendorName=`echo ${packageInfo} | cut -d'/' -f1`
-      local projectName=`echo ${packageInfo} | cut -d'/' -f2`
-      local version=`echo ${packageInfo} | cut -d'/' -f3`
+      local vendorName
+      local projectName
+      local version
+      vendorName=$(echo "${packageInfo}" | cut -d'/' -f1)
+      projectName=$(echo "${packageInfo}" | cut -d'/' -f2)
+      version=$(echo "${packageInfo}" | cut -d'/' -f3)
       #~ Skip if already installed
       test "${DOWNLOADED_PACKAGES#* $projectName }" != "$DOWNLOADED_PACKAGES" && continue
       #~ Download
@@ -1557,8 +1563,8 @@ initAction()
   done
 
   local qtFiles=("${qtProFile}" "${qtGlobalPriFile}" "src/src.pro" "test/test.pro")
-  local qompoterFiles=('${qompoterFile}')
-  local qompoterLibFiles=('qompoter.pri')
+  local qompoterFiles=("${qompoterFile}")
+  local qompoterLibFiles=("qompoter.pri")
   # qompoter.json
   if [ "${IS_FORCE}" == "1" ] || [ ! -f "${qompoterFile}" ]; then
     echo "* Create \"${qompoterFile}\" file"
@@ -1763,7 +1769,7 @@ inqludeSearchAction()
   if [ "${inqludeAllFile}" != "" ]; then
     if [ -f "${inqludeAllFile}" ]; then
       logDebug "  Prepare the provided inqlude repository file"
-      inqludePackages=`minifyInqludeFile ${inqludeAllFile}`
+      inqludePackages=$(minifyInqludeFile "${inqludeAllFile}")
     else
       echo "  No such file \"${inqludeAllFile}\""
       echo "  Qompoter will use the default inqlude repository file"
@@ -1872,6 +1878,7 @@ installAction()
   local vendorDir=$2
   local globalRes=0
   qompoterLockFile=$(echo "${qompoterFile}" | cut -d'.' -f1).lock
+  vendorPriFile=${vendorDir}/vendor.pri
 
   checkQompoterFile "${qompoterFile}" || return 100
   prepareVendorDir "${vendorDir}"
@@ -1888,7 +1895,7 @@ installAction()
       local returnCode=$?
       if [ "${returnCode}" != "0" ]; then
         globalRes=${returnCode}
-        test "${IS_BYPASS}" == "0" && test "${IS_FORCE}" == "0" && rm "${qompoterLockFile}.tmp" && return 1
+        test "${IS_BYPASS}" == "0" && test "${IS_FORCE}" == "0" && rm "${qompoterLockFile}.tmp" && rm "${vendorPriFile}.tmp" && return 1
       fi
       IS_INCLUDE_DEV=
     done
@@ -1897,10 +1904,12 @@ installAction()
     fi
   done
 
-  if [ "${globalRes}" == 0 ]; then
+  if [[ "${globalRes}" == 0 ]] || [[ "${IS_BYPASS}" == "1" ]]; then
     mv "${qompoterLockFile}.tmp" "${qompoterLockFile}"
+    mv "${vendorPriFile}.tmp" "${vendorPriFile}"
   else
     rm "${qompoterLockFile}.tmp"
+    rm "${vendorPriFile}.tmp"
   fi
   return $globalRes
 }
@@ -1908,7 +1917,7 @@ installAction()
 jsonhAction()
 {
   local qompoterFile=$1
-  cat "${qompoterFile}" | jsonh
+  jsonh < "${qompoterFile}"
 }
 
 md5sumAction()
