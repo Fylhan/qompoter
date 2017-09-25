@@ -15,9 +15,10 @@ QOMPOTER_FILENAME=qompoter.json
 INQLUDE_FILENAME=
 VENDOR_DIR=vendor
 REPO_PATH=git@gitlab.lan.trialog.com:
-IS_INCLUDE_DEV=(-dev)?
+IS_ALL=0
 IS_BYPASS=0
 IS_FORCE=0
+IS_INCLUDE_DEV=(-dev)?
 IS_NO_QOMPOTE=0
 IS_STABLE_ONLY=0
 IS_VERBOSE=0
@@ -289,6 +290,10 @@ usage()
 	                          inqlude, jsonh, md5sum
 
 	Options:
+
+          --all             List or apply actions to all elements depending of
+                            the action
+                            Supported action is: inspect
 
 	        --by-pass         By-pass error and continue the process
 	                          Supported actions are: export --repo, install
@@ -1023,7 +1028,7 @@ downloadPackageFromGit()
     fi
   fi
   logTrace "cd ${requireLocalPath}"
-  cd "${requireLocalPath}" || ( echo "  Error: can not go to ${requireLocalPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+  cd "${requireLocalPath}" || ( echo "  Error: cannot go to ${requireLocalPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
   local C_LOG_FILENAME_PACKAGE=../../${C_LOG_FILENAME}
 
   #~ FIXME Update remote
@@ -1057,7 +1062,7 @@ downloadPackageFromGit()
       logWarning "there are manual updates on this project."
       echo "  Use --by-pass to continue without modifying this package."
       echo "  Use --force to discard change and continue."
-      cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+      cd - > /dev/null 2>&1 || ( echo "  Error: cannot go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
       return 3
     elif [ "${IS_BYPASS}" == "1" ]; then
       logWarning "there are manual updates on this project. Ignore and continue."
@@ -1072,7 +1077,7 @@ downloadPackageFromGit()
   if ! git fetch > ${C_LOG_FILENAME_PACKAGE} 2>&1; then
     logGitTrace $(cat "${C_LOG_FILENAME_PACKAGE}")
     echo "  Oups, cannot fetch \"${gitPath}\"..."
-    cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+    cd - > /dev/null 2>&1 || ( echo "  Error: cannot go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
     return 2
   fi
 
@@ -1085,7 +1090,7 @@ downloadPackageFromGit()
     selectedVersion=$(git tag --list | LC_ALL=C sort --version-sort | getBestVersionNumber "${packageVersion}")
     if [ -z "${selectedVersion}" ]; then
       echo "  Oups, no matching version for \"${requireVersion}\""
-      cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+      cd - > /dev/null 2>&1 || ( echo "  Error: cannot go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
       return 2
     fi
     packageVersion=${selectedVersion}
@@ -1100,7 +1105,7 @@ downloadPackageFromGit()
   if ! git checkout -f "${packageVersion}" > ${C_LOG_FILENAME_PACKAGE} 2>&1; then
     logGitTrace $(cat "${C_LOG_FILENAME_PACKAGE}")
     echo "  Oups, \"${packageVersion}\" does not exist"
-    cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+    cd - > /dev/null 2>&1 || ( echo "  Error: cannot go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
     return 2
   fi
   if [ "${requireBranch}" != "" ]; then
@@ -1108,7 +1113,7 @@ downloadPackageFromGit()
     if ! git pull origin "${requireBranch}" > ${C_LOG_FILENAME_PACKAGE} 2>&1; then
       logGitTrace $(cat "${C_LOG_FILENAME_PACKAGE}")
       echo "  Oups, cannot pull... Is \"${requireBranch}\" really existing?"
-      cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+      cd - > /dev/null 2>&1 || ( echo "  Error: cannot go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
       return 2
     fi
   fi
@@ -1118,7 +1123,7 @@ downloadPackageFromGit()
   git reset --hard "${packageVersion}" > ${C_LOG_FILENAME_PACKAGE} 2>&1
   logGitTrace $(cat "${C_LOG_FILENAME_PACKAGE}")
 
-  cd - > /dev/null 2>&1 || ( echo "  Error: can not go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+  cd - > /dev/null 2>&1 || ( echo "  Error: cannot go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
 
   if [ ! -d "${requireLocalPath}/.git" ]; then
     gitError=1
@@ -1850,15 +1855,18 @@ inspectAction()
     actualMd5Sum=$(getProjectMd5 "${vendorDir}/${projectName}")
     local differs=
     test "${actualMd5Sum}" != "${expectedMd5Sum}" && let changes=${changes}+1 && differs="${C_INFO} *${C_END}"
-    # local repo=`getRelatedRepository ${qompoterFile} ${vendorName} ${projectName}`
-    # local url=`getRelatedUrl ${qompoterFile} ${vendorName} ${projectName}`
-    echo -e "* ${projectFullName} (${version}${differs})"
-    if [ -d "${vendorDir}/${projectName}/.git" ]; then
-      cd "${vendorDir}/${projectName}" || ( echo "  Error: can not go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
-      git status -sb
-      cd ../../ || ( echo "  Error: can not go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+    if [[ "${IS_ALL}" == "1" ]] || [[ ! -z "${differs}" ]]; then
+      echo -e "* ${projectFullName} (${version}${differs})"
+      if [ -d "${vendorDir}/${projectName}/.git" ]; then
+        cd "${vendorDir}/${projectName}" || ( echo "  Error: cannot go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+        git status -sb
+        if [[ ! -z $"${differs}" ]] && ( [ "$IS_VERBOSE" == "1" ] || [ "$IS_VERBOSE" == "2" ] || [ "$IS_VERBOSE" == "3" ] ); then
+          git diff
+        fi
+        cd ../../ || ( echo "  Error: cannot go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+      fi
+      echo
     fi
-    echo
   done
 
   if [ "${changes}" == "0" ]; then
@@ -1976,7 +1984,7 @@ repoExportAction()
       remoteGitPath="${REPO_PATH}/$(getOnePackageNameFromLock "${qompoterLockFile}" "${projectName}")/${projectName}.git"
       # Existing remote Git package: push new version
       if [ -d "${remoteGitPath}" ]; then
-        cd "${vendorDir}/${projectName}" || ( echo "  Error: can not go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+        cd "${vendorDir}/${projectName}" || ( echo "  Error: cannot go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
         remoteGitRelativePath=$(pwd)
         logDebug "  Clean package in vendor"
         logTrace "git gc"
@@ -2002,7 +2010,7 @@ repoExportAction()
         git push qompoter --all > ${C_LOG_FILENAME} 2>&1 \
           || res=1
         logGitTrace $(cat "${C_LOG_FILENAME}")
-        cd - > /dev/null 2>&1 || ( echo "  Error: can not go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+        cd - > /dev/null 2>&1 || ( echo "  Error: cannot go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
       # Not remote git package: clone --bare
       else
         logDebug "  Clone to remote ${remoteGitPath}"
@@ -2120,6 +2128,14 @@ cmdline()
   fi
   while [ "$1" != "" ]; do
   case $1 in
+    --all )
+      if [ "${ACTION}" == "inspect"  ]; then
+        IS_ALL=1
+      else
+        echo "Ignore flag --all for action '${ACTION}'"
+      fi
+      shift
+    ;;
     --by-pass )
       IS_BYPASS=1
       shift

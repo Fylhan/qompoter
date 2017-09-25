@@ -62,6 +62,8 @@ Examples:
 ```bash
 # Inspect the "vendor" directory
 qompoter inspect
+# Inspect the "vendor" directory and lisy all packages, not only modified ones
+qompoter inspect --all
 # Inspect the directory called "myvendor" based on file "myqompoter.lock"
 qompoter inspect --vendor-dir "myvendor" --file "myqompoter.json"
 ```
@@ -142,6 +144,8 @@ qompoter md5sum --vendor-dir vendor/luke
 Options
 ------------
 
+* **--all** List or apply actions to all elements depending of the action
+  * Supported action is: (inspect)[#inspect]
 * **--by-pass** By-pass error and continue the process
   * Supported actions are: export --repo, install
 * **-d, --depth SIZE** Depth of the recursivity in the searching of subpackages [default = 10]

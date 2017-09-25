@@ -8,8 +8,8 @@ Version 0.4 - in progress
 * [ ] New action: qompoter install <packagename>
 * [ ] New action: qompoter install / update (using qompoter.lock)
 * [x] Feature: Add aliases for most used actions e=export, i=install, u=update
+* [x] Feature: Improve qompoter inspect (show only modified packages by default, now use `--all` to list all of them)
 * [ ] Feature: Prevent from overriding manual changes for all packages in vendor (md5sum)
-* [ ] Feature: Improve qompoter inspect (show only modified packages...)
 * [ ] Feature: Update automaticaly the inqlude repository data
 * [ ] Feature: Support CMake
 * [ ] Bugfix campaign
