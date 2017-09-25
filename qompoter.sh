@@ -389,7 +389,7 @@ version()
 createQompotePri()
 {
 	local qompotePri=$1
-	cat << 'EOF' > ${qompotePri}
+	cat << 'EOF' > "${qompotePri}"
 # $$setLibPath()
 # Generate a lib path name depending of the OS and the arch
 # Export and return LIBPATH
@@ -1972,27 +1972,29 @@ repoExportAction()
     if [ -d "${vendorDir}/${projectName}/.git" ]; then
       logDebug "  Export Git package"
       local remoteGitPath
+      local remoteGitRelativePath
       remoteGitPath="${REPO_PATH}/$(getOnePackageNameFromLock "${qompoterLockFile}" "${projectName}")/${projectName}.git"
       # Existing remote Git package: push new version
       if [ -d "${remoteGitPath}" ]; then
         cd "${vendorDir}/${projectName}" || ( echo "  Error: can not go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+        remoteGitRelativePath=$(pwd)
         logDebug "  Clean package in vendor"
-        git gc >> ${C_LOG_FILENAME} 2>&1
         logTrace "git gc"
+        git gc >> ${C_LOG_FILENAME} 2>&1
         logGitTrace $(cat "${C_LOG_FILENAME}")
         # Git remote not already set
         logTrace "git remote -v"
         logGitTrace $(git remote -v)
-        if [[ -z $(git remote -v | grep "../../${remoteGitPath}") ]]; then
+        if [[ -z $(git remote -v | grep "${remoteGitRelativePath}") ]]; then
           if [[ ! -z $(git remote -v | grep "qompoter") ]]; then
-            logDebug "  Change \"qompoter\" remote to \"../../${remoteGitPath}\""
-            logTrace "git remote set-url qompoter "../../${remoteGitPath}""
-            git remote set-url qompoter "../../${remoteGitPath}" >> ${C_LOG_FILENAME} 2>&1 \
+            logDebug "  Change \"qompoter\" remote to \"${remoteGitRelativePath}\""
+            logTrace "git remote set-url qompoter "${remoteGitRelativePath}""
+            git remote set-url qompoter "${remoteGitRelativePath}" >> ${C_LOG_FILENAME} 2>&1 \
               || res=1
           else
-            logDebug "  Add \"../../${remoteGitPath}\" as \"qompoter\" remote"
-            logTrace "git remote add qompoter "../../${remoteGitPath}""
-            git remote add qompoter "../../${remoteGitPath}" >> ${C_LOG_FILENAME} 2>&1 \
+            logDebug "  Add \"${remoteGitRelativePath}\" as \"qompoter\" remote"
+            logTrace "git remote add qompoter "${remoteGitRelativePath}""
+            git remote add qompoter "${remoteGitRelativePath}" >> ${C_LOG_FILENAME} 2>&1 \
               || res=1
           fi
         fi

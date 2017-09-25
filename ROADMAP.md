@@ -1,9 +1,35 @@
 Qompoter Roadmap
 ================
 
-Version 0.1
+Version 0.4 - in progress
 -----------
-Proof of concept.
+
+* [ ] Installation: Create Ubuntu/Snap package (?)
+* [ ] New action: qompoter install <packagename>
+* [ ] New action: qompoter install / update (using qompoter.lock)
+* [x] Feature: Add aliases for most used actions e=export, i=install, u=update
+* [ ] Feature: Prevent from overriding manual changes for all packages in vendor (md5sum)
+* [ ] Feature: Improve qompoter inspect (show only modified packages...)
+* [ ] Feature: Update automaticaly the inqlude repository data
+* [ ] Feature: Support CMake
+* [ ] Bugfix campaign
+  * [ ] Fix: url field is not always filled in lock file
+* [ ] Clean documentation and release
+
+Version 0.3 - released 2017, august
+-----------
+
+* [x] Installation: Create npm package
+* [x] New action: qompoter init
+* [x] New action: qompoter export --repo (export vendor as a re-usable Qompoter repository, nice!)
+* [x] New action: qompoter inspect (list modified packages)
+* [x] Feature: Let "qompoter install" generates md5sum + qompoter.lock
+* [x] Feature: Prevent from overriding manual changes for Git packages in vendor (git status)
+* [x] Feature: Install packages from tarball (this will also preserve symbolic links and reduce space)
+* [x] Feature: Download packages using HTTP
+* [x] Feature: More verbosity levels
+* [x] Bugfix campaign
+* [x] Clean documentation and release
 
 Version 0.2 - released 2016, october
 -----------
@@ -15,39 +41,12 @@ Version 0.2 - released 2016, october
 * [x] Add "--no-qompote" flag
 * [x] Clean documentation and release
 
-Version 0.3 - released 2017, august
+Version 0.1
 -----------
 
-* [x] Installation: create npm package
-* [x] Fix: Git based package if changing from a branch to a tag or commit, now we first install otherwize update
-* [x] Fix: Error during lib downloading was not failing properly
-* [x] Fix: v1.1.3 was higher than v1.1.10
-* [x] New action: qompoter init
-* [x] New action: qompoter export --repo (export vendor as a re-usable Qompoter repository, nice!)
-* [x] New action: qompoter inspect (list modified packages)
-* [x] Feature: Let "qompoter install" generates md5sum + qompoter.lock
-* [x] Feature: Prevent from overriding manual changes for Git packages in vendor (git status)
-* [x] Feature: Install packages from tarball (this will also preserve symbolic links and reduce space)
-* [x] Feature: Download packages using HTTP
-* [x] Feature: More verbosity levels
-* [x] Clean documentation and release
+Proof of concept.
 
-Version 0.4
------------
-
-* [ ] Installation: create Ubuntu/Snap package
-* [ ] Fix: url field is not always filled in lock file
-* [ ] New action: qompoter install / update (using qompoter.lock)
-* [ ] New action: qompoter install <packagename>
-* [ ] Feature: add aliases for most used actions e=export, i=install, u=update
-* [ ] Feature: Prevent from overriding manual changes for all packages in vendor (md5sum)
-* [ ] Feature: Improve qompoter inspect (show only modified packages...)
-* [ ] Feature: Update automaticaly the inqlude repository data
-* [ ] Feature: Improve qompoter export with compression / optimization
-* [ ] Feature: Support CMake
-* [ ] Clean documentation and release
-
-Future versions
+Plan for future
 -----------
 
 * [ ] New action: qompoter release
@@ -62,6 +61,7 @@ Future versions
 * [ ] Feature: Increase security by checkin integrity of packages (md5sum or SHA1, SHA-256, ...)
 * [ ] Feature: qompoter install --repo vendor.zip
 * [ ] Feature: add qompoter install --local / --global
+* [ ] Feature: Improve qompoter export with compression / optimization
 * [ ] Support extension using qompoter-command available in PATH
 * [ ] Integrate automatically Qt plugins if possible (generate qompoter.pri, ... ?)
 * [ ] Integrate into QtCreator

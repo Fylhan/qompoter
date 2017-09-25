@@ -1,8 +1,15 @@
 Qompoter Changelogs
 ===================
 
-Version 0.3
+Version 0.4 - in progress
 -----------
+
+* Fix: Do not erase an existing 'vendor.pri' file when a `qompoter install` fail
+* Fix: Git remote update was failing when running `qompoter export --repo` on an existing repository
+
+Version 0.3 - released 2017, august
+-----------
+
 * Installation: create npm package
 * Fix: Git based package if changing from a branch to a tag or commit, now we first install otherwize update
 * Fix: Error during lib downloading was not failing properly
@@ -18,8 +25,9 @@ Version 0.3
 * Feature: More verbosity levels
 * Clean documentation
 
-Version 0.2
+Version 0.2 - released 2016, october
 -----------
+
 * Update qompote.pri with new qmake functions
 * vendor.pri now also contains qompote.pri to avoid double inclusion
 * Manage recursive dependencies
