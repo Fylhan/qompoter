@@ -1335,7 +1335,8 @@ getRelatedUrl()
 downloadQompoterFilePackages()
 {
   local qompoterFile=$1
-  local vendorDir=$2
+  local qompoterLockFile=$2
+  local vendorDir=$3
   local globalRes=0
   local requires
   requires=$(getProjectRequires "${qompoterFile}")
@@ -1879,31 +1880,29 @@ inspectAction()
   echo
 }
 
-installAction()
+recursiveInstallFromQompoterFile()
 {
   local qompoterFile=$1
-  local qompoterLockFile
-  local vendorDir=$2
+  local qompoterLockFile=$2
+  local vendorDir=$3
+  local vendorPriFile
   local globalRes=0
-  qompoterLockFile=$(echo "${qompoterFile}" | cut -d'.' -f1).lock
+
+  NEW_SUBPACKAGES=${qompoterFile}
   vendorPriFile=${vendorDir}/vendor.pri
 
-  checkQompoterFile "${qompoterFile}" || return 100
-  prepareVendorDir "${vendorDir}"
-  prepareQompoterLock "${qompoterLockFile}" "$(getProjectFullName "${qompoterFile}")"
-
   local depth=0
-  while [ "$depth" -lt "$DEPTH_SIZE" ] && [ -n "${NEW_SUBPACKAGES}" ]; do
+  while [ "${depth}" -lt "${DEPTH_SIZE}" ] && [ -n "${NEW_SUBPACKAGES}" ]; do
     depth=$((depth+1))
     local newSubpackages=${NEW_SUBPACKAGES}
     NEW_SUBPACKAGES=""
     for subQompoterFile in ${newSubpackages}; do
-      downloadQompoterFilePackages "${subQompoterFile}" "${vendorDir}"
+      downloadQompoterFilePackages "${subQompoterFile}" "${qompoterLockFile}" "${vendorDir}"
       #~ Exit on error if no force
       local returnCode=$?
       if [ "${returnCode}" != "0" ]; then
         globalRes=${returnCode}
-        test "${IS_BYPASS}" == "0" && test "${IS_FORCE}" == "0" && rm "${qompoterLockFile}.tmp" && rm "${vendorPriFile}.tmp" && return 1
+        test "${IS_BYPASS}" == "0" && test "${IS_FORCE}" == "0" && return 1
       fi
       IS_INCLUDE_DEV=
     done
@@ -1911,7 +1910,66 @@ installAction()
       echo -e "${C_FAIL}WARNING${C_END} There are still packages to download but maximal recursive depth of $DEPTH_SIZE have been reached."
     fi
   done
+  return $globalRes
+}
 
+installAction()
+{
+  local qompoterFile=$1
+  local qompoterLockFile
+  local vendorDir=$2
+  local vendorPriFile
+  local globalRes=0
+
+  qompoterLockFile=$(echo "${qompoterFile}" | cut -d'.' -f1).lock
+  vendorPriFile=${vendorDir}/vendor.pri
+
+  checkQompoterFile "${qompoterFile}" || return 100
+  prepareVendorDir "${vendorDir}"
+  prepareQompoterLock "${qompoterLockFile}" "$(getProjectFullName "${qompoterFile}")"
+
+  recursiveInstallFromQompoterFile "${qompoterFile}" "${qompoterLockFile}" "${vendorDir}"
+  globalRes=$?
+
+  if [[ "${globalRes}" == 0 ]] || [[ "${IS_BYPASS}" == "1" ]]; then
+    mv "${qompoterLockFile}.tmp" "${qompoterLockFile}"
+    mv "${vendorPriFile}.tmp" "${vendorPriFile}"
+  else
+    rm "${qompoterLockFile}.tmp"
+    rm "${vendorPriFile}.tmp"
+  fi
+  return $globalRes
+}
+
+installOnePackageAction()
+{
+  local qompoterFile=$1
+  local qompoterLockFile
+  local vendorDir=$2
+  local vendorPriFile
+  local requireName=${3}/${4}
+  local requireVersion=$5
+  local qompoterFilePackage="qompoter-installone.json"
+  local globalRes
+
+  qompoterLockFile=$(echo "${qompoterFile}" | cut -d'.' -f1).lock
+  if [ -f "${qompoterLockFile}" ]; then
+    cp "${qompoterLockFile}" "${qompoterLockFile}.tmp"
+  else
+    prepareQompoterLock "${qompoterLockFile}" "qompoter/installone"
+  fi
+  vendorPriFile=${vendorDir}/vendor.pri
+  if [ -f "${vendorPriFile}" ]; then
+    cp "${vendorPriFile}" "${vendorPriFile}.tmp"
+  else
+    prepareVendorDir "${vendorDir}"
+  fi
+
+  echo "{ \"require\": {\"${requireName}\": \"${requireVersion}\" } }" > ${qompoterFilePackage}
+  recursiveInstallFromQompoterFile "${qompoterFilePackage}" "${qompoterLockFile}" "${vendorDir}"
+  globalRes=$?
+
+  rm ${qompoterFilePackage}
   if [[ "${globalRes}" == 0 ]] || [[ "${IS_BYPASS}" == "1" ]]; then
     mv "${qompoterLockFile}.tmp" "${qompoterLockFile}"
     mv "${vendorPriFile}.tmp" "${vendorPriFile}"
@@ -2239,7 +2297,7 @@ cmdline()
       if [ "${ACTION}" == ""  ]; then
         ACTION=$1
         shift
-      elif [ "${ACTION}" == "inqlude"  ] || [ "${ACTION}" == "init" ]; then
+      elif [ "${ACTION}" == "inqlude"  ] || [ "${ACTION}" == "init" ] || [ "${ACTION}" == "install" ]; then
         if [ "${VENDOR_NAME}" == ""  ]; then
           VENDOR_NAME=$(echo "${1}" | cut -d'/' -f1)
           PROJECT_NAME=$(echo "${1}" | cut -d'/' -f2)
@@ -2338,7 +2396,11 @@ main()
       inspectAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
       ;;
     "install")
-      installAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
+      if [ -z "${PROJECT_NAME}" ]; then
+        installAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
+      else
+        installOnePackageAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}" "${VENDOR_NAME}" "${PROJECT_NAME}" "${PACKAGE_VERSION}"
+      fi
       ;;
     "jsonh")
       jsonhAction "${QOMPOTER_FILENAME}"
