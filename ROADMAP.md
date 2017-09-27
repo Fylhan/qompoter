@@ -11,9 +11,11 @@ Version 0.4 - in progress
 * [x] Feature: Improve qompoter inspect (show only modified packages by default, now use `--all` to list all of them)
 * [ ] Feature: Prevent from overriding manual changes for all packages in vendor (md5sum)
 * [ ] Feature: Update automatically the inqlude repository data
+* [ ] Feature: Support "--no-dev" option in `qompoter export --repo`
 * [ ] Feature: Support CMake
 * [ ] Bugfix campaign
-  * [ ] Fix: url field is not always filled in lock file
+  * [ ] Fix: Url field is not always filled in lock file
+  * [ ] Fix: Add dev packages to "required-dev" in lock file and remove them from "require"
 * [ ] Clean documentation and release
 
 Version 0.3 - released 2017, August
