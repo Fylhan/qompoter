@@ -27,6 +27,7 @@ DOWNLOADED_PACKAGES=
 NEW_SUBPACKAGES=${QOMPOTER_FILENAME}
 VENDOR_NAME=
 PROJECT_NAME=
+LAST_QOMPOTERLOCK_PART='  "require": {'
 # Version and path of the current package
 PACKAGE_VERSION=
 PACKAGE_DIST_URL=
@@ -598,11 +599,11 @@ updateVendorPri()
       logWarning "no 'qompoter.pri' found for this package"
     fi
   fi
+  # FIXME Take care of updating exsiting vendor.pri for qompoter installone
 }
 
 prepareQompoterLock()
 {
-  LAST_QOMPOTERLOCK_PART='  "require": {'
   local qompoterLockFile=$1.tmp
   local packageFullName=$2
   cat <<- EOF > "${qompoterLockFile}"
@@ -627,6 +628,10 @@ updateQompoterLock()
   md5sum=$(getProjectMd5 "${VENDOR_DIR}/$packageName")
   local packageFullName=$vendorName/$packageName
 
+  # Remove from lock file if existing
+  removeLine "${qompoterLockFile}" "\"${vendorName}\/${packageName}\": { "
+
+  # Add to lock file
   local jsonData="    ";
   if [ "${LAST_QOMPOTERLOCK_PART}" != '  "require": {' ]; then
     jsonData+=","
@@ -2146,6 +2151,14 @@ insertAfter()
    sed -e "/$line$/a"$'\\\n'"$newText"$'\n' "$file" > "$file".tmp && mv "$file".tmp "$file"
    # Use following to match exact line
    # sed -e "/^$line$/a"$'\\\n'"$newText"$'\n' "$file" > "$file".tmp && mv "$file".tmp "$file"
+}
+
+removeLine()
+{
+   local file="$1"
+   local line="$2"
+   # sed -i not supported by Solaris
+   sed -i "/$line/d" "$file"
 }
 
 logWarning()
