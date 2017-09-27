@@ -38,7 +38,7 @@ A library package should contain:
     * For Linux on x86: lib_linux_32 and lib_linux_64
     * For Linux on arm: lib_linux_gnueabi-arm
     * For Windows: lib_windows_32 and lib_windows_64
-    * As you can see, there is no way to define the compilator yet (GCC, Clang, ...), this has to be done.
+    * As you can see, there is no way to define the compiler yet (GCC, Clang, ...), this has to be done.
 * **qompoter.pri**: the package should contain a "qompoter.pri" file describing how to include the package into another project. This file will be added to the "vendor.pri" file.
 * **qompoter.json**: the package should contain a "qomposer.json" file describing the project and its dependencies.
 

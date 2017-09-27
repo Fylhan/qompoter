@@ -19,7 +19,7 @@ Can I use Qompoter in production?
 
 The Qompoter project has started at the end of 2014, reached version 0.2 in the end of 2016. and 0.3 in the middle of 2017. This is still a young project with some known bugs, however the main command line options and "qompoter.json" structure should not change a lot in the future and stay stable. I have a small amount of time to improve this tool, but I have it several time a week which allows me to fix things quite quickly, and to improve stuff step by step.
 
-Today, Qompoter is used in production by a small team, it really ease the sharing and repetability of the build between several people.
+Today, Qompoter is used in production by a small team, it really ease the sharing and repeatability of the build between several people.
 It is up to you! Please, share your experience.
 
 Which platforms does it run on?
@@ -56,7 +56,7 @@ If everything is ok, wait some times to be sure, you could delete the backup arc
 What is this qompote.pri file?
 ---------------------
 
-The "qompote.pri" defines several new functions to be used in qmake ".pro" or ".pri" files, especially to help managing several architecture of compilation (x86, arm, ...). This file is included at the begining of the "vendor.pri" file.
+The "qompote.pri" defines several new functions to be used in qmake ".pro" or ".pri" files, especially to help managing several architecture of compilation (x86, arm, ...). This file is included at the beginning of the "vendor.pri" file.
 
 The new function can be used into any ".pro" or ".pri" file once `include($$PWD/vendor/qompote.pri)` or `include($$PWD/vendor/vendor.pri)` is added in it.
 
@@ -67,7 +67,7 @@ Why "Qompoter"?
 
 The word "Qompoter" is near the word "Composer" which is the name of _THE_ dependency manager for PHP. Its ease of use was inspiring for building Qompoter.
 
-Also, in French, "Qompoter" is near the word "Compote" which means "Marmelade". Who does not love marmelade? More, you can do your own marmelade yourself with whatever fruits you like (do not forget the sugar)! Just like "Qompoter": make your own projects with whatever C++ packages you like.
+Also, in French, "Qompoter" is near the word "Compote" which means "Marmalade". Who does not love marmalade? More, you can do your own marmalade yourself with whatever fruits you like (do not forget the sugar)! Just like "Qompoter": make your own projects with whatever C++ packages you like.
 
 That is why "Qompoter".
 
@@ -86,7 +86,7 @@ There are already some dependency managers for the C++ environment:
     * Written in Python.
     * Cmake, make, gcc and whatever but no qmake yet.
     * Dedicated repository, with possibility to host its own, with a lot of packages.
-    * Packages can be easily imported, especially in Cmake files. It supports sources and binaries with several architectures in a very advanced ways. More, packages are downloaded in a cached repository which allows offline usage, great!
+    * Packages can be easily imported, especially in CMake files. It supports sources and binaries with several architectures in a very advanced ways. More, packages are downloaded in a cached repository which allows offline usage, great!
     * Open source: MIT. Premium plan available.
     * This solution really need more investigation.
 * [CPM](https://github.com/iauns/cpm) C++ package manager using CMake
@@ -117,4 +117,4 @@ When I decided to start building Qompoter, I asked myself: what do I really need
 
 That is why I started building Qompoter. In Bash because it is easy to share and can still run in Linux, Mac and even Windows. It also involves less boilerplate than C++ to kick-off the project.
 
-Today, Qompoter is used in production by a small team, it still have some issues but really ease the sharing and repetability of the build between several people. Please, share your experience.
+Today, Qompoter is used in production by a small team, it still have some issues but really ease the sharing and repeatability of the build between several people. Please, share your experience.

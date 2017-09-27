@@ -1,7 +1,7 @@
 What is this "qompote.pri" file?
 ========
 
-The "qompote.pri" defines several new functions to be used in qmake ".pro" or ".pri" files, especially to help managing several architecture of compilation (x86, arm, ...). This file is included at the begining of the "vendor.pri" file.
+The "qompote.pri" defines several new functions to be used in qmake ".pro" or ".pri" files, especially to help managing several architecture of compilation (x86, arm, ...). This file is included at the beginning of the "vendor.pri" file.
 
 The new function can be used into any ".pro" or ".pri" file once `include($$PWD/vendor/qompote.pri)` or `include($$PWD/vendor/vendor.pri)` is added in it.
 

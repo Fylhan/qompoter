@@ -133,7 +133,7 @@ qompoter jsonh --file myqompoter.json | grep "require"
 
 ### md5sum
 
-Compute a MD5 sum of the given directory. It is used internaly by Qompoter to compute the MD5 sum of each Qompoter package.
+Compute a MD5 sum of the given directory. It is used internally by Qompoter to compute the MD5 sum of each Qompoter package.
 
 Example:
 
@@ -148,7 +148,7 @@ Options
   * Supported action is: (inspect)[#inspect]
 * **--by-pass** By-pass error and continue the process
   * Supported actions are: export --repo, install
-* **-d, --depth SIZE** Depth of the recursivity in the searching of subpackages [default = 10]
+* **-d, --depth SIZE** Depth of the recursivity in the searching of sub-packages [default = 10]
 * **--inqlude-file FILE** Pick the provided file to search into the inqlude repository
 * **--file FILE** Pick another Qompoter file [default = qompoter.json]
 * **-f, --force** By-pass error by forcing the action to be taken and continue the process

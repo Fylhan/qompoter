@@ -5,7 +5,7 @@ As explained in "[How to create a qompoter.json file](Qompoter-json-file.md)", a
 A package can be available in library mode or source mode (see "[Notion of packages](Packages.md)").
 The last important piece of information about a package, is its download location (i.e. an URL) and therefore how to download it (copy from the file system, download from the Web, clone a Git repository...). This is the purpose of a repository: listing packages and the means to download them.
 
-The C++ and Qt environments are very big, there are lot of libraries and projects into the wild, and the only idea of having one repository to rule them all (*3 Rings for the Elven-kings under the sky, 7 for the Dwarf-lords in their halls of stone, and so one*) is just crazy and kind of stupid. Yes, this is what is done for the PHP environment, or the Node.js one, but they do not have the same history. Not to mention the multiplicity of target platforms or compilation environments in C++... This is real life, this is history and one of the strenght of these environments.
+The C++ and Qt environments are very big, there are lot of libraries and projects into the wild, and the only idea of having one repository to rule them all (*3 Rings for the Elven-kings under the sky, 7 for the Dwarf-lords in their halls of stone, and so one*) is just crazy and kind of stupid. Yes, this is what is done for the PHP environment, or the Node.js one, but they do not have the same history. Not to mention the multiplicity of target platforms or compilation environments in C++... This is real life, this is history and one of the strength of these environments.
 
 That is why a key concept of Qompoter is to be able to handle several types of repositories:
 
@@ -17,10 +17,10 @@ Let's dig dipper into each type of repositories to see how to use them and event
 Inqlude - Listing of Qt application
 ---------------------
 
-[Inqlude](https://inqlude.org/) is a open project which aims to list all Qt libraries and modules to promote them and help Qt developpers. In addition to this listing, the project provides also two clients to browse and download libraries. For some of theses libraries, the client will install them globally into your system, and a simple `QT += module-name` will allow you to use them in your project.
+[Inqlude](https://inqlude.org/) is a open project which aims to list all Qt libraries and modules to promote them and help Qt developers. In addition to this listing, the project provides also two clients to browse and download libraries. For some of theses libraries, the client will install them globally into your system, and a simple `QT += module-name` will allow you to use them in your project.
 The objectives of Inqlude are different from Qompoter, but there are some similarities.
 
-Qompoter uses heavily the Inqlude listing of libraries and modules. By default, when running `qompoter install`, Qompoter search required packages of the project into the Inqlude repository. If available, it downloads them using information provided by Inqlude. This is very handy. This is also promising, a lot can be done to improve the interraction with Inqlude and ease the installation of these packages.
+Qompoter uses heavily the Inqlude listing of libraries and modules. By default, when running `qompoter install`, Qompoter search required packages of the project into the Inqlude repository. If available, it downloads them using information provided by Inqlude. This is very handy. This is also promising, a lot can be done to improve the interaction with Inqlude and ease the installation of these packages.
 
 To check the availability of a package in Inqlude, use `qompoter inqlude --search <package-name>`. Please notice some information are deprecated in the Inqlude listing, some packages may not exist anymore. Please report any issues to the [Inqlude data project](https://github.com/cornelius/inqlude-data).
 
@@ -64,11 +64,11 @@ Qompotist-fs - Repository Structure
 
 Qompotist-fs is a small repository defined for Qompoter. It is just a file system structure which allows to store sources and binaries in a way letting Qompoter search and retrieve them. Qompotist-fs could store raw sources files and libraries or Git repositories.
 
-An example is better than a lot of explaination: the repository below contains 3 different projects:
+An example is better than a lot of explanation: the repository below contains 3 different projects:
 
 * Project A (directory "project_A"): raw source files are available; versions are available through different directories named with the version number.
 * Project B (directory "project_B"): raw source files are available in addition to pre-compiled libraries for Linux 32/64 bits or Windows; versions are available through different directories named with the version number (library version is suffixed by "-lib").
-* Project C (directory "project_C"): source files are available through a Git repository (using tag for versionning) in addition to pre-compiled libraries for Linux 32/64 bits or Windows; Git tags are used for versionning of source files; library versions are available through different directories named with the version number suffixed by "-lib".
+* Project C (directory "project_C"): source files are available through a Git repository (using tag for versioning) in addition to pre-compiled libraries for Linux 32/64 bits or Windows; Git tags are used for versioning of source files; library versions are available through different directories named with the version number suffixed by "-lib".
 
 ```
 qompoter-repository
