@@ -589,12 +589,16 @@ prepareVendorDir()
 
 updateVendorPri()
 {
-  local vendorDir=$1
-  local qompoterPriFile=$2
+  local vendorName=$1
+  local packageName=$2
+  local vendorDir=$3
+  local qompoterPriFile=$4
   local vendorFilepath=${vendorDir}/vendor.pri.tmp
+  local packageFullName=$vendorName/$packageName
   if [ "${IS_NO_QOMPOTE}" == "0" ]; then
+    removeBlock "${vendorFilepath}" "## Start ${vendorName}\/${packageName}.*## End ${vendorName}\/${packageName}"
     if [ -f "${qompoterPriFile}" ]; then
-      cat "${qompoterPriFile}" >> "${vendorFilepath}"
+      { echo "## Start ${packageFullName}"; cat "${qompoterPriFile}"; echo "## End ${packageFullName}"; } >> "${vendorFilepath}"
     else
       logWarning "no 'qompoter.pri' found for this package"
     fi
@@ -605,10 +609,10 @@ updateVendorPri()
 prepareQompoterLock()
 {
   local qompoterLockFile=$1.tmp
-  local packageFullName=$2
+  local projectFullName=$2
   cat <<- EOF > "${qompoterLockFile}"
 {
-  "name": "${packageFullName}",
+  "name": "${projectFullName}",
   "date": "$(date --iso-8601=sec)",
   "require": {
   }
@@ -774,7 +778,7 @@ downloadPackage()
     return 1
   # DONE
   else
-    updateVendorPri "${vendorDir}" "${qompoterPriFile}"
+    updateVendorPri "${vendorName}" "${packageName}" "${vendorDir}" "${qompoterPriFile}"
     updateQompoterLock "${qompoterLockFile}" "${vendorName}" "${packageName}" "${PACKAGE_VERSION}" "${packageType}" "${PACKAGE_DIST_URL}"
     echo -e "  ${C_OK}done${C_END}"
     echo
@@ -2158,7 +2162,17 @@ removeLine()
    local file="$1"
    local line="$2"
    # sed -i not supported by Solaris
-   sed -i "/$line/d" "$file"
+   sed -i "/${line}/d" "${file}"
+}
+
+removeBlock()
+{
+   local file="$1"
+   local block="$2"
+   # sed multiline @see http://austinmatzko.com/2008/04/26/sed-multi-line-search-and-replace/
+   # In case of issue use instead: cat "${file}" | tr '\n' '@@@' | sed -e "s/${block}//" | tr '@' '\n' > "${file}"
+   # sed -i not supported by Solaris
+   sed -i -n '1h;1!H;${;g;s/\n'"${block}"'//g;p;}' "${file}"
 }
 
 logWarning()
