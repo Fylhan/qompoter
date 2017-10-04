@@ -5,19 +5,20 @@ Version 0.4 - in progress
 -----------
 
 * [ ] Installation: Create Ubuntu/Snap package (?)
-* [ ] New action: qompoter install <packagename>
-* [ ] New action: qompoter install / update (using qompoter.lock)
+* [x] New action: qompoter install <packagename>
+  * [ ] Fix: Take care of updating existing date in lock file after `qompoter install <packagename>`
+  * [ ] Feature: Support "--save" option in `qompoter install <packagename>`
+  * [ ] Feature: Auto-detect package version if missing in `qompoter install <packagename>`
+* [ ] New action: `qompoter install` / `qompoter update` (using lock file)
 * [x] Feature: Add aliases for most used actions e=export, i=install, u=update
 * [x] Feature: Improve qompoter inspect (show only modified packages by default, now use `--all` to list all of them)
 * [ ] Feature: Prevent from overriding manual changes for all packages in vendor (md5sum)
 * [ ] Feature: Update automatically the inqlude repository data
 * [ ] Feature: Support "--no-dev" option in `qompoter export --repo`
-* [ ] Feature: Support "--save" option in `qompoter install <packagename>`
 * [ ] Feature: Support CMake
 * [ ] Bugfix campaign
   * [ ] Fix: Url field is not always filled in lock file
   * [ ] Fix: Add dev packages to "required-dev" in lock file and remove them from "require"
-  * [ ] Fix: Take care of updating existing vendor.pri in `qompoter install <packagename>`
 * [ ] Clean documentation and release
 
 Version 0.3 - released 2017, August

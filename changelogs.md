@@ -4,6 +4,9 @@ Qompoter Changelogs
 Version 0.4 - in progress
 -----------
 
+* New action: `qompoter install <packagename>`
+  * Take care of updating existing lock file in `qompoter install <packagename>`
+  * Take care of updating existing vendor.pri in `qompoter install <packagename>`
 * Feature: Improve qompoter inspect (show only modified packages by default, now use `--all` to list all of them)
 * Fix: Do not erase an existing 'vendor.pri' file when a `qompoter install` fail
 * Fix: Git remote update was failing when running `qompoter export --repo` on an existing repository
