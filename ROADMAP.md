@@ -6,7 +6,6 @@ Version 0.4 - in progress
 
 * [ ] Installation: Create Ubuntu/Snap package (?)
 * [x] New action: qompoter install <packagename>
-  * [ ] Fix: Take care of updating existing date in lock file after `qompoter install <packagename>`
   * [ ] Feature: Support "--save" option in `qompoter install <packagename>`
   * [ ] Feature: Auto-detect package version if missing in `qompoter install <packagename>`
 * [ ] New action: `qompoter install` / `qompoter update` (using lock file)
