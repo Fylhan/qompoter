@@ -608,7 +608,7 @@ updateVendorPri()
 
 prepareQompoterLock()
 {
-  local qompoterLockFile=$1.tmp
+  local qompoterLockFile=$1
   local projectFullName=$2
   cat <<- EOF > "${qompoterLockFile}"
 {
@@ -620,9 +620,20 @@ prepareQompoterLock()
 EOF
 }
 
+updateQompoterLockDate()
+{
+  local qompoterLockFile=$1
+  # replaceLine "${qompoterLockFile}" '"date": ".*",' '"date": "'"$(date --iso-8601=sec)"'",'
+  if  grep -q '"date":' "${qompoterLockFile}" ; then
+    replaceLine "${qompoterLockFile}" '"date": ".*",' '"date": "'"$(date --iso-8601=sec)"'",'
+  else
+    insertAfter "${qompoterLockFile}" '^{' '  "date": "'"$(date --iso-8601=sec)"'",'
+  fi
+}
+
 updateQompoterLock()
 {
-  local qompoterLockFile=$1.tmp
+  local qompoterLockFile=$1
   local vendorName=$2
   local packageName=$3
   local version=$4
@@ -1930,14 +1941,14 @@ installAction()
   local vendorPriFile
   local globalRes=0
 
-  qompoterLockFile=$(echo "${qompoterFile}" | cut -d'.' -f1).lock
+  qompoterLockFile="${qompoterFile/.json/}.lock"
   vendorPriFile=${vendorDir}/vendor.pri
 
   checkQompoterFile "${qompoterFile}" || return 100
   prepareVendorDir "${vendorDir}"
-  prepareQompoterLock "${qompoterLockFile}" "$(getProjectFullName "${qompoterFile}")"
+  prepareQompoterLock "${qompoterLockFile}.tmp" "$(getProjectFullName "${qompoterFile}")"
 
-  recursiveInstallFromQompoterFile "${qompoterFile}" "${qompoterLockFile}" "${vendorDir}"
+  recursiveInstallFromQompoterFile "${qompoterFile}" "${qompoterLockFile}.tmp" "${vendorDir}"
   globalRes=$?
 
   if [[ "${globalRes}" == 0 ]] || [[ "${IS_BYPASS}" == "1" ]]; then
@@ -1961,12 +1972,13 @@ installOnePackageAction()
   local qompoterFilePackage="qompoter-installone.json"
   local globalRes
 
-  qompoterLockFile=$(echo "${qompoterFile}" | cut -d'.' -f1).lock
+    qompoterLockFile="${qompoterFile/.json/}.lock"
   if [ -f "${qompoterLockFile}" ]; then
     cp "${qompoterLockFile}" "${qompoterLockFile}.tmp"
   else
-    prepareQompoterLock "${qompoterLockFile}" "qompoter/installone"
+    prepareQompoterLock "${qompoterLockFile}.tmp" "qompoter/installone"
   fi
+  updateQompoterLockDate "${qompoterLockFile}.tmp"
   vendorPriFile=${vendorDir}/vendor.pri
   if [ -f "${vendorPriFile}" ]; then
     cp "${vendorPriFile}" "${vendorPriFile}.tmp"
@@ -1975,7 +1987,7 @@ installOnePackageAction()
   fi
 
   echo "{ \"require\": {\"${requireName}\": \"${requireVersion}\" } }" > ${qompoterFilePackage}
-  recursiveInstallFromQompoterFile "${qompoterFilePackage}" "${qompoterLockFile}" "${vendorDir}"
+  recursiveInstallFromQompoterFile "${qompoterFilePackage}" "${qompoterLockFile}.tmp" "${vendorDir}"
   globalRes=$?
 
   rm ${qompoterFilePackage}
@@ -2151,10 +2163,19 @@ insertAfter()
    local line="$2"
    local newText="$3"
    # sed -i not supported by Solaris
-   # sed -i -e "/$line$/a"$'\\\n'"$newText"$'\n' "$file"
-   sed -e "/$line$/a"$'\\\n'"$newText"$'\n' "$file" > "$file".tmp && mv "$file".tmp "$file"
+   sed -i -e "/$line$/a"$'\\\n'"$newText"$'\n' "$file"
+   # sed -e "/$line$/a"$'\\\n'"$newText"$'\n' "$file" > "$file".tmp && mv "$file".tmp "$file"
    # Use following to match exact line
    # sed -e "/^$line$/a"$'\\\n'"$newText"$'\n' "$file" > "$file".tmp && mv "$file".tmp "$file"
+}
+
+replaceLine()
+{
+   local file="$1"
+   local oldLine="$2"
+   local newLine="$3"
+   # sed -i not supported by Solaris
+   sed -i -e "s/${oldLine}/${newLine}/" "${file}"
 }
 
 removeLine()
