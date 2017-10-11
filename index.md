@@ -8,7 +8,7 @@ Check the [FAQ](docs/FAQ.md) to understand "Why Qompoter?", but here is what **Q
   * describe them in a "qompoter.json" file
   * let Qompoter search and download them for you into a "vendor" directory
 * share C++ code to the [inqlude](https://inqlude.org/) repository, a development forge (like Github) or any [local or remote Qompotist-fs repository](docs/Repositories.md)
-* ease the repetability of the build
+* ease the repeatability of the build
 * work with several platforms (Linux, Windows, Mac, ...)
 * keep it simple
 
@@ -111,7 +111,7 @@ Documentation
 * [How to create a qompoter.json file?](docs/Qompoter-json-file.md)
 * [How to create a qompoter.pri file?](docs/Qompoter-pri-file.md)
 * [Command line interface](docs/Command-line.md)
-* [Contribution guide](docs/CONTRIBUTING.md)
+* [Contribution guide](docs/Contribution-guide.md)
 * [FAQ](docs/FAQ.md)
 
 Take a look at the [roadmap](docs/ROADMAP.md).
@@ -119,7 +119,7 @@ Take a look at the [roadmap](docs/ROADMAP.md).
 License
 -------------
 
-* Qompoter is distributed under the [LGPL3+](LICENSE) license. *Therefore, you can freely use it in any projects, even closed ones. Just keep in mind that if you modify Qompoter, you shall provide these updates as open source. Thanks!*
+* Qompoter is distributed under the [LGPL3+](docs/LICENSE) license. *Therefore, you can freely use it in any projects, even closed ones. Just keep in mind that if you modify Qompoter, you shall provide these updates as open source. Thanks!*
 * Qompoter is using [JSON.sh](https://github.com/dominictarr/JSON.sh) under the MIT and Apache 2 license. Qompoter unit tests are also based on the JSON.sh architecture.
 
 Please feel free to contribute.
