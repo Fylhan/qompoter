@@ -1,0 +1,6 @@
+*.lock
+*.tar.gz
+*.zip
+.tags
+vendor
+test
