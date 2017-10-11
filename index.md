@@ -112,10 +112,10 @@ Documentation
 * [How to create a Qompoter.pri file?](docs/Qompoter-pri-file.md)
 * [What is this qompote.pri file?](docs/Home-made-qompote.md)
 * [Command line interface](docs/Command-line.md)
-* [Contribution guide](CONTRIBUTING.md)
+* [Contribution guide](docs/CONTRIBUTING.md)
 * [FAQ](docs/FAQ.md)
 
-There is a previsional [roadmap](ROADMAP.md).
+Take a look at the [roadmap](docs/ROADMAP.md).
 
 License
 -------------

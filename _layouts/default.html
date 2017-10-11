@@ -39,6 +39,9 @@
 
         <aside id="sidebar">
           {% if site.show_downloads %}
+            <a href="{{ '/' | absolute_url }}">
+              <h1>Download Qompoter</h1>
+            </a>
             <a href="{{ site.release.url }}" class="button">
               <small>Download Qompoter</small>
               {{ site.release.version}}
@@ -48,6 +51,23 @@
               nightly
             </a>
           {% endif %}
+
+          <a href="{{ '/' | absolute_url }}">
+            <h1>Documentation</h1>
+          </a>
+          <ul>
+            <li><a href="index.md#Installation">Installation</a></li>
+            <li><a href="index.md#Getting-started">Getting started</a></li>
+            <li><a href="docs/Packages.md">Concept of packages</a></li>
+            <li><a href="docs/Repositories.md">Concept of repositories</a></li>
+            <li><a href="docs/Qompoter-json-file.md#require">Concept of package's versions</a></li>
+            <li><a href="docs/Qompoter-json-file.md">How to create a Qompoter.json file?</a></li>
+            <li><a href="docs/Qompoter-pri-file.md">How to create a Qompoter.pri file?</a></li>
+            <li><a href="docs/Home-made-qompote.md">What is this qompote.pri file?</a></li>
+            <li><a href="docs/Command-line.md">Command line interface</a></li>
+            <li><a href="docs/CONTRIBUTING.md">Contribution guide</a></li>
+            <li><a href="docs/FAQ.md">FAQ</a></li>
+          </ul>
 
           {% if site.github.is_project_page %}
             <p class="repo-owner"><a href="{{ site.github.repository_url }}">{{ site.github.repository_name }}</a> is maintained by <a href="{{ site.github.owner_url }}">{{ site.github.owner_name }}</a>.</p>
