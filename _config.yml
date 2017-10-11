@@ -9,9 +9,7 @@ release:
 nightly:
   url: https://github.com/Fylhan/qompoter/blob/master/qompoter.sh
 
-plugins:
-  - jekyll-feed
-  - jekyll-sitemap
-
 gems:
   - jekyll-mentions
+  - jekyll-feed
+  - jekyll-sitemap
