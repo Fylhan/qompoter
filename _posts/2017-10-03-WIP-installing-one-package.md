@@ -1,0 +1,1 @@
+I am currently working on providing `qompoter install vendor/packagename` to download and install or update only one package. This will be particularly useful to update only one package when it has changed, instead of re-downloading everything!
