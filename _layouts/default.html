@@ -40,7 +40,7 @@
         <aside id="sidebar">
           {% if site.show_downloads %}
             <a href="{{ '/' | absolute_url }}">
-              <h1>Download Qompoter</h1>
+              <h1>Download</h1>
             </a>
             <a href="{{ site.release.url }}" class="button">
               <small>Download Qompoter</small>
@@ -56,17 +56,16 @@
             <h1>Documentation</h1>
           </a>
           <ul>
-            <li><a href="index.md#Installation">Installation</a></li>
-            <li><a href="index.md#Getting-started">Getting started</a></li>
-            <li><a href="docs/Packages.md">Concept of packages</a></li>
-            <li><a href="docs/Repositories.md">Concept of repositories</a></li>
-            <li><a href="docs/Qompoter-json-file.md#require">Concept of package's versions</a></li>
-            <li><a href="docs/Qompoter-json-file.md">How to create a Qompoter.json file?</a></li>
-            <li><a href="docs/Qompoter-pri-file.md">How to create a Qompoter.pri file?</a></li>
-            <li><a href="docs/Home-made-qompote.md">What is this qompote.pri file?</a></li>
-            <li><a href="docs/Command-line.md">Command line interface</a></li>
-            <li><a href="docs/CONTRIBUTING.md">Contribution guide</a></li>
-            <li><a href="docs/FAQ.md">FAQ</a></li>
+            <li><a href="{{ absolute_url }}/index.html#installation">Installation</a></li>
+            <li><a href="{{ absolute_url }}/index.html#getting-started">Getting started</a></li>
+            <li><a href="{{ absolute_url }}/docs/Packages.html">Concept of packages</a></li>
+            <li><a href="{{ absolute_url }}/docs/Repositories.html">Concept of repositories</a></li>
+            <li><a href="{{ absolute_url }}/docs/Qompoter-json-file.html#require">Concept of package's versions</a></li>
+            <li><a href="{{ absolute_url }}/docs/Qompoter-json-file.html">qompoter.json</a></li>
+            <li><a href="{{ absolute_url }}/docs/Qompoter-pri-file.html">qompoter.pri</a></li>
+            <li><a href="{{ absolute_url }}/docs/Command-line.html">Command line interface</a></li>
+            <li><a href="{{ absolute_url }}/docs/CONTRIBUTING.html">Contribution guide</a></li>
+            <li><a href="{{ absolute_url }}/docs/FAQ.html">FAQ</a></li>
           </ul>
 
           {% if site.github.is_project_page %}
