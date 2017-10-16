@@ -31,7 +31,7 @@ It should also work on Mac, FreeBSD and more widely on Windows (Cygwin or Mysys 
 Is Qompoter open source?
 ---------------------
 
-Oh yes, Qompoter is open source and also free as in free beer! It is distributed under the [LGPL3+](LICENSE) license: *you can freely use it in any projects, even closed ones. Just keep in mind that if you modify Qompoter, you shall provide these updates as open source. Thanks!* The project is hosted on GitHub.
+Oh yes, Qompoter is open source and also free as in freedom (and free beer)! It is distributed under the [LGPL3+](LICENSE) license: *you can freely use it in any projects, even closed ones. Just keep in mind that if you modify Qompoter, you shall provide these updates as open source. Thanks!* The project is hosted on GitHub.
 
 Can I use SVN or Mercurial with Qompoter?
 ---------------------
