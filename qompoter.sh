@@ -623,9 +623,10 @@ EOF
 updateQompoterLockDate()
 {
   local qompoterLockFile=$1
-  # replaceLine "${qompoterLockFile}" '"date": ".*",' '"date": "'"$(date --iso-8601=sec)"'",'
+  # Update existing
   if  grep -q '"date":' "${qompoterLockFile}" ; then
     replaceLine "${qompoterLockFile}" '"date": ".*",' '"date": "'"$(date --iso-8601=sec)"'",'
+  # Add
   else
     insertAfter "${qompoterLockFile}" '^{' '  "date": "'"$(date --iso-8601=sec)"'",'
   fi
@@ -643,21 +644,25 @@ updateQompoterLock()
   md5sum=$(getProjectMd5 "${VENDOR_DIR}/$packageName")
   local packageFullName=$vendorName/$packageName
 
-  # Remove from lock file if existing
-  removeLine "${qompoterLockFile}" "\"${vendorName}\/${packageName}\": { "
-
-  # Add to lock file
-  local jsonData="    ";
-  if [ "${LAST_QOMPOTERLOCK_PART}" != '  "require": {' ]; then
-    jsonData+=","
-  fi
+  # Generate line
+  local jsonData
   jsonData+="\"${packageFullName}\": { ";
   jsonData+="\"version\": \"${version}\", "
   jsonData+="\"type\": \"${type}\", "
   jsonData+="\"url\": \"${url}\", "
   jsonData+="\"md5sum\": \"${md5sum}\""
   jsonData+=" }"
-  insertAfter "${qompoterLockFile}" "${LAST_QOMPOTERLOCK_PART}" "${jsonData}"
+
+  # Update existing
+  if  grep -q "\"${packageFullName}\"" "${qompoterLockFile}" ; then
+    replaceLine "${qompoterLockFile}" " *\(,\) *\"${vendorName}\/${packageName}\" *: *{.*}" "    \1${jsonData//\//\\/}"
+  # Add
+  else
+    if [ "${LAST_QOMPOTERLOCK_PART}" != '  "require": {' ]; then
+      jsonData=",${jsonData}"
+    fi
+    insertAfter "${qompoterLockFile}" "${LAST_QOMPOTERLOCK_PART}" "    ${jsonData}"
+  fi
   LAST_QOMPOTERLOCK_PART="\"${md5sum}\" }"
   # FIXME Add require-dev to lock file
 }
@@ -2163,7 +2168,7 @@ insertAfter()
    local line="$2"
    local newText="$3"
    # sed -i not supported by Solaris
-   sed -i -e "/$line$/a"$'\\\n'"$newText"$'\n' "$file"
+   sed -i -e "/$line$/a"$'\\\n'"$newText"$'\n' "${file}"
    # sed -e "/$line$/a"$'\\\n'"$newText"$'\n' "$file" > "$file".tmp && mv "$file".tmp "$file"
    # Use following to match exact line
    # sed -e "/^$line$/a"$'\\\n'"$newText"$'\n' "$file" > "$file".tmp && mv "$file".tmp "$file"
