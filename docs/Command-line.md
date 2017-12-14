@@ -83,8 +83,25 @@ qompoter install --repo /Project
 qompoter install --no-dev --repo /Project
 # Install only stable required packages
 qompoter install --stable-only --repo /Project
-# Install all required packages with specific options, and do not generate Qt specific stuff thanks to the "--no-qompote" option
+# Install all required packagesn listed in "myqompoter.json" file, in a "myvendor" directory, without using color in stdout, and do not generate Qt specific stuff thanks to the "--no-qompote" option
 qompoter install --repo /Project --file myqompoter.json --vendor myvendor --no-qompote --no-color
+```
+
+### install (one package)
+
+Download and install locally (i.e. into a "vendor" directory) the requested package. If the version number is not provided, the one from the Qompoter file is used (if any). By default, the requested package and all its dependencies are installed. To only install or update the requested package alone, use `--no-dep` option. Several other options can be used to select another "qompoter.json" file, "vendor" directory, repository path or to select only nominal or stable packages.
+
+The existing "qompoter.lock" file is updated, or a new one is created, listing the downloaded packages, their selected version and a MD5 sum of each package.
+
+Examples:
+
+```bash
+# Install only the "http-parser-wrapper" package (from Github) with all its dependencies:
+qompoter install qompoter/http-parser-wrapper dev-master --repo https://github.com
+# Install only the "qhttp-wrapper" package (from Github) but do not install its dependencies:
+qompoter install qompoter/qhttp-wrapper 3.1.* --no-dep --repo https://github.com
+# Install only a stable version (listed in the "qompoter.json" file) of the "qhttp-wrapper" package (from Github), in a "myvendor" directory, with all its dependencies:
+qompoter install qompoter/qhttp-wrapper --stable-only --repo https://github.com --file myqompoter.json --vendor myvendor
 ```
 
 ### require
@@ -159,6 +176,8 @@ Options
   * Supported action is: inqlude
 * **--no-color** Do not enable color on output [default = false]
 * **--no-dev** Do not retrieve dev dependencies listed in "require-dev" [default = false]
+  * Supported action is: install
+* **--no-dep** Do not retrieve dependencies, only use listed packages from the Qompoter file, or the one requested in command line [default = false]
   * Supported action is: install
 * **--no-qompote** Do not generate any Qompoter specific stuffs like qompote.pri and vendor.pri [default = false]
   * Supported actions are: init, install
