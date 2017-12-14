@@ -323,6 +323,11 @@ usage()
 	                          in "require-dev" [default = false]
 	                          Supported action is: install
 
+	        --no-dep          Do not retrieve dependencies, only use listed
+	                          packages from the Qompoter file, or the one
+	                          requested in command line  [default = false]
+	                          Supported action is: install
+
 	        --no-qompote      Do not generate any Qompoter specific stuffs
 	                          like qompote.pri and vendor.pri [default = false]
 	                          Supported actions are: init, install
@@ -357,11 +362,17 @@ usage()
 
 	Examples:
 
-	    Install all dependencies:
+	    Install all dependencies listed in the Qompoter file:
 	      $C_PROGNAME install --repo ~/qompoter-repo
 
 	    Install only nominal and stable dependencies:
 	      $C_PROGNAME install --no-dev --stable-only --repo ~/qompoter-repo
+
+	    Install only the "http-parser-wrapper" package (from Github):
+	      $C_PROGNAME install qompoter/http-parser-wrapper dev-master --repo https://github.com
+
+	    Install only the "qhttp-wrapper" package (from Github) but do not install its dependencies:
+	      $C_PROGNAME install qompoter/qhttp-wrapper v3.1.* --no-dep --repo https://github.com
 
 	    List required dependencies for this project:
 	      $C_PROGNAME require --list
