@@ -1239,6 +1239,22 @@ getProjectRequires()
 }
 
 #**
+# * Retrieve package info from Qompoter file
+# * @param Qompoter file name
+# * @param Project full name <vendor name>/<project name>
+# * @return <version number>
+#**
+getOnePackageVersion()
+{
+  local qompoterFile=$1
+  local projectFullName=$2
+
+  jsonh < "${qompoterFile}" \
+   | grep -E "\[\"require(-dev)?\",\"${projectFullName}\"\]" \
+   | sed -r -e "s/\"//g;s/\[require.*\]\s*//"
+}
+
+#**
 # * Retrieve packages info from Qompoter lockfile
 # * @param Qompoter file name
 # * @return list of <vendor name>/<project name>/<version number>
@@ -1987,13 +2003,33 @@ installOnePackageAction()
   local qompoterFilePackage="qompoter-installone.json"
   local globalRes
 
-    qompoterLockFile="${qompoterFile/.json/}.lock"
+  # Search version number if needed
+  if [ -z "${requireVersion}" ]; then
+    if [ ! -f "${qompoterFile}" ]; then
+      echo "* ${requireName} <missing version>"
+      echo "  No version number in command line and no Qompoter file \"${qompoterFile}\""
+      echo -e "  ${C_FAIL}FAILURE${C_END}"
+      echo
+      return 100
+    fi
+    requireVersion=$(getOnePackageVersion "${qompoterFile}" "${requireName}")
+    if [ -z "${requireVersion}" ]; then
+      echo "* ${requireName} <missing version>"
+      echo "  No version number provided in command line and none provided in Qompoter file"
+      echo -e "  ${C_FAIL}FAILURE${C_END}"
+      echo
+      return 101
+    fi
+  fi
+  # Prepare lock file
+  qompoterLockFile="${qompoterFile/.json/}.lock"
   if [ -f "${qompoterLockFile}" ]; then
     cp "${qompoterLockFile}" "${qompoterLockFile}.tmp"
   else
     prepareQompoterLock "${qompoterLockFile}.tmp" "qompoter/installone"
   fi
   updateQompoterLockDate "${qompoterLockFile}.tmp"
+  # Prepare vendor dir
   vendorPriFile=${vendorDir}/vendor.pri
   if [ -f "${vendorPriFile}" ]; then
     cp "${vendorPriFile}" "${vendorPriFile}.tmp"
