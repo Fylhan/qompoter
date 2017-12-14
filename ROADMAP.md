@@ -6,13 +6,14 @@ Version 0.4 - in progress
 
 * [ ] Installation: Create Ubuntu/Snap package (?)
 * [x] New action: `qompoter install <packagename>`
-  * [ ] Fix: Take care or using the same order during vendor.pri update in `qompoter install <packagename>`
   * [ ] Feature: Auto-detect package version if missing in `qompoter install <packagename>`
   * [ ] Feature: Support `--save` option in `qompoter install <packagename>`
   * [ ] Doc: Add doc about `qompoter install <packagename>`
 * [ ] New action: `qompoter install` / `qompoter update` (using lock file)
 * [x] Feature: Add aliases for most used actions e=export, i=install, u=update
 * [x] Feature: Improve `qompoter inspect` (show only modified packages by default, now use `--all` to list all of them)
+* [ ] Feature: Propose to download source version if lib one is outdated
+* [ ] Feature: Allow soft version management v2 (e.g. >=v2.1.3)
 * [ ] Feature: Prevent from overriding manual changes for all packages in vendor (md5sum)
 * [ ] Feature: Update automatically the inqlude repository data
 * [ ] Feature: Support `--no-dev` option in `qompoter export --repo`
@@ -63,7 +64,7 @@ Plan for future
 * [ ] Installation: install Qompoter though the "Qt Maintenance Tool"
 * [ ] Feature: Cache downloaded packages
 * [ ] Feature: Integrate automatically inqlude packages if possible (generate qompoter.pri, ... ?)
-* [ ] Feature: Allow soft version management v2 (e.g. ^v1.0 etc)
+* [ ] Feature: Allow soft version management v3 (e.g. ^v1.0 etc)
 * [ ] Feature: Search in other package manager repositories (QPM, CPM, ...)
 * [ ] Feature: Increase security by checking integrity of packages (md5sum or SHA1, SHA-256, ...)
 * [ ] Feature: `qompoter install --repo vendor.zip`
