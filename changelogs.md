@@ -11,7 +11,9 @@ Version 0.4 - in progress
   * Take care or using the same order during vendor.pri update in `qompoter install <packagename>`
   * Take care of updating existing date in lock file after `qompoter install <packagename>`
   * Auto-detect package version using Qompoter file if missing in `qompoter install <packagename>`
+  * Add doc about `qompoter install <packagename>`
 * Feature: Improve `qompoter inspect` (show only modified packages by default, now use `--all` to list all of them)
+* Feature: Add `--no-dep` flag to not load dependencies during `qompoter install` or `qompoter install <packagename>` (alias of `--depth 0`)
 * Fix: Do not erase an existing 'vendor.pri' file when a `qompoter install` fail
 * Fix: Git remote update was failing when running `qompoter export --repo` on an existing repository
 
