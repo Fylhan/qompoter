@@ -6,7 +6,7 @@ Version 0.4 - in progress
 
 * [ ] Installation: Create Ubuntu/Snap package (?)
 * [x] New action: `qompoter install <packagename>`
-  * [ ] Feature: Auto-detect package version if missing in `qompoter install <packagename>`
+  * [ ] Feature: Support `--alone` to not load dependencies in `qompoter install <packagename>`
   * [ ] Feature: Support `--save` option in `qompoter install <packagename>`
   * [ ] Doc: Add doc about `qompoter install <packagename>`
 * [ ] New action: `qompoter install` / `qompoter update` (using lock file)
@@ -67,6 +67,7 @@ Plan for future
 * [ ] Feature: Allow soft version management v3 (e.g. ^v1.0 etc)
 * [ ] Feature: Search in other package manager repositories (QPM, CPM, ...)
 * [ ] Feature: Increase security by checking integrity of packages (md5sum or SHA1, SHA-256, ...)
+* [ ] Feature: Support `--force=<number>` and `--bypass=<number>`
 * [ ] Feature: `qompoter install --repo vendor.zip`
 * [ ] Feature: add `qompoter install --local / --global`
 * [ ] Feature: Improve qompoter export with compression / optimization
