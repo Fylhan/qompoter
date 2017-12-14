@@ -6,10 +6,10 @@ Version 0.4 - in progress
 
 * [ ] Installation: Create Ubuntu/Snap package (?)
 * [x] New action: `qompoter install <packagename>`
-  * [ ] Feature: Support `--alone` to not load dependencies in `qompoter install <packagename>`
   * [ ] Feature: Support `--save` option in `qompoter install <packagename>`
-  * [ ] Doc: Add doc about `qompoter install <packagename>`
+* [ ] Study: Add specification and study result around `qompoter install` / `qompoter update` / `qompoter install --save` (compare with Composer, npm, yarn)
 * [ ] New action: `qompoter install` / `qompoter update` (using lock file)
+* [x] Feature: Add `--no-dep` flag to not load dependencies during `qompoter install` or `qompoter install <packagename>` (alias of `--depth 0`)
 * [x] Feature: Add aliases for most used actions e=export, i=install, u=update
 * [x] Feature: Improve `qompoter inspect` (show only modified packages by default, now use `--all` to list all of them)
 * [ ] Feature: Propose to download source version if lib one is outdated

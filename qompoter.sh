@@ -2037,12 +2037,13 @@ installOnePackageAction()
     prepareVendorDir "${vendorDir}"
   fi
 
+  # Load
   echo "{ \"require\": {\"${requireName}\": \"${requireVersion}\" } }" > ${qompoterFilePackage}
   recursiveInstallFromQompoterFile "${qompoterFilePackage}" "${qompoterLockFile}.tmp" "${vendorDir}"
   globalRes=$?
 
   rm ${qompoterFilePackage}
-  if [[ "${globalRes}" == 0 ]] || [[ "${IS_BYPASS}" == "1" ]]; then
+  if [[ "${globalRes}" == 0 ]]; then
     mv "${qompoterLockFile}.tmp" "${qompoterLockFile}"
     mv "${vendorPriFile}.tmp" "${vendorPriFile}"
   else
@@ -2355,6 +2356,10 @@ cmdline()
       ;;
     --no-dev )
       IS_INCLUDE_DEV=
+      shift
+      ;;
+    --no-dep )
+      DEPTH_SIZE=0
       shift
       ;;
     --no-qompote  )
