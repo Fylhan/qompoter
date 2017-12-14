@@ -595,15 +595,25 @@ updateVendorPri()
   local qompoterPriFile=$4
   local vendorFilepath=${vendorDir}/vendor.pri.tmp
   local packageFullName=$vendorName/$packageName
-  if [ "${IS_NO_QOMPOTE}" == "0" ]; then
-    removeBlock "${vendorFilepath}" "## Start ${vendorName}\/${packageName}.*## End ${vendorName}\/${packageName}"
-    if [ -f "${qompoterPriFile}" ]; then
-      { echo "## Start ${packageFullName}"; cat "${qompoterPriFile}"; echo "## End ${packageFullName}"; } >> "${vendorFilepath}"
-    else
-      logWarning "no 'qompoter.pri' found for this package"
-    fi
+
+  # Checks
+  if [ "${IS_NO_QOMPOTE}" != "0" ]; then
+    return;
   fi
-  # FIXME Take care of updating exsiting vendor.pri for qompoter installone
+  if [ ! -f "${qompoterPriFile}" ]; then
+    logWarning "no 'qompoter.pri' found for this package"
+    return
+  fi
+
+  # Update existing
+  if  grep -q "## Start ${vendorName}/${packageName}" "${vendorFilepath}" ; then
+    local packagePattern="\(## Start ${vendorName}\/${packageName}\).*\(## End ${vendorName}\/${packageName}\)"
+    replaceBlock "${vendorFilepath}" "${packagePattern}" "\n\1\nqompoter-update-in-progress\n\2"
+    replaceLineByFile "${vendorFilepath}" "qompoter-update-in-progress" "${qompoterPriFile}"
+  # Add new at end
+  else
+    { echo "## Start ${packageFullName}"; cat "${qompoterPriFile}"; echo "## End ${packageFullName}"; } >> "${vendorFilepath}"
+  fi
 }
 
 prepareQompoterLock()
@@ -626,7 +636,7 @@ updateQompoterLockDate()
   # Update existing
   if  grep -q '"date":' "${qompoterLockFile}" ; then
     replaceLine "${qompoterLockFile}" '"date": ".*",' '"date": "'"$(date --iso-8601=sec)"'",'
-  # Add
+  # Add new at end
   else
     insertAfter "${qompoterLockFile}" '^{' '  "date": "'"$(date --iso-8601=sec)"'",'
   fi
@@ -656,7 +666,7 @@ updateQompoterLock()
   # Update existing
   if  grep -q "\"${packageFullName}\"" "${qompoterLockFile}" ; then
     replaceLine "${qompoterLockFile}" " *\(,\) *\"${vendorName}\/${packageName}\" *: *{.*}" "    \1${jsonData//\//\\/}"
-  # Add
+  # Add new at end
   else
     if [ "${LAST_QOMPOTERLOCK_PART}" != '  "require": {' ]; then
       jsonData=",${jsonData}"
@@ -2161,7 +2171,7 @@ repoExportAction()
   return 1
 }
 
-# file line newText
+# destFile line newText
 insertAfter()
 {
    local file="$1"
@@ -2174,6 +2184,25 @@ insertAfter()
    # sed -e "/^$line$/a"$'\\\n'"$newText"$'\n' "$file" > "$file".tmp && mv "$file".tmp "$file"
 }
 
+# destFile patternLine file
+insertFileAfterLine()
+{
+  local destFile="$1"
+  local line="$2"
+  local file="$3"
+  sed -i -e "/$line$/r ${file}" "${destFile}"
+}
+
+replaceLineByFile()
+{
+  local destFile="$1"
+  local line="$2"
+  local file="$3"
+  sed -i -e "/$line$/r ${file}" "${destFile}"
+  removeLine "${destFile}" "${line}"
+}
+
+# destFile oldLine newLine
 replaceLine()
 {
    local file="$1"
@@ -2181,6 +2210,17 @@ replaceLine()
    local newLine="$3"
    # sed -i not supported by Solaris
    sed -i -e "s/${oldLine}/${newLine}/" "${file}"
+}
+
+replaceBlock()
+{
+   local file="$1"
+   local oldBlock="$2"
+   local newBlock="$3"
+   # sed multiline @see http://austinmatzko.com/2008/04/26/sed-multi-line-search-and-replace/
+   # In case of issue use instead: cat "${file}" | tr '\n' '|' | sed -e "s/${oldBlock}/${newBlock}/" | tr '|' '\n' > "${file}"
+   # sed -i not supported by Solaris
+   sed -i -n '1h;1!H;${;g;s/\n'"${oldBlock}"'/'"${newBlock}"'/g;p;}' "${file}"
 }
 
 removeLine()
