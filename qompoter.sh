@@ -617,13 +617,14 @@ updateVendorPri()
   fi
 
   # Update existing
-  if  grep -q "## Start ${vendorName}/${packageName}" "${vendorFilepath}" ; then
-    local packagePattern="\(## Start ${vendorName}\/${packageName}\).*\(## End ${vendorName}\/${packageName}\)"
+  if  grep -q "## Start ${vendorName}/${packageName} ##" "${vendorFilepath}" ; then
+    local packagePattern="\(## Start ${vendorName}\/${packageName} ##\).*\(## End ${vendorName}\/${packageName} ##\)"
     replaceBlock "${vendorFilepath}" "${packagePattern}" "\n\1\nqompoter-update-in-progress\n\2"
     replaceLineByFile "${vendorFilepath}" "qompoter-update-in-progress" "${qompoterPriFile}"
   # Add new at end
   else
-    { echo "## Start ${packageFullName}"; cat "${qompoterPriFile}"; echo "## End ${packageFullName}"; } >> "${vendorFilepath}"
+    { echo "## Start ${packageFullName} ##"; cat "${qompoterPriFile}"; echo "## End ${packageFullName} ##"; } >> "${vendorFilepath}"
+  fi
   fi
 }
 
