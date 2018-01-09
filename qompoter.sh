@@ -20,6 +20,7 @@ IS_BYPASS=0
 IS_FORCE=0
 IS_INCLUDE_DEV=(-dev)?
 IS_NO_QOMPOTE=0
+IS_SAVE=0
 IS_STABLE_ONLY=0
 IS_VERBOSE=0
 DEPTH_SIZE=10
@@ -346,6 +347,10 @@ usage()
 	                          "v1.0.3" and not "v1.0.4-RC1"
 	                          Supported action is: install
 
+	        --save            Add the requested package into the Qompoter file
+	                          [default = false]
+	                          Supported action is: install
+
 	        --vendor-dir DIR  Pick another vendor directory [default = $VENDOR_DIR]
 	                          Supported actions are: export, inspect, install,
 	                          md5sum
@@ -625,8 +630,48 @@ updateVendorPri()
   else
     { echo "## Start ${packageFullName} ##"; cat "${qompoterPriFile}"; echo "## End ${packageFullName} ##"; } >> "${vendorFilepath}"
   fi
+}
+
+prepareQompoterFile()
+{
+  local qompoterFile=$1
+  local projectFullName=$2
+  cat <<- EOF > "${qompoterFile}"
+{
+  "name": "${projectFullName}",
+  "require": {
+  }
+}
+EOF
+}
+
+updateQompoterFile()
+{
+  local qompoterFile=$1
+  local vendorName=$2
+  local packageName=$3
+  local version=$4
+  local isDev=$5
+  local packageFullName=$vendorName/$packageName
+  local comma=
+  local requireStart="\"require\": {"
+  if [ "${isDev}" == 1 ]; then
+    echo "Is dev"
+    requireStart="\"require-dev\": {"
+  fi
+
+  # Update existing
+  if  grep -q "\"${packageFullName}\"" "${qompoterFile}" ; then
+    replaceLine "${qompoterFile}" " *\"${vendorName}\/${packageName}\" *: *\".*\" *\(,\)?" "    \"${vendorName}\/${packageName}\": \"${version}\"\1"
+  # Add new at end
+  else
+    if [ ! -z "$(getProjectRequires "${qompoterFile}")" ]; then
+      comma=","
+    fi
+    insertAfter "${qompoterFile}" "${requireStart}" "    \"${vendorName}\/${packageName}\": \"${version}\"${comma}"
   fi
 }
+
 
 prepareQompoterLock()
 {
@@ -2054,6 +2099,14 @@ installOnePackageAction()
   recursiveInstallFromQompoterFile "${qompoterFilePackage}" "${qompoterLockFile}.tmp" "${vendorDir}"
   globalRes=$?
 
+  # Save in Qompoter file if required
+  if [[ "${globalRes}" == 0 ]] && [[ "${IS_SAVE}" == 1 ]]; then
+    if [ -f "${qompoterFile}" ]; then
+      prepareQompoterFile "${qompoterFile}"
+    fi
+    updateQompoterFile "${qompoterFile}" "${requireName}" "${requireVersion}"
+  fi
+
   rm ${qompoterFilePackage}
   if [[ "${globalRes}" == 0 ]]; then
     mv "${qompoterLockFile}.tmp" "${qompoterLockFile}"
@@ -2376,6 +2429,10 @@ cmdline()
       ;;
     --no-qompote  )
       IS_NO_QOMPOTE=1
+      shift
+      ;;
+    --save )
+      IS_SAVE=1
       shift
       ;;
     --stable-only )
