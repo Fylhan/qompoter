@@ -18,6 +18,7 @@ REPO_PATH=git@gitlab.lan.trialog.com:
 IS_ALL=0
 IS_BYPASS=0
 IS_FORCE=0
+IS_DEV=0
 IS_INCLUDE_DEV=(-dev)?
 IS_NO_QOMPOTE=0
 IS_SAVE=0
@@ -655,14 +656,19 @@ updateQompoterFile()
   local packageFullName=$vendorName/$packageName
   local comma=
   local requireStart="\"require\": {"
+  # FIXME What if there is no require or require-dev?
   if [ "${isDev}" == 1 ]; then
     echo "Is dev"
     requireStart="\"require-dev\": {"
+    if ! grep -q "\"require-dev\"" "${qompoterFile}" ; then
+      insertAfter "${qompoterFile}" "\"name\" *: *\".*\" *,? *" "   \"require-dev\": {"
+      insertAfter "${qompoterFile}" "\"require-dev\" {" "   }"
+    fi
   fi
 
   # Update existing
   if  grep -q "\"${packageFullName}\"" "${qompoterFile}" ; then
-    replaceLine "${qompoterFile}" " *\"${vendorName}\/${packageName}\" *: *\".*\" *\(,\)?" "    \"${vendorName}\/${packageName}\": \"${version}\"\1"
+    replaceLine "${qompoterFile}" " *\"${vendorName}\/${packageName}\" *: *\".*\"" "    \"${vendorName}\/${packageName}\": \"${version}\""
   # Add new at end
   else
     if [ ! -z "$(getProjectRequires "${qompoterFile}")" ]; then
@@ -927,7 +933,7 @@ downloadLibPackage()
   # Download from HTTP
   if [[ ! -z ${packageDistUrl} ]] && [[ ${packageDistUrl} == "http"* ]]; then
     logDebug "  Download using package provided url"
-    downloadLibFromHttp "${packageDistUrl}" "${requireLocalPath}"
+    downloadLibFromHttp "${packageDistUrl}" "${requireLocalPath}" "${packageName}"
     res=$?
     if [ "$res" == "0" ]; then
       PACKAGE_VERSION=${packageVersion}
@@ -945,7 +951,7 @@ downloadLibPackage()
   if [[ ${packageDistUrl} == "http"* ]]; then
     logDebug "  Download using package built url"
     # Try tarball
-    downloadLibFromHttp "${packageDistUrl}.tar.gz" "${requireLocalPath}"
+    downloadLibFromHttp "${packageDistUrl}.tar.gz" "${requireLocalPath}" "${packageName}"
     res=$?
     if [ "$res" == "0" ]; then
       PACKAGE_VERSION=${packageVersion}
@@ -955,7 +961,7 @@ downloadLibPackage()
     logDebug "  Warning: cannot find \"${packageDistUrl}.tar.gz\", let's try with zip"
 
     # Try zip archive
-    downloadLibFromHttp "${packageDistUrl}.zip" "${requireLocalPath}"
+    downloadLibFromHttp "${packageDistUrl}.zip" "${requireLocalPath}" "${packageName}"
     res=$?
     if [ "$res" == "0" ]; then
       PACKAGE_VERSION=${packageVersion}
@@ -999,6 +1005,7 @@ downloadLibFromHttp()
 {
   local packageDistUrl=$1
   local requireLocalPath=$2
+  local packageName=$3
   local archive
   # archive=$(echo "${packageDistUrl}" | cut -d@ -f2 | cut -d/ -f2- | cut -d? -f1 | sed 's/\///')
   archive=${packageDistUrl##*/}
@@ -2055,6 +2062,8 @@ installOnePackageAction()
   local qompoterLockFile
   local vendorDir=$2
   local vendorPriFile
+  local vendorName=${3}
+  local projectName=${4}
   local requireName=${3}/${4}
   local requireVersion=$5
   local qompoterFilePackage="qompoter-installone.json"
@@ -2101,10 +2110,10 @@ installOnePackageAction()
 
   # Save in Qompoter file if required
   if [[ "${globalRes}" == 0 ]] && [[ "${IS_SAVE}" == 1 ]]; then
-    if [ -f "${qompoterFile}" ]; then
+    if [ ! -f "${qompoterFile}" ]; then
       prepareQompoterFile "${qompoterFile}"
     fi
-    updateQompoterFile "${qompoterFile}" "${requireName}" "${requireVersion}"
+    updateQompoterFile "${qompoterFile}" "${vendorName}" "${projectName}" "${requireVersion}" "${IS_DEV}"
   fi
 
   rm ${qompoterFilePackage}
@@ -2421,6 +2430,11 @@ cmdline()
       ;;
     --no-dev )
       IS_INCLUDE_DEV=
+      IS_DEV=0
+      shift
+      ;;
+    --dev )
+      IS_DEV=1
       shift
       ;;
     --no-dep )
