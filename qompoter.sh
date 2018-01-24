@@ -1505,7 +1505,8 @@ downloadQompoterFilePackages()
         test "${IS_BYPASS}" == "0" && test "${IS_FORCE}" == "0" && return 1
       fi
       DOWNLOADED_PACKAGES="${DOWNLOADED_PACKAGES} ${projectName} "
-      if [ -f "${vendorDir}/${projectName}/qompoter.json" ]; then
+      # Search sub dependencies only for source package containing a qompoter.json file
+      if [ "${isSource}" == "1" ] && [ -f "${vendorDir}/${projectName}/qompoter.json" ]; then
         NEW_SUBPACKAGES="${NEW_SUBPACKAGES} ${vendorDir}/${projectName}/qompoter.json"
       fi
   done
