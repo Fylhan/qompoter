@@ -751,13 +751,16 @@ downloadPackage()
   PROJECT_NAME=$4
   local requireName=$vendorName/$packageName
   local requireVersion=$5
+  local requireVersionFull=$5
+  local versionComplement=$6
+  test "${versionComplement}" != "" && requireVersionFull="${requireVersionFull}:${versionComplement}"
   PACKAGE_VERSION=$5
   local selectedVersion=
-  local qompoterLockFile=$6
-  local packageDistUrl=$7
+  local qompoterLockFile=$7
+  local packageDistUrl=$8
   local result=1
   local isSource=1
-  if [[ "$requireVersion" == *"-lib" ]]; then
+  if [[ "$requireVersion" == *"-lib"* ]]; then
     isSource=0
   fi
   local requireBasePath=${repositoryPath}/${requireName}
@@ -765,7 +768,7 @@ downloadPackage()
   local qompoterPriFile=${requireLocalPath}/qompoter.pri
   local inqludeDistUrl
 
-  echo "* ${requireName} ${requireVersion}"
+  echo "* ${requireName} ${requireVersionFull}"
 
   mkdir -p "${requireLocalPath}"
 
@@ -848,9 +851,24 @@ downloadPackage()
     echo "  Downloading lib..."
     packageType="qompotist-fs"
     if [ -z "${packageDistUrl}" ] && [ ! -z "${inqludeDistUrl}" ]; then # Use Inqlude binary if any
-      logDebug "  Use inqlude package \"${packageName}\" (${inqludeDistUrl})"
       packageType="inqlude"
       packageDistUrl=${inqludeDistUrl}
+      logDebug "  Use ${packageType} package \"${packageName}\" (${packageDistUrl})"
+    elif [[ "${repositoryPath}" == *"gitlab"* ]]; then
+      packageType="gitlab"
+      if [[ "${repositoryPath}" == "http"* ]]; then
+        packageDistUrl="${repositoryPath}/"
+      else
+        packageDistUrl="${repositoryPath#*@}"
+        packageDistUrl="http://${packageDistUrl%:*}/"
+      fi
+      test "${versionComplement}" == "" && versionComplement=${packageName}
+      # FIXME Search for variadic version v1.* : http://gitlab.lan.trialog.com/api/v4/projects/trialog-em%2Fslac-controller-launcher/repository/tags grep "\[.*,\"name\"\].*\"v1.1.*\""
+      packageDistUrl="${packageDistUrl}api/v4/projects/${vendorName}%2F${packageName}/jobs/artifacts/${requireVersion%-lib}/download?job=${versionComplement}"
+     if [ "${QOMP_TOKEN}" != "" ]; then
+        packageDistUrl="${packageDistUrl}&private_token=${QOMP_TOKEN}"
+      fi
+      logDebug "  Use ${packageType} package \"${packageName}\" (${packageDistUrl})"
     fi
     downloadLibPackage "${repositoryPath}" "${vendorDir}" "${vendorName}" "${packageName}" "${requireVersion}" "${packageDistUrl}"
     result=$?
@@ -1461,9 +1479,17 @@ downloadQompoterFilePackages()
       local vendorName
       local projectName
       local version
+      local versionComplement
       vendorName=$(echo "${packageInfo}" | cut -d'/' -f1)
       projectName=$(echo "${packageInfo}" | cut -d'/' -f2)
       version=$(echo "${packageInfo}" | cut -d'/' -f3)
+      versionComplement="${version#*:}"
+      version="${version%%:*}"
+      test "${versionComplement}" == "${version}" && versionComplement=
+      local isSource=1
+      if [[ "$version" == *"-lib"* ]]; then
+        isSource=0
+      fi
       #~ Skip if already installed
       test "${DOWNLOADED_PACKAGES#* $projectName }" != "$DOWNLOADED_PACKAGES" && continue
       #~ Download
@@ -1471,7 +1497,7 @@ downloadQompoterFilePackages()
       local url
       repo=$(getRelatedRepository "${qompoterFile}" "${vendorName}" "${projectName}")
       url=$(getRelatedUrl "${qompoterFile}" "${vendorName}" "${projectName}")
-      downloadPackage "${repo}" "${vendorDir}" "${vendorName}" "${projectName}" "${version}" "${qompoterLockFile}" "${url}"
+      downloadPackage "${repo}" "${vendorDir}" "${vendorName}" "${projectName}" "${version}" "${versionComplement}" "${qompoterLockFile}" "${url}"
       #~ Exit on error if no force
       local returnCode=$?
       if [ "${returnCode}" != "0" ]; then
@@ -2444,6 +2470,11 @@ cmdline()
       ;;
     --no-qompote  )
       IS_NO_QOMPOTE=1
+      shift
+      ;;
+    --qompoter-token  )
+      shift
+      QOMP_TOKEN=$1
       shift
       ;;
     --save )
