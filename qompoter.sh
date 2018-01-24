@@ -2466,7 +2466,7 @@ cmdline()
       shift
       ;;
     --no-dep )
-      DEPTH_SIZE=0
+      DEPTH_SIZE=1
       shift
       ;;
     --no-qompote  )
@@ -4347,7 +4347,7 @@ INQLUDE_ALL_MIN_CONTENT='[0,"name"]	"adctl"
 [207,"name"]	"qhttp-wrapper"
 [207,"display_name"]	"QHttp"
 [207,"version"]	"3.1.2"
-[207,"summary"]	"Qompoter wrapper for azadkuh/qhttp and oliviermaridat/qhttp "
+[207,"summary"]	"Qompoter wrapper for azadkuh/qhttp and oliviermaridat/qhttp"
 [207,"urls","vcs"]	"https://github.com/qompoter/qhttp-wrapper.git"
 [207,"packages","source"]	"https://github.com/qompoter/http-parser-wrapper/archive/v3.1.2.tar.gz"
 [207,"licenses"]	["MIT"]
