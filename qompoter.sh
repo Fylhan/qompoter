@@ -413,6 +413,7 @@ version()
 createQompotePri()
 {
 	local qompotePri=$1
+  # cat << EOF > "${qompotePri}"
 	cat << 'EOF' > "${qompotePri}"
 # $$setLibPath()
 # Generate a lib path name depending of the OS and the arch
@@ -1025,55 +1026,75 @@ downloadLibFromHttp()
   local packageDistUrl=$1
   local requireLocalPath=$2
   local packageName=$3
-  local archive
-  # archive=$(echo "${packageDistUrl}" | cut -d@ -f2 | cut -d/ -f2- | cut -d? -f1 | sed 's/\///')
-  archive=${packageDistUrl##*/}
-  archive=${archive%%\?*}
+  local archive="${packageName}-archive"
 
-  logDebug "  Download \"${packageDistUrl}\" to \"${requireLocalPath}/${archive}\""
-  wget "${packageDistUrl}" --directory-prefix="${requireLocalPath}" \
-        >> ${C_LOG_FILENAME} 2>&1
+  logDebug "  Download \"${packageDistUrl}\" to \"${vendorDir}/${archive}\""
+  logTrace "Download with wget"
+  # wget "${packageDistUrl}" --content-disposition --directory-prefix="${vendorDir}" \
+  wget "${packageDistUrl}" -O "${vendorDir}/${archive}" \
+        1> ${C_LOG_FILENAME} 2> ${C_LOG_FILENAME}
   local res="$?"
-  if [ "${res}" == "127" ]; then
+  if [ "${res}" != "0" ]; then
     # wget missing, try with curl
-    curl "${packageDistUrl}" --fail > "${requireLocalPath}/${archive}" \
-          2>&1
+    # -O -J only available for curl >7.20 (Debian Wheezy has 7.26)
+    # --fail Fail silently
+    logTrace "Download with curl"
+    # curl "${packageDistUrl}" --fail -O -J \
+    curl "${packageDistUrl}" -o "${vendorDir}/${archive}" \
+          1> ${C_LOG_FILENAME} 2> ${C_LOG_FILENAME}
     res="$?"
   fi
   # Download fail
   if [ "${res}" != "0" ]; then
+    logDebug "  Delete archive \"${archive}\""
+    rm -f "${vendorDir}/${archive}"
     return ${res}
   fi
 
   logDebug "  Extract library tarball"
-  if [[ ${packageDistUrl} == *".tar.gz" ]]; then
-    tar -xf "${requireLocalPath}/${archive}" --directory "${requireLocalPath}" --overwrite --strip-components=1 \
+  logTrace "Extract with tar"
+    tar -xf "${vendorDir}/${archive}" --directory "${requireLocalPath}" --overwrite --strip-components=1 \
         >> ${C_LOG_FILENAME} 2>&1
     res="$?"
-  elif [[ ${packageDistUrl} == *".zip" ]]; then
-    unzip -u "${requireLocalPath}/${archive}" -d "${requireLocalPath}" \
+  if [ "${res}" != "0" ]; then
+    logTrace "tar error: ${res}"
+    logTrace "Extract with unzip"
+    test -d "${requireLocalPath}.tmp" && rm -rf "${requireLocalPath}.tmp"
+    unzip "${vendorDir}/${archive}" -d "${requireLocalPath}.tmp" \
       >> ${C_LOG_FILENAME} 2>&1
     res="$?"
-    mv -f ${requireLocalPath}/${packageVersion}/* "${requireLocalPath}"
-  else
+    if [ "$res" == "0" ]; then
+      test -d "${requireLocalPath}" && rm -rf "${requireLocalPath}"
+      mv "${requireLocalPath}.tmp" "${requireLocalPath}"
+    fi
+  fi
+  # Error
+  if [ "${res}" != "0" ]; then
+    logTrace "unzip error: ${res}"
     logDebug "  Error: unknown archive packaging"
+    logDebug "  Delete archive \"${archive}\""
+    rm -f "${vendorDir}/${archive}"
     return 1
   fi
 
-  if [ "$res" == "0" ]; then
-    logDebug "  Delete archive \"${archive}\""
-    rm -f ${requireLocalPath}/${archive}*
-    logDebug "  Move \"${requireLocalPath}/*lib_?*\" to \"${vendorDir}\""
-    cp -rf ${requireLocalPath}/lib_* ${vendorDir} \
-        && rm -rf ${requireLocalPath}/lib_* \
-        >> ${C_LOG_FILENAME} 2>&1
-    cp -rf ${requireLocalPath}/*lib ${vendorDir} \
-        >> ${C_LOG_FILENAME} 2>&1 \
-        && rm -rf ${requireLocalPath}/*lib ${vendorDir} \
-        >> ${C_LOG_FILENAME} 2>&1
-    PACKAGE_VERSION=${packageVersion}
-    PACKAGE_DIST_URL=${packageDistUrl}
+  # Ok
+  if [ -d "${requireLocalPath}/${packageVersion}" ]; then
+    logDebug "  Move tarball result to root of  \"${requireLocalPath}\""
+    mv -rf "${requireLocalPath}/${packageVersion}" "${requireLocalPath}"
   fi
+  logDebug "  Delete archive \"${archive}\""
+  rm -f "${vendorDir}/${archive}"
+  logDebug "  Move \"${requireLocalPath}/*lib_?*\" to \"${vendorDir}\""
+  cp -rf ${requireLocalPath}/lib_* "${vendorDir}" \
+      >> ${C_LOG_FILENAME} 2>&1
+  rm -rf ${requireLocalPath}/lib_* \
+      >> ${C_LOG_FILENAME} 2>&1
+  cp -rf ${requireLocalPath}/*lib "${vendorDir}" \
+      >> ${C_LOG_FILENAME} 2>&1
+  rm -rf ${requireLocalPath}/*lib \
+      >> ${C_LOG_FILENAME} 2>&1
+  PACKAGE_VERSION=${packageVersion}
+  PACKAGE_DIST_URL=${packageDistUrl}
   return $res
 }
 
