@@ -14,7 +14,8 @@ C_LOG_FILENAME=qompoter.log
 QOMPOTER_FILENAME=qompoter.json
 INQLUDE_FILENAME=
 VENDOR_DIR=vendor
-REPO_PATH=git@gitlab.lan.trialog.com:
+REPO_PATH=${QOMP_REPO_PATH}
+test "${REPO_PATH}" == "" && REPO_PATH=https://github.com
 IS_ALL=0
 IS_BYPASS=0
 IS_FORCE=0
