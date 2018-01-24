@@ -1,9 +1,11 @@
 Qompoter Changelogs
 ===================
 
-Version 0.4 - in progress
+Version 0.4.0 - released 2018-01-24
 -----------
 
+* Breaking changes
+  * Change default repository path to Github and read `QOMP_REPO_PATH` environment variable to select another one
 * New action: `qompoter install <packagename>`
   * Take care of updating existing lock file in `qompoter install <packagename>`
   * Take care or using the same order during lock file update in `qompoter install <packagename>`
@@ -11,11 +13,15 @@ Version 0.4 - in progress
   * Take care or using the same order during vendor.pri update in `qompoter install <packagename>`
   * Take care of updating existing date in lock file after `qompoter install <packagename>`
   * Auto-detect package version using Qompoter file if missing in `qompoter install <packagename>`
+  * Support `--save` option in `qompoter install <packagename>`
   * Add doc about `qompoter install <packagename>`
 * Feature: Improve `qompoter inspect` (show only modified packages by default, now use `--all` to list all of them)
-* Feature: Add `--no-dep` flag to not load dependencies during `qompoter install` or `qompoter install <packagename>` (alias of `--depth 0`)
+* Feature: Add `--no-dep` flag to not load dependencies during `qompoter install` or `qompoter install <packagename>` (alias of `--depth 1`)
+* Feature: Add specific library loader for GitLab forges
 * Fix: Do not erase an existing 'vendor.pri' file when a `qompoter install` fail
 * Fix: Git remote update was failing when running `qompoter export --repo` on an existing repository
+* Fix: Do not load sub-dependencies for library packages
+* Fix: Several corrections, maybe not complete, in `downloadLibPackage`
 
 Version 0.3 - released 2017, August
 -----------
