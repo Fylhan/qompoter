@@ -2,7 +2,7 @@
 
 readonly C_PROGNAME=$(basename $0)
 readonly C_PROGDIR=$(readlink -m $(dirname $0))
-readonly C_PROGVERSION="v0.4.0"
+readonly C_PROGVERSION="v0.4.1-alpha"
 readonly C_ARGS="$@"
 C_OK="\e[1;32m"
 C_FAIL="\e[1;31m"
@@ -1037,16 +1037,17 @@ downloadLibFromHttp()
   if [ "${res}" != "0" ]; then
     # wget missing, try with curl
     # -O -J only available for curl >7.20 (Debian Wheezy has 7.26)
-    # --fail Fail silently
+    # --fail Return an error when HTTP error status code, instead of sending back an HTML with the status code
     logTrace "Download with curl"
     # curl "${packageDistUrl}" --fail -O -J \
-    curl "${packageDistUrl}" -o "${vendorDir}/${archive}" \
+    curl --fail "${packageDistUrl}" -o "${vendorDir}/${archive}" \
           1> ${C_LOG_FILENAME} 2> ${C_LOG_FILENAME}
     res="$?"
   fi
   # Download fail
   if [ "${res}" != "0" ]; then
     logDebug "  Delete archive \"${archive}\""
+    logTrace $(cat ${C_LOG_FILENAME})
     rm -f "${vendorDir}/${archive}"
     return ${res}
   fi
