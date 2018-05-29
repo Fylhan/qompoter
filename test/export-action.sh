@@ -20,10 +20,10 @@ do
   else
     if [ ! -f "$(date +"%Y-%m-%d")_${input_file_name}_vendor.zip" ]; then
       echo "error: no archive \"$(date +"%Y-%m-%d")_${input_file_name}_vendor.zip\""
-      echo "not ok $i - $(echo "$input" | tr '-' ' ' | sed 's/.json//')"
+      echo "not ok $i - $(echo "$input" | tr '-' ' ' | sed 's/.json//' | sed 's/ offline//')"
       fails=$((fails+1))
     else
-      echo "ok $i - $(echo "$input" | tr '-' ' ' | sed 's/.json//')"
+      echo "ok $i - $(echo "$input" | tr '-' ' ' | sed 's/.json//' | sed 's/ offline//')"
       rm "$(date +"%Y-%m-%d")_${input_file_name}_vendor.zip"
     fi
   fi

@@ -1,0 +1,17 @@
+Qompoter
+======== update
+
+* cp/fylhan v1.1.10
+  Downloading sources...
+  done
+
+* cp/acme-cp v1.0-lib
+  Downloading lib...
+  done
+
+* fylhan/posibrain v0.2
+  Downloading sources from Git...
+  Warning: no 'qompoter.pri' found for this package
+  done
+
+done

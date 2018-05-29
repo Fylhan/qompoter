@@ -42,6 +42,5 @@ else
   echo -e -n '\e[1;31mFAILURE\e[0m '
   exitcode=1
 fi
-rm -- *.lock
 echo "$passed / $tests"
 exit $exitcode

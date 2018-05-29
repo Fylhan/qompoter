@@ -66,6 +66,7 @@ Version 0.2 - released 2016, October
 
 Version 0.1
 -----------
+
 * First release
 * List packages in qompoter.json and download them
 * Generate qompote.pri and vendor.pri

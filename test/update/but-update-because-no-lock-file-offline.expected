@@ -1,0 +1,16 @@
+Qompoter
+======== update
+
+======== -> install
+
+* cp/fylhan v1.*
+  Downloading sources...
+  Selected version: v1.1.10
+  done
+
+* cp/acme-cp v1.*-lib
+  Downloading lib...
+  Selected version: v1.0-lib
+  done
+
+done

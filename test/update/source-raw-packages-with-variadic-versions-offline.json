@@ -1,0 +1,17 @@
+{
+	"name": "install-ok/qompoter-versionstar-offline",
+	"authors": [
+		{
+			"name": "Fylhan",
+			"homepage": "http://fylhan.la-bnbox.fr"
+		}
+	],
+	"require": {
+		"cp/fylhan": "v1.*",
+		"cp/acme-cp": "v1.*-lib",
+		"fylhan/posibrain": "v0.*"
+	},
+	"repositories": {
+		"fylhan/posibrain": "https://github.com"
+	}
+}

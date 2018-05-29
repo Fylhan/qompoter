@@ -5,10 +5,13 @@ Version 0.4 - in progress
 -----------
 
 * [ ] Installation: Create Ubuntu/Snap package (?)
+* [ ] Installation: Create Debian package (?)
+* [ ] Installation: Create FlatPack package (?)
 * [x] New action: `qompoter install <packagename>`
   * [ ] Support `--save --dev` option in `qompoter install <packagename>`
-* [ ] Study: Add specification and study result around `qompoter install` / `qompoter update` / `qompoter install --save` (compare with Composer, npm, yarn)
+* [ ] Study: Make a study around `qompoter install` / `qompoter update` / `qompoter install --save` (compare with Composer, npm, yarn) and post the result into the blog
 * [ ] New action: `qompoter install` / `qompoter update` (using lock file)
+  * In progress: url is ok, unit test in progress, cannot download on Github?, need to inverse install and update
 * [x] Feature: Add `--no-dep` flag to not load dependencies during `qompoter install` or `qompoter install <packagename>` (alias of `--depth 0`)
 * [x] Feature: Add aliases for most used actions e=export, i=install, u=update
 * [x] Feature: Improve `qompoter inspect` (show only modified packages by default, now use `--all` to list all of them)
@@ -17,11 +20,13 @@ Version 0.4 - in progress
 * [ ] Feature: Prevent from overriding manual changes for all packages in vendor (md5sum)
 * [ ] Feature: Update automatically the inqlude repository data
 * [ ] Feature: Support `--no-dev` option in `qompoter export --repo`
+* [ ] Feature: Support `--prefer-source` option in `qompoter update` to prefer source packages instead over library packages
 * [ ] Feature: Support CMake
 * [ ] Bugfix campaign
   * [ ] Fix: Url field is not always filled in lock file
-  * [ ] Fix: Add dev packages to "required-dev" in lock file and remove them from "require"
+  * [ ] Fix: Add dev packages to "require-dev" in lock file and remove them from "require"
   * [ ] Fix: When using local repository, libraries are still searched first in Inqlude repository
+  * [ ] Fix: If a package is manually deleted, `qompoter inspect` displays an unexpected error `find: ‘vendor/package-dir’: No file or folder of this type`
 * [ ] Clean documentation and release
 
 Version 0.3 - released 2017, August
@@ -58,8 +63,7 @@ Plan for future
 -----------
 
 * [ ] New action: `qompoter release`
-* [ ] Installation: create Debian package
-* [ ] Installation: create other Linux package
+* [ ] Installation: Create other Linux package
 * [ ] Installation: `qompoter self-update` (from Github)
 * [ ] Installation: install Qompoter though the "Qt Maintenance Tool"
 * [ ] Feature: Cache downloaded packages

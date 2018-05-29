@@ -139,4 +139,5 @@ checkVersion "${i}" "${TEST_CASE}" "v1.1"
 
 rm $QOMPOTER_FILE
 rm -rf vendor
+rm -- *.lock
 exit $FAILS

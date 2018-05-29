@@ -788,7 +788,9 @@ downloadPackage()
     # Git
     # Provided URL
     if [ ! -z "${packageDistUrl}" ] && isGitRepositories "${packageDistUrl}"; then
-      packageDistUrl=${packageDistUrl}.git
+      if [[ ! "${packageDistUrl}" == *".git" ]]; then
+        packageDistUrl="${packageDistUrl}.git"
+      fi
       echo "  Downloading sources from Git..."
       logDebug "  URL has been provided (${packageDistUrl})"
       packageType="git"
@@ -811,8 +813,11 @@ downloadPackage()
       fi
     fi
     # Mostly HTTP URL
-    if [ "${result}" != "0" ] && [ "${result}" != "3" ] && [ "${result}" != "4" ] && isGitRepositories "${requireBasePath}.git"; then
-      packageDistUrl="${requireBasePath}.git"
+    if [ "${result}" != "0" ] && [ "${result}" != "3" ] && [ "${result}" != "4" ] && isGitRepositories "${requireBasePath}"; then
+      packageDistUrl="${requireBasePath}"
+      if [[ "${packageDistUrl}" != *".git" ]]; then
+        packageDistUrl="${packageDistUrl}.git"
+      fi
       echo "  Downloading sources from Git..."
       logDebug "  Found in repository (${packageDistUrl})"
       packageType="git"
@@ -1477,6 +1482,17 @@ getRelatedRepository()
   fi
 }
 
+getRelatedUrlFromLock()
+{
+  local qompoterLockFile=$1
+  local requireName=$2/$3
+  local packageUrlFromQompoterLockFile
+  packageUrlFromQompoterLockFile=`jsonh < "${qompoterLockFile}" \
+   | grep -E "\[\"require(-dev)?\",\"${requireName}\",\"url\"\]" \
+   | sed -r "s/\"//g;s/\[require(-dev)?,.*,url\]\t*//g"`
+  echo "${packageUrlFromQompoterLockFile}"
+}
+
 getRelatedUrl()
 {
   local qompoterFile=$1
@@ -1493,9 +1509,14 @@ downloadQompoterFilePackages()
   local qompoterFile=$1
   local qompoterLockFile=$2
   local vendorDir=$3
+  local fromLock=$4
   local globalRes=0
   local requires
-  requires=$(getProjectRequires "${qompoterFile}")
+  if [ "1" == "${fromLock}" ]; then
+    requires=$(getProjectRequiresFromLock "${qompoterLockFile}")
+  else
+    requires=$(getProjectRequires "${qompoterFile}")
+  fi
 
   for packageInfo in ${requires}; do
       local vendorName
@@ -1517,8 +1538,13 @@ downloadQompoterFilePackages()
       #~ Download
       local repo
       local url
-      repo=$(getRelatedRepository "${qompoterFile}" "${vendorName}" "${projectName}")
-      url=$(getRelatedUrl "${qompoterFile}" "${vendorName}" "${projectName}")
+      if [ "1" == "${fromLock}" ]; then
+        repo=$(getRelatedRepository "${qompoterLockFile}" "${vendorName}" "${projectName}")
+        url=$(getRelatedUrlFromLock "${qompoterFile}" "${vendorName}" "${projectName}")
+      else
+        repo=$(getRelatedRepository "${qompoterFile}" "${vendorName}" "${projectName}")
+        url=$(getRelatedUrl "${qompoterFile}" "${vendorName}" "${projectName}")
+      fi
       downloadPackage "${repo}" "${vendorDir}" "${vendorName}" "${projectName}" "${version}" "${versionComplement}" "${qompoterLockFile}" "${url}"
       #~ Exit on error if no force
       local returnCode=$?
@@ -2191,8 +2217,34 @@ md5sumAction()
 
 updateAction()
 {
-  echo "Not implemented yet";
-  return 1
+  # FIXME update and install have been temporarily inversed
+  local qompoterFile=$1
+  local qompoterLockFile
+  local vendorDir=$2
+  local vendorPriFile
+  local globalRes=0
+
+  qompoterLockFile="${qompoterFile/.json/.lock}"
+  vendorPriFile=${vendorDir}/vendor.pri
+
+  if [ ! -f "${qompoterLockFile}" ]; then
+    # FIXME Replace by updateAction "${qompoterFile}" "${vendorDir}"
+    echo "======== -> install"
+    echo
+    installAction "${qompoterFile}" "${vendorDir}"
+    return $?
+  fi
+  prepareVendorDir "${vendorDir}"
+
+  downloadQompoterFilePackages "${qompoterLockFile}" "${qompoterLockFile}" "${vendorDir}" "1"
+  globalRes=$?
+
+  if [[ "${globalRes}" == 0 ]] || [[ "${IS_BYPASS}" == "1" ]]; then
+    mv "${vendorPriFile}.tmp" "${vendorPriFile}"
+  else
+    rm "${vendorPriFile}.tmp"
+  fi
+  return $globalRes
 }
 
 requireListAction()
