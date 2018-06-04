@@ -20,6 +20,48 @@ That is why one of the key concept of Qompoter is to be able to handle several t
 
 Let's dig dipper into each type of repositories to see how to use them and eventually manage them.
 
+Configure the repository
+---------------------
+
+Qompoter provides several means to configure the repository to be used. The default repository is Github (https://github.com/). If this does not fit your need, select one of the method listed below.
+
+At the moment, Qompoter only allows to select one repository at a time. This will be improved in the future.
+
+### Environment variable
+
+The `QOMP_TOKEN` environment variable is used by Qompoter to override the default repository path. It allows you to change the Qompoter repository locally or for your whole system:
+* Locally, run `export QOMP_TOKEN=htpps://gitlab.com/ && qompoter install`.
+* Globally, add the following to your `~/.bashrc` file `export QOMP_TOKEN=htpps://gitlab.com/`
+
+### In command line
+
+The default repository or `QOMP_TOKEN` can be override using command line. Use the `--repository` (alias `-r`) option to specify another repository path.
+
+Example: `qompoter install -r https://anongit.kde.org/`.
+
+### Inqlude repository
+
+The [Inqlude](https://inqlude.org/) repository (an open initiative which aims to list all Qt libraries and modules) has a special behaviour for Qompoter. If a package is listed in the Inqlude repository, Qompoter will always try to download it using the URL provided by Inqlude first, and fallback to the "normal" Qompoter repository configuration if that failed.
+
+### In the qompoter.json file
+
+It is always possible to define a specific repository for a given package in the `qompoter.json` file. Previous methods applied for all packages, but this one allows to target one package. This method will override the default repository, the `QOMP_TOKEN` variable, the repository passed by command line, and even the Inqlude URL.
+
+In the `qompoter.json` file, use the "repositories" field to define a repository for a package, or even the complete path to download the package.
+
+Example:
+
+```
+    "require": {
+        "young/luke": "v0.2.1-beta",
+        "young/leia": "v0.5-lib"
+    },
+    "repositories": {
+        "young/luke" : "https://github.com",
+        "young/leia": { "url": "https://raw.githubusercontent.com/young/leia/fdf464df84fs9g8/v0.5-lib.tar.gz" }
+    }
+```
+
 Development Forges - Github and al.
 ---------------------
 
@@ -113,7 +155,7 @@ The repository directories and files shall be available using the "ls" and "cp" 
 Inqlude - Listing of Qt application
 ---------------------
 
-[Inqlude](https://inqlude.org/) is a open project which aims to list all Qt libraries and modules to promote them and help Qt developers. In addition to this listing, the project provides also two clients to browse and download libraries. For some of theses libraries, the client will install them globally into your system, and a simple `QT += module-name` will allow you to use them in your project.
+[Inqlude](https://inqlude.org/) is an open project which aims to list all Qt libraries and modules to promote them and help Qt developers. In addition to this listing, the project provides also two clients to browse and download libraries. For some of theses libraries, the client will install them globally into your system, and a simple `QT += module-name` will allow you to use them in your project.
 The objectives of Inqlude are different from Qompoter, but there are some similarities.
 
 Qompoter uses heavily the Inqlude listing of libraries and modules. By default, when running `qompoter install`, Qompoter search required packages of the project into the Inqlude repository. If available, it downloads them using information provided by Inqlude. This is very handy. This is also promising, a lot can be done to improve the interaction with Inqlude and ease the installation of these packages.
