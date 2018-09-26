@@ -8,7 +8,6 @@
 	],
 	"require": {
 		"cp/fylhan": "v1.*",
-		"cp/acme-cp": "v1.*-lib",
-		"git/acme-git": "v2.0.*"
+		"cp/acme-cp": "v1.*-lib"
 	}
 }

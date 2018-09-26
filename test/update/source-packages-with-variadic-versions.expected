@@ -9,8 +9,9 @@ Qompoter
   Downloading lib...
   done
 
-* git/acme-git v2.0.2
+* fylhan/posibrain v0.2
   Downloading sources from Git...
+  Warning: no 'qompoter.pri' found for this package
   done
 
 done

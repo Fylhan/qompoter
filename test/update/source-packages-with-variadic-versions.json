@@ -1,5 +1,5 @@
 {
-	"name": "update/source-raw-packages-with-variadic-versions-offline",
+	"name": "install-ok/qompoter-versionstar-offline",
 	"authors": [
 		{
 			"name": "Fylhan",
@@ -9,6 +9,9 @@
 	"require": {
 		"cp/fylhan": "v1.*",
 		"cp/acme-cp": "v1.*-lib",
-		"git/acme-git": "v2.0.*"
+		"fylhan/posibrain": "v0.*"
+	},
+	"repositories": {
+		"fylhan/posibrain": "https://github.com"
 	}
 }
