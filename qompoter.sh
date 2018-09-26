@@ -34,6 +34,7 @@ LAST_QOMPOTERLOCK_PART='  "require": {'
 # Version and path of the current package
 PACKAGE_VERSION=
 PACKAGE_DIST_URL=
+GIT_WELLKNOWN_REPOS=("github" "git.kde" "gitlab" "gitorious" "code.qt.io" "git.freedesktop" "framagit")
 
 #######################
 # JSON.H              #
@@ -788,9 +789,6 @@ downloadPackage()
     # Git
     # Provided URL
     if [ ! -z "${packageDistUrl}" ] && isGitRepositories "${packageDistUrl}"; then
-      if [[ ! "${packageDistUrl}" == *".git" ]]; then
-        packageDistUrl="${packageDistUrl}.git"
-      fi
       echo "  Downloading sources from Git..."
       logDebug "  URL has been provided (${packageDistUrl})"
       packageType="git"
@@ -871,7 +869,7 @@ downloadPackage()
       test "${versionComplement}" == "" && versionComplement=${packageName}
       # FIXME Search for variadic version v1.* : http://gitlab.lan.trialog.com/api/v4/projects/trialog-em%2Fslac-controller-launcher/repository/tags grep "\[.*,\"name\"\].*\"v1.1.*\""
       packageDistUrl="${packageDistUrl}api/v4/projects/${vendorName}%2F${packageName}/jobs/artifacts/${requireVersion%-lib}/download?job=${versionComplement}"
-     if [ "${QOMP_TOKEN}" != "" ]; then
+      if [ "${QOMP_TOKEN}" != "" ]; then
         packageDistUrl="${packageDistUrl}&private_token=${QOMP_TOKEN}"
       fi
       logDebug "  Use ${packageType} package \"${packageName}\" (${packageDistUrl})"
@@ -1296,12 +1294,20 @@ isGitRepositories()
     return 1;
   fi
   # Existing Git repository in file system: ok
-  if [ -d "${gitUrlOrRepository}" ]; then
+  if [ -d "${gitUrlOrRepository}/.git" ]; then
     return 0
   fi
-  local gitRepositories=("github" "git.kde" "gitlab" "gitorious" "code.qt.io" "git.freedesktop" "framagit")
+  # Finishing with .git, its probably a Git repository: ok
+  if [[ "${gitUrlOrRepository}" == *".git" ]]; then
+    if [[ "${gitUrlOrRepository}" == "http"* ]]; then
+      return 0
+    fi
+    if [ -d "${gitUrlOrRepository}" ]; then
+      return 0
+    fi
+  fi
   # Repository path confirms it is a well-known Git repository: ok
-  for i in "${gitRepositories[@]}"; do
+  for i in "${GIT_WELLKNOWN_REPOS[@]}"; do
     if [[ "${gitUrlOrRepository}" == *"$i"* ]]; then
       return 0;
     fi
@@ -2694,12 +2700,12 @@ main()
   touch ${C_LOG_FILENAME}
 
   echo "Qompoter"
-  echo "======== ${ACTION}"
-  echo
 
   updateVendorDirFromQompoterFile "${QOMPOTER_FILENAME}"
   case ${ACTION} in
     "export")
+      echo "======== ${ACTION}"
+      echo
       if [ "${SUB_ACTION}" == "repo" ]; then
         repoExportAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
       else
@@ -2707,9 +2713,13 @@ main()
       fi
       ;;
     "init")
+      echo "======== ${ACTION}"
+      echo
       initAction "${VENDOR_NAME}" "${PROJECT_NAME}" "${PACKAGE_VERSION}" "${QOMPOTER_FILENAME}"
       ;;
     "inqlude")
+      echo "======== ${ACTION}"
+      echo
       if [ "${SUB_ACTION}" == "search" ]; then
         inqludeSearchAction "${VENDOR_NAME}" "${PROJECT_NAME}" "${PACKAGE_VERSION}" "${INQLUDE_FILENAME}"
       elif [ "${SUB_ACTION}" == "minify" ]; then
@@ -2717,9 +2727,13 @@ main()
       fi
       ;;
     "inspect")
+      echo "======== ${ACTION}"
+      echo
       inspectAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
       ;;
     "install")
+      echo "======== ${ACTION}"
+      echo
       if [ -z "${PROJECT_NAME}" ]; then
         installAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
       else
@@ -2727,12 +2741,18 @@ main()
       fi
       ;;
     "jsonh")
+      echo "======== ${ACTION}"
+      echo
       jsonhAction "${QOMPOTER_FILENAME}"
       ;;
     "md5sum")
+      echo "======== ${ACTION}"
+      echo
       md5sumAction "${VENDOR_NAME}"
       ;;
     "require")
+      echo "======== ${ACTION}"
+      echo
       if [ "${SUB_ACTION}" == "list" ]; then
         requireListAction "${QOMPOTER_FILENAME}"
       else
@@ -2740,9 +2760,20 @@ main()
       fi
       ;;
     "update")
-      updateAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
+      if [ ! -f "${QOMPOTER_FILENAME/.json/.lock}" ]; then
+        # FIXME Replace by updateAction "${qompoterFile}" "${vendorDir}"
+        echo "======== ${ACTION} -> install"
+        echo
+        installAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
+      else
+        echo "======== ${ACTION}"
+        echo
+        updateAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
+      fi
       ;;
     *)
+      echo "======== ${ACTION}"
+      echo
       echo -e "${C_FAIL}FAILURE${C_END} Unknown action '${ACTION}'"
       return 1
       ;;
