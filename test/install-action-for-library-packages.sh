@@ -19,5 +19,6 @@ do
   fi
   rm -rf vendor
 done
+echo "postamble: Remove lock files"
 rm ${name}/*.lock
 exit $fails

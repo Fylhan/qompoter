@@ -20,5 +20,6 @@ do
   rm -rf vendor
 done
 #~ echo "$fails test(s) failed"
+echo "postamble: Remove lock files"
 rm ${name}/*.lock
 exit $fails

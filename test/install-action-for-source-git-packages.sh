@@ -139,5 +139,6 @@ checkVersion "${i}" "${TEST_CASE}" "v1.1"
 
 rm $QOMPOTER_FILE
 rm -rf vendor
+echo "postamble: Remove lock files"
 rm -- *.lock
 exit $FAILS

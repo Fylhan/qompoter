@@ -7,23 +7,23 @@ offline=$1
 tests=$(ls ${name}/*${offline}.json | wc -l)
 echo "1..${tests##* }"
 
-echo "Create fake Git repository"
+echo "preamble: Create fake Git repository"
 REPO=qompoter-repo
 mkdir "${REPO}/git"
 mkdir "${REPO}/git/acme-git"
 mkdir "${REPO}/git/acme-git/tmp"
 cd "${REPO}/git/acme-git/tmp"
 touch qompoter.pri
-git init
-git add qompoter.pri
-git commit -m "First commit"
-git tag v2.0.2
+git init &> /dev/null
+git add qompoter.pri &> /dev/null
+git commit -m "First commit" &> /dev/null
+git tag v2.0.2 &> /dev/null
 touch another-file.txt
-git add another-file.txt
-git commit -m "Second commit"
-git tag v2.0.3
+git add another-file.txt &> /dev/null
+git commit -m "Second commit" &> /dev/null
+git tag v2.0.3 &> /dev/null
 cd ..
-git clone --bare tmp acme-git.git
+git clone --bare tmp acme-git.git &> /dev/null
 rm -rf tmp
 cd ../../../
 
@@ -40,7 +40,9 @@ do
   fi
   rm -rf vendor
 done
+echo "postamble: Remove lock file for 'but-update-because-no-lock-file-offline.json'"
 rm update/but-update-because-no-lock-file-offline.lock
+echo "postamble: Remove fake Git repository"
 rm -rf "${REPO}/git"
 #~ echo "$fails test(s) failed"
 exit $fails
