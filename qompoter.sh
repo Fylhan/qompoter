@@ -34,7 +34,7 @@ LAST_QOMPOTERLOCK_PART='  "require": {'
 # Version and path of the current package
 PACKAGE_VERSION=
 PACKAGE_DIST_URL=
-GIT_WELLKNOWN_REPOS=("github" "git.kde" "gitlab" "gitorious" "code.qt.io" "git.freedesktop" "framagit")
+GIT_WELLKNOWN_REPOS=("github" "gitlab" "git.kde" "gitorious" "code.qt.io" "git.freedesktop" "framagit")
 
 #######################
 # JSON.H              #
@@ -777,9 +777,10 @@ downloadPackage()
   # Search in Inqlude repository
   checkPackageInqludeVersion "${vendorName}" "${packageName}" "${requireVersion}" "${INQLUDE_FILENAME}"
   inqludeDistUrl=$(getPackageInqludeUrl "${vendorName}" "${packageName}" "${requireVersion}" "${INQLUDE_FILENAME}")
+  # The following has been moved later
   # if [ -z "${packageDistUrl}" ] && [ ! -z "${inqludeDistUrl}" ]; then
-  #   logDebug "  Use inqlude package \"${packageName}\" (${inqludeDistUrl})"
-  #   packageDistUrl=${inqludeDistUrl}
+    # logDebug "  Use inqlude package \"${packageName}\" (${inqludeDistUrl})"
+    # packageDistUrl=${inqludeDistUrl}
   # elif [ -z "${packageDistUrl}" ]; then
   #   packageDistUrl=${requireBasePath}/${requireVersion}
   # fi
@@ -1593,11 +1594,11 @@ getInqludeId()
   local packageName=$1
   local inqludePackages=$2
 
-  local packageId=`echo ${inqludePackages} \
+  local packageId=$(echo "${inqludePackages}" \
    | grep -E "\[[0-9]+,\"name\"\]\\s*\"${packageName}\"" -o \
-   | sed -r "s/\[([0-9]+),\"name\"\]\\s*\"${packageName}\"/\1/"`
+   | sed -r "s/\[([0-9]+),\"name\"\]\\s*\"${packageName}\"/\1/")
   test -z "${packageId}" && return 3
-  echo ${packageId}
+  echo "${packageId}"
 }
 
 checkPackageInqludeVersion()
@@ -1705,7 +1706,7 @@ getPackageInqludeData()
   local keys=`echo ${2} | sed -r 's/\//\",\"/'`
   local inqludePackages=$3
 
-  echo ${inqludePackages} \
+  echo "${inqludePackages}" \
    | grep -E "\[${packageId},\"${keys}\"\]\\s*\"([^\"]*)\"" -o \
    | sed -r "s/\[${packageId},\"${keys}\"\]\\s*\"([^\"]*)\"/\1/"
 }
