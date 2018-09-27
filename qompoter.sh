@@ -2,7 +2,7 @@
 
 readonly C_PROGNAME=$(basename $0)
 readonly C_PROGDIR=$(readlink -m $(dirname $0))
-readonly C_PROGVERSION="v0.4.1-alpha"
+readonly C_PROGVERSION="v0.4.1-beta"
 readonly C_ARGS="$@"
 C_OK="\e[1;32m"
 C_FAIL="\e[1;31m"
@@ -414,8 +414,8 @@ version()
 createQompotePri()
 {
 	local qompotePri=$1
-  # cat << EOF > "${qompotePri}"
-	cat << 'EOF' > "${qompotePri}"
+  cat << EOF > "${qompotePri}"
+	# cat << 'EOF' > "${qompotePri}"
 # $$setLibPath()
 # Generate a lib path name depending of the OS and the arch
 # Export and return LIBPATH

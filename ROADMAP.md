@@ -4,14 +4,14 @@ Qompoter Roadmap
 Version 0.4 - in progress
 -----------
 
-* [ ] Installation: Create Ubuntu/Snap package (?)
 * [ ] Installation: Create Debian package (?)
+* [ ] Installation: Create Ubuntu/Snap package (?)
 * [ ] Installation: Create FlatPack package (?)
 * [x] New action: `qompoter install <packagename>`
   * [ ] Support `--save --dev` option in `qompoter install <packagename>`
 * [ ] Study: Make a study around `qompoter install` / `qompoter update` / `qompoter install --save` (compare with Composer, npm, yarn) and post the result into the blog
 * [ ] New action: `qompoter install` / `qompoter update` (using lock file)
-  * In progress: url is ok, unit test in progress, cannot download on Github?, need to inverse install and update
+  * In progress: url is ok, unit test are ok, cannot download on Github?, need to inverse install and update
 * [x] Feature: Add `--no-dep` flag to not load dependencies during `qompoter install` or `qompoter install <packagename>` (alias of `--depth 0`)
 * [x] Feature: Add aliases for most used actions e=export, i=install, u=update
 * [x] Feature: Improve `qompoter inspect` (show only modified packages by default, now use `--all` to list all of them)

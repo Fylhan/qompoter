@@ -1,8 +1,13 @@
 Qompoter Changelogs
 ===================
 
-Version 0.4.0 - released 2018-01-24
------------
+[Unreleased]
+-------
+
+* New action: `qompoter update` (wip)
+
+[0.4.0] - released 2018-01-24
+-------
 
 * Breaking changes
   * Change default repository path to Github and read `QOMP_REPO_PATH` environment variable to select another one
@@ -23,8 +28,8 @@ Version 0.4.0 - released 2018-01-24
 * Fix: Do not load sub-dependencies for library packages
 * Fix: Several corrections, maybe not complete, in `downloadLibPackage`
 
-Version 0.3 - released 2017, August
------------
+[0.3] - released 2017, August
+-----
 
 * Installation: create npm package
 * Fix: Git based package if changing from a branch to a tag or commit, now we first install otherwize update
@@ -41,8 +46,8 @@ Version 0.3 - released 2017, August
 * Feature: More verbosity levels
 * Clean documentation
 
-Version 0.2 - released 2016, October
------------
+[0.2] - released 2016, October
+-----
 
 * Update qompote.pri with new qmake functions
 * vendor.pri now also contains qompote.pri to avoid double inclusion
@@ -64,8 +69,8 @@ Version 0.2 - released 2016, October
 * Add "--no-color" flag which prevent fancy colors to be displayed
 * Add unit tests, yeah!
 
-Version 0.1
------------
+[0.1]
+-----
 
 * First release
 * List packages in qompoter.json and download them
