@@ -1,0 +1,9 @@
+{
+  "name": "install-ok/qompoter-versionstar-offline",
+  "date": "2018-01-24T14:46:50+01:00",
+  "require": {
+    "cp/fylhan": { "version": "v1.1.10", "type": "qompotist-fs", "url": "qompoter-repo/cp/fylhan/v1.1.10", "md5sum": "9d57702586a06dcd5de4d717d936c9d6" }
+    ,"cp/acme-cp": { "version": "v1.0-lib", "type": "qompotist-fs", "url": "qompoter-repo/cp/acme-cp/v1.0-lib", "md5sum": "115f3cd6f4a5dec31fb31b9cf39fa855" }
+    ,"fylhan/posibrain": { "version": "v0.2", "type": "git", "url": "https://github.com/fylhan/posibrain.git", "md5sum": "1147fc622a5cb562f7ca02450576431a" }
+  }
+}

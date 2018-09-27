@@ -8,5 +8,6 @@ release*
 *.zip
 *.tar*
 *.lock
+!test/update/*.lock
 .tags
 commit-*
