@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 readonly C_PROGNAME=$(basename $0)
 readonly C_PROGDIR=$(readlink -m $(dirname $0))
@@ -2232,7 +2232,7 @@ updateAction()
 
   if [ ! -f "${qompoterLockFile}" ]; then
     # FIXME Replace by updateAction "${qompoterFile}" "${vendorDir}"
-    echo "======== -> create qompoter.lock"
+    echo "======== update -> create qompoter.lock"
     echo
     installAction "${qompoterFile}" "${vendorDir}"
     return $?
@@ -2737,12 +2737,11 @@ main()
       echo "======== ${ACTION}"
       echo
       requireAction "${QOMPOTER_FILENAME}"
-      fi
       ;;
     "update")
       if [ ! -f "${QOMPOTER_FILENAME/.json/.lock}" ]; then
         # FIXME Replace by updateAction "${qompoterFile}" "${vendorDir}"
-        echo "======== ${ACTION} -> install"
+        echo "======== ${ACTION} -> create qompoter.lock"
         echo
         installAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
       else
