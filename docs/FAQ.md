@@ -13,7 +13,7 @@ Table of Contents
 * [What is this qompote.pri file?](#what-is-this-qompotepri-file)
 * [Why "Qompoter"?](#why-qompoter)
 * [Why building Qompoter and not using something already there?](#why-building-qompoter-and-not-using-something-already-there)
-* [How did you choose the Qompoter CLI syntax?](#how-did-you-choose-the-qompoter-cli-syntax]
+* [How did you choose the Qompoter CLI syntax?](#how-did-you-choose-the-qompoter-cli-syntax)
 
 Can I use Qompoter in production?
 ---------------------
