@@ -2,7 +2,7 @@
 
 readonly C_PROGNAME=$(basename $0)
 readonly C_PROGDIR=$(readlink -m $(dirname $0))
-readonly C_PROGVERSION="v0.4.1-beta"
+readonly C_PROGVERSION="v0.5.0-beta"
 readonly C_ARGS="$@"
 C_OK="\e[1;32m"
 C_FAIL="\e[1;31m"
@@ -315,9 +315,6 @@ usage()
 	                          and continue the process
 	                          Supported actions are: export --repo, install
 
-	    -l, --list            List elements depending of the action
-	                          Supported action is: require
-
 	        --minify          Minify the provided file
 	                          Supported action is: inqlude
 
@@ -383,10 +380,13 @@ usage()
 	      $C_PROGNAME install qompoter/qhttp-wrapper v3.1.* --no-dep --repo https://github.com
 
 	    List required dependencies for this project:
-	      $C_PROGNAME require --list
+	      $C_PROGNAME require
 
 	    List manually modified dependencies for this project:
 	      $C_PROGNAME inspect
+
+	    List downloaded dependencies for this project:
+	      $C_PROGNAME inspect --all
 
 	    Export vendor directory:
 	      $C_PROGNAME export
@@ -396,9 +396,6 @@ usage()
 
 	    Search dependency in the inqlude repository:
 	      $C_PROGNAME inqlude --search vogel/injeqt
-
-	    Generate boilerplate for the "old/yoda" package starting from version 900.0
-	      $C_PROGNAME init old/yoda v900.0
 
 	EOF
 }
@@ -414,8 +411,8 @@ version()
 createQompotePri()
 {
 	local qompotePri=$1
-  cat << EOF > "${qompotePri}"
-	# cat << 'EOF' > "${qompotePri}"
+  #cat << EOF > "${qompotePri}"
+	cat << 'EOF' > "${qompotePri}"
 # $$setLibPath()
 # Generate a lib path name depending of the OS and the arch
 # Export and return LIBPATH
@@ -680,7 +677,6 @@ updateQompoterFile()
     insertAfter "${qompoterFile}" "${requireStart}" "    \"${vendorName}\/${packageName}\": \"${version}\"${comma}"
   fi
 }
-
 
 prepareQompoterLock()
 {
@@ -2236,7 +2232,7 @@ updateAction()
 
   if [ ! -f "${qompoterLockFile}" ]; then
     # FIXME Replace by updateAction "${qompoterFile}" "${vendorDir}"
-    echo "======== -> install"
+    echo "======== -> create qompoter.lock"
     echo
     installAction "${qompoterFile}" "${vendorDir}"
     return $?
@@ -2254,7 +2250,7 @@ updateAction()
   return $globalRes
 }
 
-requireListAction()
+requireAction()
 {
   local qompoterFile=$1
 
@@ -2263,12 +2259,6 @@ requireListAction()
     echo "* ${packageInfo}"
   done
   echo
-}
-
-requireAction()
-{
-  echo "Not implemented yet";
-  return 1
 }
 
 repoExportAction()
@@ -2600,14 +2590,6 @@ cmdline()
       version
       exit 0
       ;;
-    --list )
-      if [ "${ACTION}" == "require"  ]; then
-        SUB_ACTION="list"
-      else
-        echo "Ignore flag --list for action '${ACTION}'"
-      fi
-      shift
-    ;;
     --minify )
       if [ "${ACTION}" == "inqlude"  ]; then
         SUB_ACTION="minify"
@@ -2754,10 +2736,7 @@ main()
     "require")
       echo "======== ${ACTION}"
       echo
-      if [ "${SUB_ACTION}" == "list" ]; then
-        requireListAction "${QOMPOTER_FILENAME}"
-      else
-        requireAction "${QOMPOTER_FILENAME}"
+      requireAction "${QOMPOTER_FILENAME}"
       fi
       ;;
     "update")

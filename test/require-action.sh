@@ -8,7 +8,7 @@ echo "1..${tests##* }"
 for input in require/*${offline}.json
 do
   i=$((i+1))
-  if ! ../qompoter.sh require --list --no-color --file "$input" | diff -u - "${input%.json}.expected"
+  if ! ../qompoter.sh require --no-color --file "$input" | diff -u - "${input%.json}.expected"
   then
     echo "not ok $i - $input - error during require"
     fails=$((fails+1))

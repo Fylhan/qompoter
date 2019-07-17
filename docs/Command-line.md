@@ -62,15 +62,17 @@ Examples:
 ```bash
 # Inspect the "vendor" directory
 qompoter inspect
-# Inspect the "vendor" directory and lisy all packages, not only modified ones
+# Inspect the "vendor" directory and list all packages, not only modified ones
 qompoter inspect --all
 # Inspect the directory called "myvendor" based on file "myqompoter.lock"
 qompoter inspect --vendor-dir "myvendor" --file "myqompoter.json"
 ```
 
+To list packages required in the "qompoter.json" file, use [`qompoter require`](#require).
+
 ### install
 
-Download and install locally (i.e. into a "vendor" directory) the packages listed as required into the "qompoter.json" file. Several options can be used to select another "qompoter.json" file, "vendor" directory, repository path or to select only nominal or stable packages.
+Download and install locally into the "vendor" directory, the packages listed as required into the "qompoter.json" file. Several options can be used to select another "qompoter.json" file, "vendor" directory, repository path or to select only nominal or stable packages.
 
 The installation process generates a "qompoter.lock" file listing the downloaded packages, their selected version and a MD5 sum of each package.
 
@@ -89,7 +91,7 @@ qompoter install --repo /Project --file myqompoter.json --vendor myvendor --no-q
 
 ### install (one package)
 
-Download and install locally (i.e. into a "vendor" directory) the requested package. If the version number is not provided, the one from the Qompoter file is used (if any). By default, the requested package and all its dependencies are installed. To only install or update the requested package alone, use `--no-dep` option. Several other options can be used to select another "qompoter.json" file, "vendor" directory, repository path or to select only nominal or stable packages.
+Download and install locally into the "vendor" directory, the requested package. If the version number is not provided, the one from the Qompoter file is used (if any). By default, the requested package and all its dependencies are installed. To only install or update the requested package alone, use `--no-dep` option. Several other options can be used to select another "qompoter.json" file, "vendor" directory, repository path or to select only nominal or stable packages.
 
 The existing "qompoter.lock" file is updated, or a new one is created, listing the downloaded packages, their selected version and a MD5 sum of each package.
 
@@ -106,18 +108,20 @@ qompoter install qompoter/qhttp-wrapper --stable-only --repo https://github.com 
 
 ### require
 
-With the `--list` options, lists the required packages of a project.
+List the required packages of a project from the "qompoter.json" file.
 
 Example:
 
 ```bash
 # List required dependencies of the project
-qompoter require --list
+qompoter require
 # List required dependencies of "myqompoter.json" file
-qompoter require --list --file myqompoter.json
+qompoter require --file myqompoter.json
 ```
 
 The other features are not implemented yet.
+
+To list packages available in the "vendor" directory, use [`qompoter inspect --all`](#inspect).
 
 ### inqlude
 
