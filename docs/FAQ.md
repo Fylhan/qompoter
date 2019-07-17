@@ -127,6 +127,7 @@ During the first days of Qompoter, I was using Composer, the PHP dependency mana
 
 | Project  | Install                 | Update   | Add in depencency list file |
 |:--------:|:-----------------------:|:---------:|:--------------------------:|
+| qompoter | `install` (using lock)  | `update` | to be defined
 | composer | `install` (using lock)  | `update` | `require`
 | npm      | `install`               | `update` | `install --save`
 | yarn     | `install` (using lock)  | `update` | `add`
