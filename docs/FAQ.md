@@ -133,3 +133,4 @@ During the first days of Qompoter, I was using Composer, the PHP dependency mana
 | bower    | `install`               | `update` | `install --save`
 | conan    | `install` (using lock?) | ?        |
 | maven    | `install`               | N/A      | N/A
+| qpm      | `install`               | N/A      | N/A
