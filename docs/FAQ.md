@@ -13,6 +13,7 @@ Table of Contents
 * [What is this qompote.pri file?](#what-is-this-qompotepri-file)
 * [Why "Qompoter"?](#why-qompoter)
 * [Why building Qompoter and not using something already there?](#why-building-qompoter-and-not-using-something-already-there)
+* [How did you choose the Qompoter CLI syntax?](#how-did-you-choose-the-qompoter-cli-syntax]
 
 Can I use Qompoter in production?
 ---------------------
@@ -118,3 +119,17 @@ When I decided to start building Qompoter, I asked myself: what do I really need
 That is why I started building Qompoter. In Bash because it is easy to share and can still run in Linux, Mac and even Windows. It also involves less boilerplate than C++ to kick-off the project.
 
 Today, Qompoter is used in production by a small team, it still have some issues but really ease the sharing and repeatability of the build between several people. Please, share your experience.
+
+How did you choose the Qompoter CLI syntax?
+---------------------
+
+During the first days of Qompoter, I was using Composer, the PHP dependency manager, a lot. So yes, Qompoter is well inspired from Composer concepts, but I also tried to use the most common syntax.
+
+| Project  | Install                 | Update   | Add in depencency list file |
+|:--------:|:-----------------------:|:---------:|:--------------------------:|
+| composer | `install` (using lock)  | `update` | `require`
+| npm      | `install`               | `update` | `install --save`
+| yarn     | `install` (using lock)  | `update` | `add`
+| bower    | `install`               | `update` | `install --save`
+| conan    | `install` (using lock?) | ?        |
+| maven    | `install`               | N/A      | N/A
