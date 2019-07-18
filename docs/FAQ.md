@@ -86,6 +86,7 @@ There are already some dependency managers for the C++ environment:
 * [Conan](https://github.com/conan-io/conan) C/C++ distributed package manager
     * Written in Python.
     * Cmake, make, gcc and whatever but no qmake yet.
+    * Multi-platform
     * Dedicated repository, with possibility to host its own, with a lot of packages.
     * Packages can be easily imported, especially in CMake files. It supports sources and binaries with several architectures in a very advanced ways. More, packages are downloaded in a cached repository which allows offline usage, great!
     * Open source: MIT. Premium plan available.
@@ -105,6 +106,14 @@ There are already some dependency managers for the C++ environment:
     * Qmake only.
     * Dedicated repository.
     * Open source: AGPL.
+* [Craft](https://community.kde.org/Craft)
+    * To be studied
+* [vcpkg](https://github.com/Microsoft/vcpkg) C++ library manager
+    * Written in C++.
+    * Binary only?
+    * Multi-platform: Windows, Linux, MacOS
+    * Open source: MIT.
+    * To be studied
 
 There is also [npm](https://github.com/npm/npm) (Node Package Manager) which is actualy more generic than just Node.js. Still it seems difficult to provide easy installation of a C++ dependency manager based on "npm". More, I am not sure the C++ community is willing to use something based on "npm".
 
