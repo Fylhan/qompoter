@@ -29,13 +29,13 @@ At the moment, Qompoter only allows to select one repository at a time. This wil
 
 ### Environment variable
 
-The `QOMP_TOKEN` environment variable is used by Qompoter to override the default repository path. It allows you to change the Qompoter repository locally or for your whole system:
-* Locally, run `export QOMP_TOKEN=htpps://gitlab.com/ && qompoter install`.
-* Globally, add the following to your `~/.bashrc` file `export QOMP_TOKEN=htpps://gitlab.com/`
+The `QOMP_REPO_PATH` environment variable is used by Qompoter to override the default repository path. It allows you to change the Qompoter repository locally or for your whole system:
+* Locally, run `export QOMP_REPO_PATH=htpps://gitlab.com/ && qompoter install`.
+* Globally, add the following to your `~/.bashrc` file `export QOMP_REPO_PATH=htpps://gitlab.com/`
 
 ### In command line
 
-The default repository or `QOMP_TOKEN` can be override using command line. Use the `--repository` (alias `-r`) option to specify another repository path.
+The default repository or `QOMP_REPO_PATH` can be override using command line. Use the `--repository` (alias `-r`) option to specify another repository path.
 
 Example: `qompoter install -r https://anongit.kde.org/`.
 
