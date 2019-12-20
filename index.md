@@ -29,7 +29,7 @@ It should also work on Mac, FreeBSD and more widely on Windows (Cygwin or Mysys 
 ```bash
 $ npm install -g qompoter
 $ qompoter --version
-Qompoter v0.4.0
+Qompoter v{{ site.release.version}}
 Dependency manager for C++/Qt by Fylhan
 ```
 
@@ -38,7 +38,7 @@ Dependency manager for C++/Qt by Fylhan
 Download it from Github and move it to a place accessible in the `PATH`:
 
 ```bash
-$ wget https://github.com/Fylhan/qompoter/releases/download/v0.4.0/qompoter.sh -O qompoter.sh && sudo mv qompoter.sh /usr/bin/qompoter
+$ wget {{ site.release.url }} -O qompoter.sh && sudo mv qompoter.sh /usr/bin/qompoter
 $ qompoter --version
 Qompoter v0.4.0
 Dependency manager for C++/Qt by Fylhan
@@ -47,7 +47,7 @@ Dependency manager for C++/Qt by Fylhan
 To enable autocompletion, download the script and source it in your `~/.bashrc` file:
 
 ```bash
-wget https://github.com/Fylhan/qompoter/releases/download/v0.4.0/qompoter_bash_completion.sh -O qompoter_bash_completion.sh && sudo mv qompoter_bash_completion.sh /usr/share/bash-completion/completions/qompoter
+wget https://github.com/Fylhan/qompoter/releases/download/v{{ site.release.version}}/qompoter_bash_completion.sh -O qompoter_bash_completion.sh && sudo mv qompoter_bash_completion.sh /usr/share/bash-completion/completions/qompoter
 echo "test [ -f /usr/share/bash-completion/completions/qompoter ]; source /usr/share/bash-completion/completions/qompoter" >> ~/.bashrc
 ```
 
