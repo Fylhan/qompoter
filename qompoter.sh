@@ -34,7 +34,7 @@ LAST_QOMPOTERLOCK_PART='  "require": {'
 # Version and path of the current package
 PACKAGE_VERSION=
 PACKAGE_DIST_URL=
-GIT_WELLKNOWN_REPOS=("github" "gitlab" "git.kde" "gitorious" "code.qt.io" "git.freedesktop" "framagit")
+GIT_WELLKNOWN_REPOS=("gitolite" "github" "gitlab" "git.kde" "gitorious" "code.qt.io" "git.freedesktop" "framagit")
 
 #######################
 # JSON.H              #
