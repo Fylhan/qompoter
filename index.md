@@ -40,7 +40,7 @@ Download it from Github and move it to a place accessible in the `PATH`:
 ```bash
 $ wget {{ site.release.url }} -O qompoter.sh && sudo mv qompoter.sh /usr/bin/qompoter
 $ qompoter --version
-Qompoter v0.4.0
+Qompoter v0.4.{{ site.release.version}}
 Dependency manager for C++/Qt by Fylhan
 ```
 
