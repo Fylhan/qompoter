@@ -1293,7 +1293,7 @@ isGitRepositories()
   if [ -d "${gitUrlOrRepository}" ]; then
     return 0
   fi
-  local gitRepositories=("github" "git.kde" "gitlab" "gitorious" "code.qt.io" "git.freedesktop" "framagit")
+  local gitRepositories=("gitolite" "github" "git.kde" "gitlab" "gitorious" "code.qt.io" "git.freedesktop" "framagit")
   # Repository path confirms it is a well-known Git repository: ok
   for i in "${gitRepositories[@]}"; do
     if [[ "${gitUrlOrRepository}" == *"$i"* ]]; then
