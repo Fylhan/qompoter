@@ -1,6 +1,11 @@
 Qompoter Changelogs
 ===================
 
+Version 0.4.1 - released 2019-12-20
+-----------
+
+* Add "gitolite" as well-known Git repository
+
 Version 0.4.0 - released 2018-01-24
 -----------
 
