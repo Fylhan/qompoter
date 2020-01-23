@@ -22,7 +22,15 @@ Installation
 Qompoter requires Bash, Git, sed. Other tools like rsync, curl (or wget) and tar (or zip) may be useful for some advanced cases.
 
 It works on Linux and Windows (using [Git bash](https://git-scm.com/)).
-It should also work on Mac, FreeBSD and more widely on Windows (Cygwin or Mysys command line) because it is Bash based, but I did not test it yet.
+
+It also works on MacOS, but requires additional packages to be installed with Homebrew (https://brew.sh/): `brew install gnu-sed && brew install coreutils`, then make sure to add these to your path, in order to use GNU sed and GNU date instead of the MacOS version:
+
+```
+PATH=/usr/local/opt/coreutils/libexec/gnubin:$PATH
+PATH=/usr/local/opt/gnu-sed/libexec/gnubin:$PATH
+```
+
+It should also work on FreeBSD and more widely on Windows (Cygwin or Mysys command line) because it is Bash based, but I did not test it yet.
 
 ### Using [npm](https://www.npmjs.com/)
 
