@@ -290,7 +290,7 @@ usage()
 	Usage: $C_PROGNAME [action] [ --repo <repo> | other options ]
 
 	    action               Select an action:
-	                          export, init, inspect, install, require, tree
+	                          export, init, inspect, install, require
 
 	                         Other actions are useful for digging into Qompoter:
 	                          inqlude, jsonh, md5sum
@@ -2033,6 +2033,7 @@ inspectAction()
   qompoterLockFile=$(echo "${qompoterFile}" | cut -d'.' -f1).lock
 
     if [[ "${IS_TREE}" == "1" ]]; then
+      #afficher le nom du projet
       treeAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
     else
         # Check
@@ -2088,32 +2089,28 @@ listRequirement()
 {
   local match=$(grep -w -o $1 qompoter.json)
   if [ "$match" = "$1" ];then
-    echo -e "\t\e[37m$match: {"
-    local data=$(echo $(<qompoter.json) |sed "s/$1/%/" | cut -d'%' -f2 | sed "s/://" | sed "s/{//" | cut -d'}' -f1| sed "s/,/\r\n\t\t/g")
-    data=$(tr -d ' ' <<<"$data")
-    echo -e "\t\t\e[39m$data\r\n\t}"
-  #else
-    #echo -e "\t\e[93m$1 not found."
+        local data=$(echo $(<qompoter.json) |sed "s/$1/%/" | cut -d'%' -f2 | sed "s/://" | sed "s/{//" | cut -d'}' -f1| sed "s/,/\r\n|\t|----/g")
+        data=$(tr -d ' ' <<<"$data")
+        echo -e "\e[37m|\t|----$data"
   fi
 }
 
 treeAction(){
-  local vendorDir=$2
-  cd $vendorDir
-  for dir in $(find [0-9a-zA-Z]* -maxdepth 0 -type d); do
-    cd $dir
-    echo -e "\e[34m$dir/"
-    if [ -f qompoter.json ]; then
-        local qompoterFile=$(<qompoter.json)
-        listRequirement ""\"require\"""
-        listRequirement ""\"require-dev\"""
-        listRequirement ""\"require-global\"""
-        echo -e "\r\n"
-    #else
-        #echo -e "\t\e[93mqompoter.json not found.\r\n"
-    fi
-    cd ..
-  done
+    local vendorDir=$2
+    echo -e "\e[35m${PWD##*/}"
+    cd $vendorDir
+    for dir in $(find [0-9a-zA-Z]* -maxdepth 0 -type d); do
+        cd $dir
+        echo -e "\e[37m|\r\n|----\e[34m$dir"
+        if [ -f qompoter.json ]; then
+            echo -e "\e[37m|\t|"
+            local qompoterFile=$(<qompoter.json)
+            listRequirement ""\"require\"""
+            listRequirement ""\"require-dev\"""
+            listRequirement ""\"require-global\"""
+        fi
+        cd ..
+    done
 }
 
 recursiveInstallFromQompoterFile()
