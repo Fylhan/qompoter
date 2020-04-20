@@ -2111,6 +2111,7 @@ treeAction(){
         fi
         cd ..
     done
+    cd ..
 }
 
 recursiveInstallFromQompoterFile()
