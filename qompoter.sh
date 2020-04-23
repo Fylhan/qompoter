@@ -2031,47 +2031,47 @@ inspectAction()
   local vendorDir=$2
   local globalRes=0
   qompoterLockFile=$(echo "${qompoterFile}" | cut -d'.' -f1).lock
-
-    if [[ "${IS_TREE}" == "1" ]]; then
-      #afficher le nom du projet
-      treeAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
-    else
-        # Check
-        checkQompoterFile "${qompoterLockFile}" || return 100
-        if [ ! -d "${vendorDir}" ]; then
-            echo "Nothing to do: no '${VENDOR_DIR}' dir"
-            return 0
-        fi
-        # Loop over lock file
-        local changes=0
-        local requires
-        requires=$(getProjectRequiresFromLock "${qompoterLockFile}")
-        for packageInfo in ${requires}; do
-            local vendorName
-            vendorName=$(echo "${packageInfo}" | cut -d'/' -f1)
-            local projectName
-            projectName=$(echo "${packageInfo}" | cut -d'/' -f2)
-            local projectFullName="${vendorName}/${projectName}"
-            local version
-            version=$(echo "${packageInfo}" | cut -d'/' -f3)
-            local expectedMd5Sum
-            expectedMd5Sum=$(getProjectMd5FromLock "${qompoterLockFile}" "${projectFullName}" | cut -d'/' -f3)
-            local actualMd5Sum
-            actualMd5Sum=$(getProjectMd5 "${vendorDir}/${projectName}")
-            local differs=
-            test "${actualMd5Sum}" != "${expectedMd5Sum}" && let changes=${changes}+1 && differs="${C_INFO} *${C_END}"
-            if [[ "${IS_ALL}" == "1" ]] || [[ ! -z "${differs}" ]]; then
-                echo -e "* ${projectFullName} (${version}${differs})"
-            if [ -d "${vendorDir}/${projectName}/.git" ]; then
-                cd "${vendorDir}/${projectName}" || ( echo "  Error: cannot go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
-                git status -sb
-                if [[ ! -z $"${differs}" ]] && ( [ "$IS_VERBOSE" == "1" ] || [ "$IS_VERBOSE" == "2" ] || [ "$IS_VERBOSE" == "3" ] ); then
-                    git diff
-                fi
-                cd ../../ || ( echo "  Error: cannot go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
-            fi
-            echo
-            fi
+    
+  # Check
+  checkQompoterFile "${qompoterLockFile}" || return 100
+  if [ ! -d "${vendorDir}" ]; then
+      echo "Nothing to do: no '${VENDOR_DIR}' dir"
+      return 0
+  fi
+  
+  if [[ "${IS_TREE}" == "1" ]]; then
+      treeAction "${vendorDir}"
+  else
+      # Loop over lock file
+      local changes=0
+      local requires
+      requires=$(getProjectRequiresFromLock "${qompoterLockFile}")
+      for packageInfo in ${requires}; do
+          local vendorName
+          vendorName=$(echo "${packageInfo}" | cut -d'/' -f1)
+          local projectName
+          projectName=$(echo "${packageInfo}" | cut -d'/' -f2)
+          local projectFullName="${vendorName}/${projectName}"
+          local version
+          version=$(echo "${packageInfo}" | cut -d'/' -f3)
+          local expectedMd5Sum
+          expectedMd5Sum=$(getProjectMd5FromLock "${qompoterLockFile}" "${projectFullName}" | cut -d'/' -f3)
+          local actualMd5Sum
+          actualMd5Sum=$(getProjectMd5 "${vendorDir}/${projectName}")
+          local differs=
+          test "${actualMd5Sum}" != "${expectedMd5Sum}" && let changes=${changes}+1 && differs="${C_INFO} *${C_END}"
+          if [[ "${IS_ALL}" == "1" ]] || [[ ! -z "${differs}" ]]; then
+              echo -e "* ${projectFullName} (${version}${differs})"
+              if [ -d "${vendorDir}/${projectName}/.git" ]; then
+                  cd "${vendorDir}/${projectName}" || ( echo "  Error: cannot go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+                  git status -sb
+                  if [[ ! -z $"${differs}" ]] && ( [ "$IS_VERBOSE" == "1" ] || [ "$IS_VERBOSE" == "2" ] || [ "$IS_VERBOSE" == "3" ] ); then
+                      git diff
+                  fi
+                  cd ../../ || ( echo "  Error: cannot go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+              fi
+          echo
+          fi
         done
 
         if [ "${changes}" == "0" ]; then
@@ -2091,27 +2091,37 @@ listRequirement()
   if [ "$match" = "$1" ];then
         local data=$(echo $(<qompoter.json) |sed "s/$1/%/" | cut -d'%' -f2 | sed "s/://" | sed "s/{//" | cut -d'}' -f1| sed "s/,/\r\n|\t|----/g")
         data=$(tr -d ' ' <<<"$data")
-        echo -e "\e[37m|\t|----$data"
+        if [[ ! -z "$data" ]]; then
+            echo -e "\e[37m|\t|----$data"
+        fi
   fi
 }
 
 treeAction(){
-    local vendorDir=$2
-    echo -e "\e[35m${PWD##*/}"
-    cd $vendorDir
-    for dir in $(find [0-9a-zA-Z]* -maxdepth 0 -type d); do
-        cd $dir
-        echo -e "\e[37m|\r\n|----\e[34m$dir"
+    echo -e "Project : \e[35m${PWD##*/}"
+    local requires
+    requires=$(getProjectRequiresFromLock "${qompoterLockFile}")
+    for packageInfo in ${requires}; do
+        local vendorName
+        vendorName=$(echo "${packageInfo}" | cut -d'/' -f1)
+        local projectName
+        projectName=$(echo "${packageInfo}" | cut -d'/' -f2)
+        cd $1/$projectName
+        echo -e "\e[37m|\r\n|----\e[34m$projectName"
+        echo -e "\e[37m|\t|"
         if [ -f qompoter.json ]; then
-            echo -e "\e[37m|\t|"
-            local qompoterFile=$(<qompoter.json)
-            listRequirement ""\"require\"""
-            listRequirement ""\"require-dev\"""
-            listRequirement ""\"require-global\"""
+            if [ -z "$(grep -w -o ""\"require\""" qompoter.json)" ] && [ -z "$(grep -w -o ""\"require-dev\""" qompoter.json)" ] && [ -z "$(grep -w -o ""\"require-global\""" qompoter.json)" ]; then
+                echo -e "\e[37m|\t|---- There is no dependencies in the qompoter.json of this project"
+            else 
+                listRequirement ""\"require\"""
+                listRequirement ""\"require-dev\"""
+                listRequirement ""\"require-global\"""
+            fi
+        else
+            echo -e "\e[37m|\t|---- There is no qompoter.json in this project"
         fi
-        cd ..
+        cd ../..
     done
-    cd ..
 }
 
 recursiveInstallFromQompoterFile()
