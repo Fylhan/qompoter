@@ -16,6 +16,7 @@ INQLUDE_FILENAME=
 VENDOR_DIR=vendor
 REPO_PATH=${QOMP_REPO_PATH}
 test "${REPO_PATH}" == "" && REPO_PATH=https://github.com
+IS_TREE=0
 IS_ALL=0
 IS_BYPASS=0
 IS_FORCE=0
@@ -289,12 +290,15 @@ usage()
 	Usage: $C_PROGNAME [action] [ --repo <repo> | other options ]
 
 	    action               Select an action:
-	                          export, init, inspect, install, require, tree
+	                          export, init, inspect, install, require
 
 	                         Other actions are useful for digging into Qompoter:
 	                          inqlude, jsonh, md5sum
 
 	Options:
+          --tree            Make a tree with all dependencies and sub-dependecies
+                            of the project.
+                            Supported action is: inspect
 
           --all             List or apply actions to all elements depending of
                             the action
@@ -387,7 +391,10 @@ usage()
 
 	    List downloaded dependencies for this project:
 	      $C_PROGNAME inspect --all
-
+	      
+        Make a tree with all downloaded dependencies and sub-dependencies for this project:
+	      $C_PROGNAME inspect --tree
+	      
 	    Export vendor directory:
 	      $C_PROGNAME export
 
@@ -2033,86 +2040,97 @@ inspectAction()
   local vendorDir=$2
   local globalRes=0
   qompoterLockFile=$(echo "${qompoterFile}" | cut -d'.' -f1).lock
-
+    
   # Check
   checkQompoterFile "${qompoterLockFile}" || return 100
   if [ ! -d "${vendorDir}" ]; then
-    echo "Nothing to do: no '${VENDOR_DIR}' dir"
-    return 0
+      echo "Nothing to do: no '${VENDOR_DIR}' dir"
+      return 0
   fi
-
-  # Loop over lock file
-  local changes=0
-  local requires
-  requires=$(getProjectRequiresFromLock "${qompoterLockFile}")
-  for packageInfo in ${requires}; do
-    local vendorName
-    vendorName=$(echo "${packageInfo}" | cut -d'/' -f1)
-    local projectName
-    projectName=$(echo "${packageInfo}" | cut -d'/' -f2)
-    local projectFullName="${vendorName}/${projectName}"
-    local version
-    version=$(echo "${packageInfo}" | cut -d'/' -f3)
-    local expectedMd5Sum
-    expectedMd5Sum=$(getProjectMd5FromLock "${qompoterLockFile}" "${projectFullName}" | cut -d'/' -f3)
-    local actualMd5Sum
-    actualMd5Sum=$(getProjectMd5 "${vendorDir}/${projectName}")
-    local differs=
-    test "${actualMd5Sum}" != "${expectedMd5Sum}" && let changes=${changes}+1 && differs="${C_INFO} *${C_END}"
-    if [[ "${IS_ALL}" == "1" ]] || [[ ! -z "${differs}" ]]; then
-      echo -e "* ${projectFullName} (${version}${differs})"
-      if [ -d "${vendorDir}/${projectName}/.git" ]; then
-        cd "${vendorDir}/${projectName}" || ( echo "  Error: cannot go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
-        git status -sb
-        if [[ ! -z $"${differs}" ]] && ( [ "$IS_VERBOSE" == "1" ] || [ "$IS_VERBOSE" == "2" ] || [ "$IS_VERBOSE" == "3" ] ); then
-          git diff
-        fi
-        cd ../../ || ( echo "  Error: cannot go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
-      fi
-      echo
-    fi
-  done
-
-  if [ "${changes}" == "0" ]; then
-      echo -e "${C_OK}Great! There is no manual change${C_END}"
-  elif [ "${changes}" == "1" ]; then
-      echo -e "Take care, there is ${C_INFO}1${C_END} manual change"
+  
+  if [[ "${IS_TREE}" == "1" ]]; then
+      treeAction "${vendorDir}"
   else
-    echo -e "Take care, there are ${C_INFO}${changes}${C_END} manual changes"
-  fi
-  echo
+      # Loop over lock file
+      local changes=0
+      local requires
+      requires=$(getProjectRequiresFromLock "${qompoterLockFile}")
+      for packageInfo in ${requires}; do
+          local vendorName
+          vendorName=$(echo "${packageInfo}" | cut -d'/' -f1)
+          local projectName
+          projectName=$(echo "${packageInfo}" | cut -d'/' -f2)
+          local projectFullName="${vendorName}/${projectName}"
+          local version
+          version=$(echo "${packageInfo}" | cut -d'/' -f3)
+          local expectedMd5Sum
+          expectedMd5Sum=$(getProjectMd5FromLock "${qompoterLockFile}" "${projectFullName}" | cut -d'/' -f3)
+          local actualMd5Sum
+          actualMd5Sum=$(getProjectMd5 "${vendorDir}/${projectName}")
+          local differs=
+          test "${actualMd5Sum}" != "${expectedMd5Sum}" && let changes=${changes}+1 && differs="${C_INFO} *${C_END}"
+          if [[ "${IS_ALL}" == "1" ]] || [[ ! -z "${differs}" ]]; then
+              echo -e "* ${projectFullName} (${version}${differs})"
+              if [ -d "${vendorDir}/${projectName}/.git" ]; then
+                  cd "${vendorDir}/${projectName}" || ( echo "  Error: cannot go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+                  git status -sb
+                  if [[ ! -z $"${differs}" ]] && ( [ "$IS_VERBOSE" == "1" ] || [ "$IS_VERBOSE" == "2" ] || [ "$IS_VERBOSE" == "3" ] ); then
+                      git diff
+                  fi
+                  cd ../../ || ( echo "  Error: cannot go to !$" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
+              fi
+          echo
+          fi
+        done
+
+        if [ "${changes}" == "0" ]; then
+            echo -e "${C_OK}Great! There is no manual change${C_END}"
+        elif [ "${changes}" == "1" ]; then
+            echo -e "Take care, there is ${C_INFO}1${C_END} manual change"
+        else
+            echo -e "Take care, there are ${C_INFO}${changes}${C_END} manual changes"
+        fi
+        echo
+    fi
 }
 
 listRequirement()
 {
   local match=$(grep -w -o $1 qompoter.json)
   if [ "$match" = "$1" ];then
-    echo -e "\t\e[37m$match: {"
-    local data=$(echo $(<qompoter.json) |sed "s/$1/%/" | cut -d'%' -f2 | sed "s/://" | sed "s/{//" | cut -d'}' -f1| sed "s/,/\r\n\t\t/g")
-    data=$(tr -d ' ' <<<"$data")
-    echo -e "\t\t\e[39m$data\r\n\t}"
-  else
-  echo -e "\t\e[93m$1 not found."
+        local data=$(echo $(<qompoter.json) |sed "s/$1/%/" | cut -d'%' -f2 | sed "s/://" | sed "s/{//" | cut -d'}' -f1| sed "s/,/\r\n|\t|----/g")
+        data=$(tr -d ' ' <<<"$data")
+        if [[ ! -z "$data" ]]; then
+            echo -e "\e[37m|\t|----$data"
+        fi
   fi
 }
 
 treeAction(){
-  local vendorDir=$2
-  cd $vendorDir
-  for dir in $(find [0-9a-zA-Z]* -maxdepth 0 -type d); do
-  cd $dir
-  echo -e "\e[34m$dir/"
-  if [ -f qompoter.json ]; then
-        local qompoterFile=$(<qompoter.json)
-        listRequirement ""\"require\"""
-        listRequirement ""\"require-dev\"""
-        listRequirement ""\"require-global\"""
-        echo -e "\r\n"
-  else
-  echo -e "\t\e[93mqompoter.json not found.\r\n"
-  fi
-    cd ..
-  done
+    echo -e "Project : \e[35m${PWD##*/}"
+    local requires
+    requires=$(getProjectRequiresFromLock "${qompoterLockFile}")
+    for packageInfo in ${requires}; do
+        local vendorName
+        vendorName=$(echo "${packageInfo}" | cut -d'/' -f1)
+        local projectName
+        projectName=$(echo "${packageInfo}" | cut -d'/' -f2)
+        cd $1/$projectName
+        echo -e "\e[37m|\r\n|----\e[34m$projectName"
+        echo -e "\e[37m|\t|"
+        if [ -f qompoter.json ]; then
+            if [ -z "$(grep -w -o ""\"require\""" qompoter.json)" ] && [ -z "$(grep -w -o ""\"require-dev\""" qompoter.json)" ] && [ -z "$(grep -w -o ""\"require-global\""" qompoter.json)" ]; then
+                echo -e "\e[37m|\t|---- There is no dependencies in the qompoter.json of this project"
+            else 
+                listRequirement ""\"require\"""
+                listRequirement ""\"require-dev\"""
+                listRequirement ""\"require-global\"""
+            fi
+        else
+            echo -e "\e[37m|\t|---- There is no qompoter.json in this project"
+        fi
+        cd ../..
+    done
 }
 
 recursiveInstallFromQompoterFile()
@@ -2530,14 +2548,22 @@ cmdline()
   fi
   while [ "$1" != "" ]; do
   case $1 in
-    --all )
+   --tree )
+      if [ "${ACTION}" == "inspect"  ]; then
+        IS_TREE=1
+      else
+        echo "Ignore flag --tree for action '${ACTION}'"
+      fi
+      shift
+      ;;
+   --all )
       if [ "${ACTION}" == "inspect"  ]; then
         IS_ALL=1
       else
         echo "Ignore flag --all for action '${ACTION}'"
       fi
       shift
-    ;;
+      ;;
     --by-pass )
       IS_BYPASS=1
       shift
@@ -2754,11 +2780,6 @@ main()
       echo "======== ${ACTION}"
       echo
       inspectAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
-      ;;
-      "tree")
-      echo "======== ${ACTION}"
-      echo
-      treeAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
       ;;
     "install")
       echo "======== ${ACTION}"
