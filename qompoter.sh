@@ -441,6 +441,9 @@ defineReplace(setLibPath){
       else:linux-arm-gnueabi-g++ {
         LIBPATH = $${LIBPATH}_arm-gnueabi
       }
+      else:linux-arm-gnueabihf-g++ {
+        LIBPATH = $${LIBPATH}_arm-gnueabihf
+      }
       # Or use architecture of the host when not provided
       else {
         contains(QMAKE_HOST.arch, x86_64) {
@@ -563,6 +566,12 @@ defineReplace(setBuildDir){
       OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_arm-gnueabi
       UI_DIR      = $${UI_DIR}/build_linux_arm-gnueabi
       LIBS       += -L/usr/lib/gcc/arm-linux-gnueabi/4.9
+    }
+    else:linux-arm-gnueabihf-g++{
+      MOC_DIR     = $${MOC_DIR}/build_linux_arm-gnueabihf
+      OBJECTS_DIR = $${OBJECTS_DIR}/build_linux_arm-gnueabihf
+      UI_DIR      = $${UI_DIR}/build_linux_arm-gnueabihf
+      LIBS       += -L/usr/lib/gcc/arm-linux-gnueabihf/4.9
     }
     # Linux use the architecture of the host
     else:unix{
