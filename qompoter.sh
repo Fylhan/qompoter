@@ -2815,7 +2815,7 @@ main()
   esac
   local status=$?
 
-  if [ "$IS_VERBOSE" == "0" ]; then
+  if [ "$IS_VERBOSE" == "0" ] && [ -f ${C_LOG_FILENAME} ]; then
     rm ${C_LOG_FILENAME}
   fi
 
