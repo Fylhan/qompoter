@@ -708,6 +708,20 @@ prepareQompoterLock()
 EOF
 }
 
+updateJsonFileKey()
+{
+  local file=$1
+  local key=$2
+  local value=$3
+  # Update existing
+  if  grep -q '"'"${key}"'":' "${file}" ; then
+    replaceLine "${file}" '"'"${key}"'": ".*",' '"'"${key}"'": "'"${value}"'",'
+  # Add new at end
+  else
+    insertAfter "${file}" '^{' '  "'"${key}"'": "'"${value}"'",'
+  fi
+}
+
 updateQompoterLockDate()
 {
   local qompoterLockFile=$1
@@ -1365,6 +1379,21 @@ getProjectRequires()
    | grep -E "\[\"require${IS_INCLUDE_DEV}\",\".*\"\]" \
    | sed -r "s/\"//g;s/\[require${IS_INCLUDE_DEV},//g;s/\]	/ /g" \
    | tr ' ' '/'
+}
+
+#**
+# * Retrieve value of JSON key at primary level of a file
+# * @param JSON file name
+# * @param key name
+# * @return <key value>
+#**
+getJsonFilePrimaryKeyValue()
+{
+  local file=$1
+  local key=$2
+  jsonh < "${file}" \
+   | grep -E "\[\"${key}\"\]" \
+   | sed -e 's/"//g;s/\['"${key}"'\]\s*//;s/.*\///'
 }
 
 #**
