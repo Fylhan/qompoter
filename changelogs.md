@@ -4,6 +4,12 @@ Qompoter Changelogs
 [Unreleased]
 -------
 
+### Fixed
+
+* KDE projects loaded from Inqlude are now using GitLab
+
+### Added
+
 * New action: `qompoter update` (wip)
 
 [0.4.1] - released 2019-12-20

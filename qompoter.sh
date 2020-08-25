@@ -35,7 +35,7 @@ LAST_QOMPOTERLOCK_PART='  "require": {'
 # Version and path of the current package
 PACKAGE_VERSION=
 PACKAGE_DIST_URL=
-GIT_WELLKNOWN_REPOS=("gitolite" "github" "gitlab" "git.kde" "gitorious" "code.qt.io" "git.freedesktop" "framagit")
+GIT_WELLKNOWN_REPOS=("gitolite" "github" "gitlab" "git.kde" "invent.kde" "gitorious" "code.qt.io" "git.freedesktop" "framagit")
 
 #######################
 # JSON.H              #
@@ -1726,7 +1726,8 @@ getPackageInqludeUrl()
   packagePath=$(getPackageInqludeData "${packageId}" "urls/vcs" "${inqludePackages}")
   if [[ "${packagePath}" != "" ]]; then
     if [[ "${packagePath}" == *"projects.kde.org"* ]]; then
-      packagePath="git://anongit.kde.org/${packageName}"
+      #packagePath="git://invent.kde.org:frameworks/${packageName}.git"
+      packagePath="https://invent.kde.org/frameworks/${packageName}.git"
     elif [[ "${packagePath}" == *"cgit.freedesktop.org"* ]]; then
       packagePath="https://anongit.freedesktop.org/git/${vendorName}/${packageName}"
     fi
