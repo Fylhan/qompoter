@@ -2238,7 +2238,7 @@ installAction()
   return $globalRes
 }
 
-installOnePackageAction()
+requireAction()
 {
   local qompoterFile=$1
   local qompoterLockFile
@@ -2352,8 +2352,7 @@ updateAction()
   fi
   return $globalRes
 }
-
-requireAction()
+showAction()
 {
   local qompoterFile=$1
 
@@ -2855,7 +2854,12 @@ main()
     "require")
       echo "======== ${ACTION}"
       echo
-      requireAction "${QOMPOTER_FILENAME}"
+      requireAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}" "${VENDOR_NAME}" "${PROJECT_NAME}" "${PACKAGE_VERSION}"
+      ;;
+    "show")
+      echo "======== ${ACTION}"
+      echo
+      showAction "${QOMPOTER_FILENAME}"
       ;;
     "update")
       if [ ! -f "${QOMPOTER_FILENAME/.json/.lock}" ]; then
