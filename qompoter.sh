@@ -791,7 +791,6 @@ downloadPackage()
   if [[ "$requireVersion" == *"-lib"* ]]; then
     isSource=0
   fi
-  local requireBasePath=${repositoryPath}/${requireName}
   local requireLocalPath=${vendorDir}/${packageName}
   local qompoterPriFile=${requireLocalPath}/qompoter.pri
   local inqludeDistUrl
@@ -803,18 +802,11 @@ downloadPackage()
   # Search in Inqlude repository
   checkPackageInqludeVersion "${vendorName}" "${packageName}" "${requireVersion}" "${INQLUDE_FILENAME}"
   inqludeDistUrl=$(getPackageInqludeUrl "${vendorName}" "${packageName}" "${requireVersion}" "${INQLUDE_FILENAME}")
-  # The following has been moved later
-  # if [ -z "${packageDistUrl}" ] && [ ! -z "${inqludeDistUrl}" ]; then
-    # logDebug "  Use inqlude package \"${packageName}\" (${inqludeDistUrl})"
-    # packageDistUrl=${inqludeDistUrl}
-  # elif [ -z "${packageDistUrl}" ]; then
-  #   packageDistUrl=${requireBasePath}/${requireVersion}
-  # fi
 
   # Sources
   if [ "${isSource}" -eq 1 ]; then
     # Git
-    # Provided URL
+    # Use the provided URL
     if [ ! -z "${packageDistUrl}" ] && isGitRepositories "${packageDistUrl}"; then
       echo "  Downloading sources from Git..."
       logDebug "  URL has been provided (${packageDistUrl})"
@@ -825,7 +817,7 @@ downloadPackage()
         logWarning "error with Git, Qompoter will try downloading sources from scratch..."
       fi
     fi
-    # Inqlude
+    # Use the URL available in Inqlude repository (also done if previous failed)
     if [ "${result}" != "0" ] && [ "${result}" != "3" ] && [ "${result}" != "4" ] && [ ! -z "${inqludeDistUrl}" ] && isGitRepositories "${inqludeDistUrl}"; then
       packageDistUrl=${inqludeDistUrl}
       echo "  Downloading sources from Git..."
@@ -837,11 +829,17 @@ downloadPackage()
         logWarning "error with Git, Qompoter will try downloading sources from scratch..."
       fi
     fi
-    # Mostly HTTP URL
-    if [ "${result}" != "0" ] && [ "${result}" != "3" ] && [ "${result}" != "4" ] && isGitRepositories "${requireBasePath}"; then
-      packageDistUrl="${requireBasePath}"
-      if [[ "${packageDistUrl}" != *".git" ]]; then
-        packageDistUrl="${packageDistUrl}.git"
+    # Compute a Git or HTTP URL from repository path and package info (also done if previous failed)
+    if [ "${result}" != "0" ] && [ "${result}" != "3" ] && [ "${result}" != "4" ] && isGitRepositories "${repositoryPath}/${requireName}"; then
+      # If the repo does not support vendor name (like gitolite): compute from repository path and package name
+      if [[ "${repositoryPath}" == *"gitolite"* ]]; then
+        packageDistUrl="${repositoryPath}:${packageName}"
+      # Otherwize: from repository path and package info
+      else
+        packageDistUrl="${repositoryPath}/${requireName}"
+        if [[ "${packageDistUrl}" != *".git" ]]; then
+          packageDistUrl="${packageDistUrl}.git"
+        fi
       fi
       echo "  Downloading sources from Git..."
       logDebug "  Found in repository (${packageDistUrl})"
@@ -852,10 +850,16 @@ downloadPackage()
         logWarning "error with Git, Qompoter will try downloading sources from scratch..."
       fi
     fi
-    # FIXME Check if requireBasePath does not already contain REPO_PATH with && [[ "${requireBasePath}" != "${REPO_PATH}"* ]]  but this is sometimes useful
-    # Qompotist-fs
+    # Compute a Git or HTTP URL from default REPO_PATH and package info (also done if previous failed)
+    # same as above but with the default repository path instead of the overriding one (if any)
     if [ "${result}" != "0" ] && [ "${result}" != "3" ] && [ "${result}" != "4" ] && isGitRepositories "${REPO_PATH}/${requireName}/${packageName}.git"; then
-      packageDistUrl="${REPO_PATH}/${requireName}/${packageName}.git"
+      # If the repo does not support vendor name (like gitolite): compute from repository path and package name
+      if [[ "${REPO_PATH}" == *"gitolite"* ]]; then
+        packageDistUrl="${REPO_PATH}:${packageName}"
+      # Otherwize: from repository path and package info
+      else
+        packageDistUrl="${REPO_PATH}/${requireName}/${packageName}.git"
+      fi
       echo "  Downloading sources from Git..."
       logDebug "  Found in base repository (${packageDistUrl})"
       packageType="git"
@@ -875,7 +879,7 @@ downloadPackage()
       packageType="qompotist-fs"
       downloadPackageFromCp "${repositoryPath}" "${vendorDir}" "${vendorName}" "${packageName}" "${requireVersion}"
       result=$?
-      packageDistUrl=${requireBasePath}/${PACKAGE_VERSION}
+      packageDistUrl=${repositoryPath}/${requireName}/${PACKAGE_VERSION}
     fi
   # Lib
   else
@@ -894,7 +898,7 @@ downloadPackage()
         packageDistUrl="http://${packageDistUrl%:*}/"
       fi
       test "${versionComplement}" == "" && versionComplement=${packageName}
-      # FIXME Search for variadic version v1.* : http://gitlab.lan.trialog.com/api/v4/projects/trialog-em%2Fslac-controller-launcher/repository/tags grep "\[.*,\"name\"\].*\"v1.1.*\""
+      # FIXME Search for variadic version v1.* : http://gitlab.lan.trialog.com/api/v4/projects/my-vendor%2Fmy-package/repository/tags grep "\[.*,\"name\"\].*\"v1.1.*\""
       packageDistUrl="${packageDistUrl}api/v4/projects/${vendorName}%2F${packageName}/jobs/artifacts/${requireVersion%-lib}/download?job=${versionComplement}"
       if [ "${QOMP_TOKEN}" != "" ]; then
         packageDistUrl="${packageDistUrl}&private_token=${QOMP_TOKEN}"
