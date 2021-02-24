@@ -3,13 +3,13 @@
 fails=0
 i=0
 offline=$1
-tests=$(ls require/*"${offline}".json | wc -l)
+tests=$(ls show/*"${offline}".json | wc -l)
 echo "1..${tests##* }"
-for input in require/*${offline}.json
+for input in show/*${offline}.json
 do
   i=$((i+1))
-  mkdir vendor
-  mkdir vendor/test
+  test ! -d "vendor" && mkdir vendor
+  test ! -d "vendor/test" && mkdir vendor/test
   touch vendor/qompote.pri
   touch vendor/vendor.pri
   input_file_name=$(echo "$input" | cut -d'/' -f2 | cut -d'.' -f1)

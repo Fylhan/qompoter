@@ -31,6 +31,11 @@ function checkVersion()
   local pattern=$3
 
   if [ "$?" == "0" ]; then
+    if [ ! -d "vendor/qompoter-test-package4git" ]; then
+      echo "not ok ${i} - ${testCase} (no directory)"
+      FAILS=$((FAILS+1))
+      return 1
+    fi
     cd vendor/qompoter-test-package4git
     local res=`git status | grep "${pattern}"`
     if [ ! -z "${res}" ]; then
@@ -47,8 +52,21 @@ function checkVersion()
 
 for qompoterFileData in "${QOMPOTER_FILES[@]}"; do
   echo $qompoterFileData > $QOMPOTER_FILE
+  test -f "${QOMPOTER_FILE/.json/.lock}" && rm "${QOMPOTER_FILE/.json/.lock}"
+  j=0
+  # install and create lock
   ../qompoter.sh install --no-color --file "$QOMPOTER_FILE" > /dev/null 2>&1
-  checkVersion "$((i+1))" "${TEST_CASE_NAMES[$i]}" "${TEST_CASE_EXPECTED_RESULTS[$i]}"
+  j=$((j+1))
+  checkVersion "$((i+1)).${j}" "${TEST_CASE_NAMES[$i]}" "${TEST_CASE_EXPECTED_RESULTS[$i]}"
+  # install using lock
+  ../qompoter.sh install --no-color --file "$QOMPOTER_FILE" > /dev/null 2>&1
+  j=$((j+1))
+  checkVersion "$((i+1)).${j}" "${TEST_CASE_NAMES[$i]}" "${TEST_CASE_EXPECTED_RESULTS[$i]}"
+  # update to recreate lock
+  ../qompoter.sh update --no-color --file "$QOMPOTER_FILE" > /dev/null 2>&1
+  j=$((j+1))
+  checkVersion "$((i+1)).${j}" "${TEST_CASE_NAMES[$i]/install/update}" "${TEST_CASE_EXPECTED_RESULTS[$i]}"
+  rm "${QOMPOTER_FILE/.json/.lock}"
   i=$((i+1))
 done
 
@@ -80,6 +98,7 @@ fi
 
 i=$((i+1))
 TEST_CASE="install a git package but bys-pass existing change"
+test -f "${QOMPOTER_FILE/.json/.lock}" && rm "${QOMPOTER_FILE/.json/.lock}"
 ../qompoter.sh install --no-color --file "$QOMPOTER_FILE" --by-pass > /dev/null 2>&1
 if [ "$?" == "0" ]; then
   cd vendor/qompoter-test-package4git
@@ -108,6 +127,7 @@ fi
 
 i=$((i+1))
 TEST_CASE="install a git package by forcing overriding existing change"
+test -f "${QOMPOTER_FILE/.json/.lock}" && rm "${QOMPOTER_FILE/.json/.lock}"
 ../qompoter.sh install --no-color --file "$QOMPOTER_FILE" --force > /dev/null 2>&1
 if [ "$?" == "0" ]; then
   cd vendor/qompoter-test-package4git
@@ -133,6 +153,7 @@ fi
 
 i=$((i+1))
 TEST_CASE="install a git package at a given soft version stable only"
+test -f "${QOMPOTER_FILE/.json/.lock}" && rm "${QOMPOTER_FILE/.json/.lock}"
 echo $qompoterVersionStar > $QOMPOTER_FILE
 ../qompoter.sh install --no-color --file "$QOMPOTER_FILE" --stable-only > /dev/null 2>&1
 checkVersion "${i}" "${TEST_CASE}" "v1.1"
