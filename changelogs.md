@@ -4,24 +4,44 @@ Qompoter Changelogs
 [Unreleased]
 -------
 
+### Breaking changes
+
+* Renamed action: `qompoter install <packagename>` to `qompoter require <packagename>`
+* Renamed action: `qompoter install` to `qompoter update`
+
 ### Fixed
 
 * KDE projects loaded from Inqlude are now using GitLab
 
 ### Added
 
-* New action: `qompoter update` (wip)
+* Add support for the "gitolite" Git repository which does not use vendor name
+* New action: `qompoter update`
+* New action: `qompoter inspect --tree`
 
 [0.4.1] - released 2019-12-20
 -----------
+
+### Added
 
 * Add "gitolite" as well-known Git repository
 
 [0.4.0] - released 2018-01-24
 -------
 
-* Breaking changes
-  * Change default repository path to Github and read `QOMP_REPO_PATH` environment variable to select another one
+### Breaking changes
+
+* Change default repository path to Github and read `QOMP_REPO_PATH` environment variable to select another one
+
+### Fixed
+
+* Fix: Do not erase an existing 'vendor.pri' file when a `qompoter install` fail
+* Fix: Git remote update was failing when running `qompoter export --repo` on an existing repository
+* Fix: Do not load sub-dependencies for library packages
+* Fix: Several corrections, maybe not complete, in `downloadLibPackage`
+
+### Added
+
 * New action: `qompoter install <packagename>`
   * Take care of updating existing lock file in `qompoter install <packagename>`
   * Take care or using the same order during lock file update in `qompoter install <packagename>`
@@ -31,13 +51,12 @@ Qompoter Changelogs
   * Auto-detect package version using Qompoter file if missing in `qompoter install <packagename>`
   * Support `--save` option in `qompoter install <packagename>`
   * Add doc about `qompoter install <packagename>`
-* Feature: Improve `qompoter inspect` (show only modified packages by default, now use `--all` to list all of them)
 * Feature: Add `--no-dep` flag to not load dependencies during `qompoter install` or `qompoter install <packagename>` (alias of `--depth 1`)
 * Feature: Add specific library loader for GitLab forges
-* Fix: Do not erase an existing 'vendor.pri' file when a `qompoter install` fail
-* Fix: Git remote update was failing when running `qompoter export --repo` on an existing repository
-* Fix: Do not load sub-dependencies for library packages
-* Fix: Several corrections, maybe not complete, in `downloadLibPackage`
+
+### Changed
+
+* Feature: Improve `qompoter inspect` (show only modified packages by default, now use `--all` to list all of them)
 
 [0.3] - released 2017, August
 -----

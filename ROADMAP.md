@@ -1,20 +1,16 @@
 Qompoter Roadmap
 ================
 
-Version 0.4 - in progress
+Version 0.5 - in progress
 -----------
 
+* [ ] Study: Make a study around `qompoter install` / `qompoter update` / `qompoter install --save` (compare with Composer, npm, yarn) and post the result into the blog
 * [ ] Installation: Create Debian package (?)
 * [ ] Installation: Create Ubuntu/Snap package (?)
 * [ ] Installation: Create FlatPack package (?)
-* [x] New action: `qompoter install <packagename>`
-  * [ ] Support `--save --dev` option in `qompoter install <packagename>`
-* [ ] Study: Make a study around `qompoter install` / `qompoter update` / `qompoter install --save` (compare with Composer, npm, yarn) and post the result into the blog
-* [ ] New action: `qompoter install` / `qompoter update` (using lock file)
-  * In progress: url is ok, unit test are ok, cannot download on Github?, need to inverse install and update
-* [x] Feature: Add `--no-dep` flag to not load dependencies during `qompoter install` or `qompoter install <packagename>` (alias of `--depth 0`)
-* [x] Feature: Add aliases for most used actions e=export, i=install, u=update
-* [x] Feature: Improve `qompoter inspect` (show only modified packages by default, now use `--all` to list all of them)
+* [ ] Feature: Support `--save --dev` option in `qompoter require <packagename>`
+* [x] New action: `qompoter install` / `qompoter update` (using lock file)
+  * url is ok, unit test are ok, cannot download on Github?
 * [ ] Feature: Propose to download source version if lib one is outdated
 * [ ] Feature: Allow soft version management v2 (e.g. >=v2.1.3)
 * [ ] Feature: Prevent from overriding manual changes for all packages in vendor (md5sum)
@@ -28,6 +24,14 @@ Version 0.4 - in progress
   * [ ] Fix: When using local repository, libraries are still searched first in Inqlude repository
   * [ ] Fix: If a package is manually deleted, `qompoter inspect` displays an unexpected error `find: ‘vendor/package-dir’: No file or folder of this type`
 * [ ] Clean documentation and release
+
+Version 0.4 - released 2019, December
+-----------
+
+* [x] New action: `qompoter install <packagename>`
+* [x] Feature: Add `--no-dep` flag to not load dependencies during `qompoter install` or `qompoter install <packagename>` (alias of `--depth 0`)
+* [x] Feature: Add aliases for most used actions e=export, i=install, u=update
+* [x] Feature: Improve `qompoter inspect` (show only modified packages by default, now use `--all` to list all of them)
 
 Version 0.3 - released 2017, August
 -----------
