@@ -725,13 +725,7 @@ updateJsonFileKey()
 updateQompoterLockDate()
 {
   local qompoterLockFile=$1
-  # Update existing
-  if  grep -q '"date":' "${qompoterLockFile}" ; then
-    replaceLine "${qompoterLockFile}" '"date": ".*",' '"date": "'"$(date --iso-8601=sec)"'",'
-  # Add new at end
-  else
-    insertAfter "${qompoterLockFile}" '^{' '  "date": "'"$(date --iso-8601=sec)"'",'
-  fi
+  updateJsonFileKey "${qompoterLockFile}" "date" $(date --iso-8601=sec)
 }
 
 updateQompoterLock()
@@ -760,12 +754,17 @@ updateQompoterLock()
     replaceLine "${qompoterLockFile}" " *\(,\) *\"${vendorName}\/${packageName}\" *: *{.*}" "    \1${jsonData//\//\\/}"
   # Add new at end
   else
+    local lastMd5sum=$(getJsonFilePrimaryKeyValue "${qompoterLockFile}" "last")
     if [ "${LAST_QOMPOTERLOCK_PART}" != '  "require": {' ]; then
       jsonData=",${jsonData}"
+    elif [ ! -z "${lastMd5sum}" ]; then
+      jsonData=",${jsonData}"
+      LAST_QOMPOTERLOCK_PART="\"${lastMd5sum}\" }"
     fi
     insertAfter "${qompoterLockFile}" "${LAST_QOMPOTERLOCK_PART}" "    ${jsonData}"
+    updateJsonFileKey "${qompoterLockFile}" "last" "${md5sum}"
+    LAST_QOMPOTERLOCK_PART="\"${md5sum}\" }"
   fi
-  LAST_QOMPOTERLOCK_PART="\"${md5sum}\" }"
   # FIXME Add require-dev to lock file
 }
 
@@ -1172,7 +1171,7 @@ downloadPackageFromGit()
   local vendorDir=$2
   local vendorName=$3
   local packageName=$4
-  local packageVersion=$5
+  local rawPackageVersion=$5
   local requireBranch=$5
   local gitPath=$6
   local requireLocalPath=${vendorDir}/${packageName}
@@ -1181,13 +1180,14 @@ downloadPackageFromGit()
   local hasChanged=0
 
   # Parse commit number in version
-  if [[ ${packageVersion} == "#"* ]]; then
-    packageVersion=$(echo "${packageVersion}" | cut -d'#' -f2)
+  packageVersion=${rawPackageVersion}
+  if [[ ${rawPackageVersion} == "#"* ]]; then
+    packageVersion=$(echo "${rawPackageVersion}" | cut -d'#' -f2)
     requireBranch=
   fi
   # Parse branch name in version
-  if [[ ${packageVersion} == "dev-"* ]]; then
-    packageVersion=${packageVersion/dev-/}
+  if [[ ${rawPackageVersion} == "dev-"* ]]; then
+    packageVersion=${rawPackageVersion/dev-/}
     requireBranch=${packageVersion}
     test "${requireBranch}" == "" && requireBranch="master"
   fi
@@ -1268,6 +1268,7 @@ downloadPackageFromGit()
       return 2
     fi
     packageVersion=${selectedVersion}
+    rawPackageVersion=${selectedVersion}
     requireBranch=${selectedVersion}
     echo "  Selected version: ${packageVersion}"
   fi
@@ -1302,7 +1303,7 @@ downloadPackageFromGit()
   if [ ! -d "${requireLocalPath}/.git" ]; then
     gitError=1
   fi
-  PACKAGE_VERSION=${packageVersion}
+  PACKAGE_VERSION=${rawPackageVersion}
   PACKAGE_DIST_URL=${gitPath}
   return $gitError
 }
@@ -2151,7 +2152,6 @@ treeAction()
       return 0
   fi
   # TODO Inspect using lock file instead of
-  echo -e "Project : \e[35m${PWD##*/}"
   local requires
   requires=$(getProjectRequiresFromLock "${qompoterLockFile}")
   for packageInfo in ${requires}; do
@@ -2175,6 +2175,7 @@ treeAction()
       fi
       cd ../..
     done
+    echo
 }
 
 recursiveInstallFromQompoterFile()
@@ -2218,13 +2219,38 @@ installAction()
   local vendorPriFile
   local globalRes=0
 
-  qompoterLockFile="${qompoterFile/.json/}.lock"
+  qompoterLockFile="${qompoterFile/.json/.lock}"
+  vendorPriFile=${vendorDir}/vendor.pri
+
+  checkQompoterFile "${qompoterLockFile}" || return 100
+  prepareVendorDir "${vendorDir}"
+
+  downloadQompoterFilePackages "${qompoterLockFile}" "${qompoterLockFile}" "${vendorDir}" "1"
+  globalRes=$?
+
+  if [[ "${globalRes}" == 0 ]] || [[ "${IS_BYPASS}" == "1" ]]; then
+    mv "${vendorPriFile}.tmp" "${vendorPriFile}"
+  else
+    rm "${vendorPriFile}.tmp"
+  fi
+  return $globalRes
+}
+
+updateAction()
+{
+  local qompoterFile=$1
+  local qompoterLockFile
+  local vendorDir=$2
+  local vendorPriFile
+  local globalRes=0
+
+  qompoterLockFile="${qompoterFile/.json/.lock}"
   vendorPriFile=${vendorDir}/vendor.pri
 
   checkQompoterFile "${qompoterFile}" || return 100
   prepareVendorDir "${vendorDir}"
   prepareQompoterLock "${qompoterLockFile}.tmp" "$(getProjectFullName "${qompoterFile}")"
-
+  
   recursiveInstallFromQompoterFile "${qompoterFile}" "${qompoterLockFile}.tmp" "${vendorDir}"
   globalRes=$?
 
@@ -2321,37 +2347,6 @@ md5sumAction()
   getProjectMd5 "${projectDir}"
 }
 
-updateAction()
-{
-  # FIXME update and install have been temporarily inversed
-  local qompoterFile=$1
-  local qompoterLockFile
-  local vendorDir=$2
-  local vendorPriFile
-  local globalRes=0
-
-  qompoterLockFile="${qompoterFile/.json/.lock}"
-  vendorPriFile=${vendorDir}/vendor.pri
-
-  if [ ! -f "${qompoterLockFile}" ]; then
-    # FIXME Replace by updateAction "${qompoterFile}" "${vendorDir}"
-    echo "======== update -> create qompoter.lock"
-    echo
-    installAction "${qompoterFile}" "${vendorDir}"
-    return $?
-  fi
-  prepareVendorDir "${vendorDir}"
-
-  downloadQompoterFilePackages "${qompoterLockFile}" "${qompoterLockFile}" "${vendorDir}" "1"
-  globalRes=$?
-
-  if [[ "${globalRes}" == 0 ]] || [[ "${IS_BYPASS}" == "1" ]]; then
-    mv "${vendorPriFile}.tmp" "${vendorPriFile}"
-  else
-    rm "${vendorPriFile}.tmp"
-  fi
-  return $globalRes
-}
 showAction()
 {
   local qompoterFile=$1
@@ -2831,14 +2826,14 @@ main()
       fi
       ;;
     "install")
-      if [ -z "${PROJECT_NAME}" ]; then
+      if [ ! -f "${QOMPOTER_FILENAME/.json/.lock}" ]; then
+        echo "======== ${ACTION} -> create qompoter.lock"
+        echo
+        updateAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
+      else
         echo "======== ${ACTION}"
         echo
         installAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
-      else
-        echo "======== ${ACTION} one"
-        echo
-        installOnePackageAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}" "${VENDOR_NAME}" "${PROJECT_NAME}" "${PACKAGE_VERSION}"
       fi
       ;;
     "jsonh")
@@ -2862,16 +2857,9 @@ main()
       showAction "${QOMPOTER_FILENAME}"
       ;;
     "update")
-      if [ ! -f "${QOMPOTER_FILENAME/.json/.lock}" ]; then
-        # FIXME Replace by updateAction "${qompoterFile}" "${vendorDir}"
-        echo "======== ${ACTION} -> create qompoter.lock"
-        echo
-        installAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
-      else
-        echo "======== ${ACTION}"
-        echo
-        updateAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
-      fi
+      echo "======== ${ACTION}"
+      echo
+      updateAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
       ;;
     *)
       echo "======== ${ACTION}"
