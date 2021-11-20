@@ -17,7 +17,7 @@ Section: base
 Priority: optional
 Architecture: all
 Depends: bash,git,sed
-Maintainer: Fylhan <mail@mail.com>
+Maintainer: Fylhan <fylhan@hotmail.com>
 Description: Dependency manager for Qt / C++
 Homepage: https://fylhan.github.io/qompoter/
 " > $DEBIAN"/control"
