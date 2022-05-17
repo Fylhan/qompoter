@@ -1,7 +1,6 @@
 #!/bin/bash
 
 readonly C_PROGNAME=$(basename $0)
-readonly C_PROGDIR=$(readlink -m $(dirname $0))
 readonly C_PROGVERSION="v0.5.0-RC1"
 readonly C_ARGS="$@"
 C_OK="\e[1;32m"
@@ -701,7 +700,7 @@ prepareQompoterLock()
   cat <<- EOF > "${qompoterLockFile}"
 {
   "name": "${projectFullName}",
-  "date": "$(date --iso-8601=sec)",
+  "date": "$(date -Iseconds)",
   "require": {
   }
 }
@@ -725,7 +724,7 @@ updateJsonFileKey()
 updateQompoterLockDate()
 {
   local qompoterLockFile=$1
-  updateJsonFileKey "${qompoterLockFile}" "date" $(date --iso-8601=sec)
+  updateJsonFileKey "${qompoterLockFile}" "date" $(date -Iseconds)
 }
 
 updateQompoterLock()
@@ -944,8 +943,8 @@ downloadPackageFromCp()
  # Select the best version (if variadic version number provided)
   if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
     logDebug "  Search matching version"
-    logTrace $(ls "${requireBasePath}" | LC_ALL=C sort --version-sort) # noquote for oneline
-    selectedVersion=$(ls "${requireBasePath}" | LC_ALL=C sort --version-sort | getBestVersionNumber "$packageVersion")
+    logTrace $(ls "${requireBasePath}" | LC_ALL=C sort -V) # noquote for oneline
+    selectedVersion=$(ls "${requireBasePath}" | LC_ALL=C sort -V | getBestVersionNumber "$packageVersion")
     if [ -z "${selectedVersion}" ]; then
       echo "  Oups, no matching version for \"${packageVersion}\""
       return 2
@@ -1027,8 +1026,8 @@ downloadLibPackage()
   # Select the best version (if variadic version number provided)
   if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
     logDebug "  Search matching version"
-    logTrace $(ls "${requireBasePath}" | LC_ALL=C sort --version-sort) # noquote for oneline
-    selectedVersion=$(ls "${requireBasePath}" | LC_ALL=C sort --version-sort | getBestVersionNumber "${packageVersion}")
+    logTrace $(ls "${requireBasePath}" | LC_ALL=C sort -V) # noquote for oneline
+    selectedVersion=$(ls "${requireBasePath}" | LC_ALL=C sort -V | getBestVersionNumber "${packageVersion}")
     if [ -z "${selectedVersion}" ]; then
       echo "  Oups, no matching version for \"${packageVersion}\""
       return 2
@@ -1259,9 +1258,9 @@ downloadPackageFromGit()
   if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
     logDebug "  Search matching version"
     logTrace "git tag --list"
-    logGitTrace $(git tag --list | LC_ALL=C sort --version-sort) # noquote for oneline
+    logGitTrace $(git tag --list | LC_ALL=C sort -V) # noquote for oneline
     local selectedVersion
-    selectedVersion=$(git tag --list | LC_ALL=C sort --version-sort | getBestVersionNumber "${packageVersion}")
+    selectedVersion=$(git tag --list | LC_ALL=C sort -V | getBestVersionNumber "${packageVersion}")
     if [ -z "${selectedVersion}" ]; then
       echo "  Oups, no matching version for \"${requireVersion}\""
       cd - > /dev/null 2>&1 || ( echo "  Error: cannot go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
@@ -1364,7 +1363,7 @@ getProjectMd5()
   local projectDir=$1
   (find "${projectDir}" -type f -not -path "*.git*" \
       | while read f; do md5sum "$f"; done; find "${projectDir}" -type d -not -path "*.git*" ) \
-    | LC_ALL=C sort --version-sort \
+    | LC_ALL=C sort -V \
     | md5sum \
     | sed -e 's/ *- *//'
 }
