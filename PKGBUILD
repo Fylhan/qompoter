@@ -2,7 +2,7 @@
 # Maintainer: Olivier Maridat (Fylhan)
 
 pkgname=qompoter
-pkgver=0.5.0-RC1
+pkgver=0.5.0
 pkgrel=1
 pkgdesc="Dependency manager for Qt / C++"
 arch=('any')

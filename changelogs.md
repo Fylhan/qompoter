@@ -1,7 +1,7 @@
 Qompoter Changelogs
 ===================
 
-[Unreleased]
+[0.5.0]
 -------
 
 ### Breaking changes
@@ -12,6 +12,7 @@ Qompoter Changelogs
 ### Fixed
 
 * KDE projects loaded from Inqlude are now using GitLab
+* Now compatible with Busybox based Linux system like Alpine
 
 ### Added
 

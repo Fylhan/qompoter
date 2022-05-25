@@ -27,7 +27,7 @@ Installation
 
 Qompoter requires Bash, Git, sed. Other tools like rsync, curl (or wget) and tar (or zip) may be useful for some advanced cases.
 
-It works on Linux and Windows (using [Git bash](https://git-scm.com/)).
+It works on Linux, including Busibox Linux based system like Alpine, and Windows (using [Git bash](https://git-scm.com/)).
 
 It also works on MacOS, but requires additional packages to be installed with Homebrew (https://brew.sh/): `brew install gnu-sed && brew install coreutils`, then make sure to add these to your path, in order to use GNU sed and GNU date instead of the MacOS version:
 
@@ -43,7 +43,7 @@ It should also work on FreeBSD and more widely on Windows (Cygwin or Mysys comma
 ```bash
 $ npm install -g qompoter
 $ qompoter --version
-Qompoter v0.4.0
+Qompoter v0.5.0
 Dependency manager for C++/Qt by Fylhan
 ```
 
@@ -52,20 +52,24 @@ Dependency manager for C++/Qt by Fylhan
 Download it from Github and move it to a place accessible in the `PATH`:
 
 ```bash
-$ wget https://github.com/Fylhan/qompoter/releases/download/v0.4.0/qompoter.sh -O qompoter.sh && sudo mv qompoter.sh /usr/bin/qompoter
+$ wget https://github.com/Fylhan/qompoter/releases/download/v0.5.0/qompoter.sh -O qompoter.sh && sudo mv qompoter.sh /usr/bin/qompoter
 $ qompoter --version
-Qompoter v0.4.0
+Qompoter v0.5.0
 Dependency manager for C++/Qt by Fylhan
 ```
 
-The MD5 sum of the v0.4.0 version is `272de8c30bb940507e390dd9e90eb5eb`.
+The MD5 sum of the v0.5.0 version is `5c397cec3e4aff2df599a0dff08e2f74`.
 
 To enable autocompletion, download the script and source it in your `~/.bashrc` file:
 
 ```bash
-wget https://github.com/Fylhan/qompoter/releases/download/v0.4.0/qompoter_bash_completion.sh -O qompoter_bash_completion.sh && sudo mv qompoter_bash_completion.sh /usr/share/bash-completion/completions/qompoter
+wget https://github.com/Fylhan/qompoter/releases/download/v0.5.0/qompoter_bash_completion.sh -O qompoter_bash_completion.sh && sudo mv qompoter_bash_completion.sh /usr/share/bash-completion/completions/qompoter
 echo "test [ -f /usr/share/bash-completion/completions/qompoter ]; source /usr/share/bash-completion/completions/qompoter" >> ~/.bashrc
 ```
+
+### Using Debian package (beta)
+
+A Debian package can be generated using the script available in `resources/create-deb-package.sh`. Please share feedback!
 
 Getting Started
 -------------
@@ -100,7 +104,7 @@ In your project, create a qompoter.json file:
 Then, download and install dependencies listed in your `qompoter.json` using:
 
 ```bash
-qompoter install
+qompoter update
 ```
 
 *For more information about the command line options, use `qompoter --help` or check the [online help](docs/Command-line.md).*
@@ -114,9 +118,16 @@ include(vendor/vendor.pri)
 
 Let's start coding!
 
-During development, if you want to change / upgrade the version of an existing package, add or remove packages: update the `qompoter.json` file accordingly and run again `qompoter install`.
+During development, if you want to change / upgrade the version of an existing package, add or remove packages: update the `qompoter.json` file accordingly and run again `qompoter update`.
 
-If you reached a milestone of your project and wanted to provide a backup of your project's dependencies, run `qompoter export` to create an archive file of the `vendor` directory, or `qompoter export --repo <path to a directory>` to create a Qompotist-fs repository on which you can run `qompoter install`. You may want to use `qompoter inspect` before to check you did not modified manually any packages in the `vendor` directory.
+If you reached a milestone of your project and wanted to provide a backup of your project's dependencies, run `qompoter export` to create an archive file of the `vendor` directory, or `qompoter export --repo <path to a directory>` to create a Qompotist-fs repository on which you can run `qompoter update`. You may want to use `qompoter inspect` before to check you did not modified manually any packages in the `vendor` directory.
+
+Important change between Qompoter 0.4 and 0.5
+-------------
+
+The `qompoter update` has been introduced and is identical to the <0.4 `qompoter install` action: take the `qompoter.json`, download dependencies and generate a `qompoter.lock` file listing the downloaded versions.
+
+The `qompoter install` action has been modified as follow: take the `qompoter.lock` and download dependencies. This allows to download the same version used by the last `qompoter update` without computing again the potential variadic version numbers. 
 
 Documentation
 -------------

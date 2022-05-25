@@ -11,3 +11,6 @@ release*
 !test/update/*.lock
 .tags
 commit-*
+*.deb
+resources/*/DEBIAN
+resources/*/usr

@@ -1,11 +1,11 @@
 Qompoter Roadmap
 ================
 
-Version 0.5 - in progress
+Version 0.5 - in progress, first release 2022, May
 -----------
 
-* [ ] Study: Make a study around `qompoter install` / `qompoter update` / `qompoter install --save` (compare with Composer, npm, yarn) and post the result into the blog
-* [ ] Installation: Create Debian package (?)
+* [x] Study: Make a study around `qompoter install` / `qompoter update` / `qompoter install --save` (compare with Composer, npm, yarn) and post the result into the blog. See FAQ.
+* [ ] Installation: Create Debian package (in progress)
 * [ ] Installation: Create Ubuntu/Snap package (?)
 * [ ] Installation: Create FlatPack package (?)
 * [ ] Feature: Support `--save --dev` option in `qompoter require <packagename>`
