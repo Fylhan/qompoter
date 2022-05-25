@@ -4,8 +4,8 @@ google_analytics:
 show_downloads: true
 theme: jekyll-theme-architect
 release:
-  version: 0.4.1
-  url: https://github.com/Fylhan/qompoter/releases/download/v0.4.1/qompoter.sh
+  version: 0.5.0
+  url: https://github.com/Fylhan/qompoter/releases/download/v0.5.0/qompoter.sh
 nightly:
   url: https://github.com/Fylhan/qompoter/blob/master/qompoter.sh
 
