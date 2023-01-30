@@ -943,6 +943,8 @@ downloadPackageFromCp()
  # Select the best version (if variadic version number provided)
   if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
     logDebug "  Search matching version"
+    # _ (underscore) added at the end of every tag without a hyphen to get "official" tags after alpha/beta/rc tags
+    # .0 added before underscore to make sure that tags with X.Y numbering with a higher Y number get chosen before a X.Y.Z numbering tag
     logTrace $(ls "${requireBasePath}" | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//') # noquote for oneline
     selectedVersion=$(ls "${requireBasePath}" | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//' | getBestVersionNumber "$packageVersion")
     if [ -z "${selectedVersion}" ]; then
@@ -1026,6 +1028,8 @@ downloadLibPackage()
   # Select the best version (if variadic version number provided)
   if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
     logDebug "  Search matching version"
+    # _ (underscore) added at the end of every tag without a hyphen to get "official" tags after alpha/beta/rc tags
+    # .0 added before underscore to make sure that tags with X.Y numbering with a higher Y number get chosen before a X.Y.Z numbering tag
     logTrace $(ls "${requireBasePath}" | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//' ) # noquote for oneline
     selectedVersion=$(ls "${requireBasePath}" | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//' | getBestVersionNumber "${packageVersion}")
     if [ -z "${selectedVersion}" ]; then
@@ -1258,6 +1262,8 @@ downloadPackageFromGit()
   if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
     logDebug "  Search matching version"
     logTrace "git tag --list"
+    # _ (underscore) added at the end of every tag without a hyphen to get "official" tags after alpha/beta/rc tags
+    # .0 added before underscore to make sure that tags with X.Y numbering with a higher Y number get chosen before a X.Y.Z numbering tag
     logGitTrace $(git tag --list | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//') # noquote for oneline
     local selectedVersion
     selectedVersion=$(git tag --list | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//' | getBestVersionNumber "${packageVersion}")
