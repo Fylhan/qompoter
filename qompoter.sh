@@ -943,8 +943,8 @@ downloadPackageFromCp()
  # Select the best version (if variadic version number provided)
   if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
     logDebug "  Search matching version"
-    logTrace $(ls "${requireBasePath}" | LC_ALL=C sort -V) # noquote for oneline
-    selectedVersion=$(ls "${requireBasePath}" | LC_ALL=C sort -V | getBestVersionNumber "$packageVersion")
+    logTrace $(ls "${requireBasePath}" | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//') # noquote for oneline
+    selectedVersion=$(ls "${requireBasePath}" | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//' | getBestVersionNumber "$packageVersion")
     if [ -z "${selectedVersion}" ]; then
       echo "  Oups, no matching version for \"${packageVersion}\""
       return 2
@@ -1026,8 +1026,8 @@ downloadLibPackage()
   # Select the best version (if variadic version number provided)
   if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
     logDebug "  Search matching version"
-    logTrace $(ls "${requireBasePath}" | LC_ALL=C sort -V) # noquote for oneline
-    selectedVersion=$(ls "${requireBasePath}" | LC_ALL=C sort -V | getBestVersionNumber "${packageVersion}")
+    logTrace $(ls "${requireBasePath}" | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//' ) # noquote for oneline
+    selectedVersion=$(ls "${requireBasePath}" | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//' | getBestVersionNumber "${packageVersion}")
     if [ -z "${selectedVersion}" ]; then
       echo "  Oups, no matching version for \"${packageVersion}\""
       return 2
@@ -1258,9 +1258,9 @@ downloadPackageFromGit()
   if [ "${packageVersion#*\*}" != "${packageVersion}" ]; then
     logDebug "  Search matching version"
     logTrace "git tag --list"
-    logGitTrace $(git tag --list | LC_ALL=C sort -V) # noquote for oneline
+    logGitTrace $(git tag --list | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//') # noquote for oneline
     local selectedVersion
-    selectedVersion=$(git tag --list | LC_ALL=C sort -V | getBestVersionNumber "${packageVersion}")
+    selectedVersion=$(git tag --list | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//' | getBestVersionNumber "${packageVersion}")
     if [ -z "${selectedVersion}" ]; then
       echo "  Oups, no matching version for \"${requireVersion}\""
       cd - > /dev/null 2>&1 || ( echo "  Error: cannot go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
