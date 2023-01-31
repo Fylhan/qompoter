@@ -59,6 +59,7 @@ Dependency manager for C++/Qt by Fylhan
 ```
 
 The MD5 sum of qompoter.sh v0.5.1 version is `0374e612a2cb61fcb41673d7ed2abd34`.
+
 The SHA512 sum of qompoter.sh v0.5.1 version is `c8b7fa2c9d20bf288c8c434ddebdee64698ed0eae7fa39ae5255f5c38613dae2b0124b20adac0e8e4c10419df69db36fb5c8e71d62032cae5bc86ff4e8eef7b6`.
 
 To enable autocompletion, download the script and source it in your `~/.bashrc` file:
