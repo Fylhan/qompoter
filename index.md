@@ -21,7 +21,7 @@ Installation
 
 Qompoter requires Bash, Git, sed. Other tools like rsync, curl (or wget) and tar (or zip) may be useful for some advanced cases.
 
-It works on Linux, including Busibox Linux based system like Alpine, and Windows (using [Git bash](https://git-scm.com/)).
+It works on Linux, including Busybox Linux based system like Alpine, and Windows (using [Git bash](https://git-scm.com/)).
 
 It also works on MacOS, but requires additional packages to be installed with Homebrew (https://brew.sh/): `brew install gnu-sed && brew install coreutils`, then make sure to add these to your path, in order to use GNU sed and GNU date instead of the MacOS version:
 
