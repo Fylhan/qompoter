@@ -1,7 +1,7 @@
 #!/bin/bash
 
 readonly C_PROGNAME=$(basename $0)
-readonly C_PROGVERSION="v0.5.0"
+readonly C_PROGVERSION="v0.5.1"
 readonly C_ARGS="$@"
 C_OK="\e[1;32m"
 C_FAIL="\e[1;31m"

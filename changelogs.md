@@ -1,7 +1,14 @@
 Qompoter Changelogs
 ===================
 
-[0.5.0]
+[0.5.1] - released 2023-01-31
+-------
+
+### Fixed
+
+* Stable tags are now sorted before their related alpha and RC tags (e.g. v1.1.10 is now chosen instead of v1.1.10-RC1)
+
+[0.5.0] - released 2022-05-25
 -------
 
 ### Breaking changes
