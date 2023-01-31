@@ -361,6 +361,7 @@ vendor/fylhan
 vendor/fylhan/qompoter.json
 vendor/fylhan/qompoter.pri
 vendor/glc-lib
+vendor/glc-lib/GLC_Triangle
 vendor/glc-lib/LICENSE.LGPL
 vendor/glc-lib/README
 vendor/glc-lib/doc
@@ -383,6 +384,9 @@ vendor/glc-lib/src/examples/example08
 vendor/glc-lib/src/examples/example09
 vendor/glc-lib/src/examples/example10
 vendor/glc-lib/src/examples/example11
+vendor/glc-lib/src/examples/example12
+vendor/glc-lib/src/examples/example13
+vendor/glc-lib/src/examples/example14
 vendor/glc-lib/src/examples/examples.pro
 vendor/glc-lib/src/lib
 vendor/glc-lib/src/lib/3DWidget
@@ -406,6 +410,10 @@ vendor/glc-lib/src/lib/GLC_Circle
 vendor/glc-lib/src/lib/GLC_Cone
 vendor/glc-lib/src/lib/GLC_Context
 vendor/glc-lib/src/lib/GLC_ContextManager
+vendor/glc-lib/src/lib/GLC_CsgHelper
+vendor/glc-lib/src/lib/GLC_CsgLeafNode
+vendor/glc-lib/src/lib/GLC_CsgNode
+vendor/glc-lib/src/lib/GLC_CsgOperatorNode
 vendor/glc-lib/src/lib/GLC_CuttingPlane
 vendor/glc-lib/src/lib/GLC_Cylinder
 vendor/glc-lib/src/lib/GLC_Disc
@@ -422,9 +430,11 @@ vendor/glc-lib/src/lib/GLC_GeomTools
 vendor/glc-lib/src/lib/GLC_Geometry
 vendor/glc-lib/src/lib/GLC_Global
 vendor/glc-lib/src/lib/GLC_Glu
+vendor/glc-lib/src/lib/GLC_Image
 vendor/glc-lib/src/lib/GLC_ImagePlane
 vendor/glc-lib/src/lib/GLC_InputEventInterpreter
 vendor/glc-lib/src/lib/GLC_Interpolator
+vendor/glc-lib/src/lib/GLC_LatheMesh
 vendor/glc-lib/src/lib/GLC_Light
 vendor/glc-lib/src/lib/GLC_Line
 vendor/glc-lib/src/lib/GLC_Line3d
@@ -437,9 +447,13 @@ vendor/glc-lib/src/lib/GLC_MoverController
 vendor/glc-lib/src/lib/GLC_Object
 vendor/glc-lib/src/lib/GLC_Octree
 vendor/glc-lib/src/lib/GLC_OctreeNode
+vendor/glc-lib/src/lib/GLC_OpenGLViewHandler
+vendor/glc-lib/src/lib/GLC_OpenGLViewInterface
+vendor/glc-lib/src/lib/GLC_OpenGLViewWidget
 vendor/glc-lib/src/lib/GLC_OpenGlException
 vendor/glc-lib/src/lib/GLC_PanMover
 vendor/glc-lib/src/lib/GLC_Plane
+vendor/glc-lib/src/lib/GLC_PlaneManipulator
 vendor/glc-lib/src/lib/GLC_Point
 vendor/glc-lib/src/lib/GLC_Point2d
 vendor/glc-lib/src/lib/GLC_Point2df
@@ -448,6 +462,7 @@ vendor/glc-lib/src/lib/GLC_Point3df
 vendor/glc-lib/src/lib/GLC_Point4d
 vendor/glc-lib/src/lib/GLC_PointCloud
 vendor/glc-lib/src/lib/GLC_PointSprite
+vendor/glc-lib/src/lib/GLC_Polygon
 vendor/glc-lib/src/lib/GLC_Polylines
 vendor/glc-lib/src/lib/GLC_PullManipulator
 vendor/glc-lib/src/lib/GLC_QuickCamera
@@ -455,6 +470,7 @@ vendor/glc-lib/src/lib/GLC_QuickItem
 vendor/glc-lib/src/lib/GLC_QuickOccurrence
 vendor/glc-lib/src/lib/GLC_QuickSelection
 vendor/glc-lib/src/lib/GLC_QuickView
+vendor/glc-lib/src/lib/GLC_QuickViewHandler
 vendor/glc-lib/src/lib/GLC_Rectangle
 vendor/glc-lib/src/lib/GLC_RenderProperties
 vendor/glc-lib/src/lib/GLC_RenderState
@@ -477,6 +493,7 @@ vendor/glc-lib/src/lib/GLC_State
 vendor/glc-lib/src/lib/GLC_StructInstance
 vendor/glc-lib/src/lib/GLC_StructOccurrence
 vendor/glc-lib/src/lib/GLC_StructReference
+vendor/glc-lib/src/lib/GLC_Text
 vendor/glc-lib/src/lib/GLC_Texture
 vendor/glc-lib/src/lib/GLC_TraceLog
 vendor/glc-lib/src/lib/GLC_TrackBallMover
@@ -495,6 +512,7 @@ vendor/glc-lib/src/lib/GLC_WorldReaderHandler
 vendor/glc-lib/src/lib/GLC_WorldReaderPlugin
 vendor/glc-lib/src/lib/GLC_WorldTo3ds
 vendor/glc-lib/src/lib/GLC_WorldTo3dxml
+vendor/glc-lib/src/lib/GLC_WorldToCollada
 vendor/glc-lib/src/lib/GLC_ZoomMover
 vendor/glc-lib/src/lib/geometry
 vendor/glc-lib/src/lib/glcXmlUtil
@@ -528,6 +546,8 @@ vendor/glc-lib/src/lib/glc_object.cpp
 vendor/glc-lib/src/lib/glc_object.h
 vendor/glc-lib/src/lib/glc_openglexception.cpp
 vendor/glc-lib/src/lib/glc_openglexception.h
+vendor/glc-lib/src/lib/glc_renderstate.cpp
+vendor/glc-lib/src/lib/glc_renderstate.h
 vendor/glc-lib/src/lib/glc_renderstatistics.cpp
 vendor/glc-lib/src/lib/glc_renderstatistics.h
 vendor/glc-lib/src/lib/glc_selectionevent.cpp

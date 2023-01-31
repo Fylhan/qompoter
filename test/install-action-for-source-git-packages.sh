@@ -16,11 +16,11 @@ qompoterVersionStarOrderNaturally='{ "name": "install-git/git", "require": { "fy
 qompoterCommit='{ "name": "install-git/git", "require": { "fylhan/qompoter-test-package4git": "#9504ee4" }, "repositories": { "fylhan/qompoter-test-package4git": "https://github.com" }}'
 QOMPOTER_FILES=("${qompoterBranch}" "${qompoterVersionStar}" "${qompoterVersion}" "${qompoterVersionStarOrderNaturally}" "${qompoterCommit}")
 TEST_CASE_NAMES=("install a git package with given branch" \
-                "install a git package with a given variadic version v1.* -> v1.1-alpha" \
+                "install a git package with a given variadic version v1.* -> v1.1" \
                 "install a git package with a given version" \
                 "install a git package with a given variadic version v2.* -> v2.0.10 (whereas v2.0.1 exists)" \
                 "install a git package with a given commit number")
-TEST_CASE_EXPECTED_RESULTS=("mybranch" "v1.1-alpha" "v1.0" "v2.0.10" "9504ee4")
+TEST_CASE_EXPECTED_RESULTS=("mybranch" "v1.1" "v1.0" "v2.0.10" "9504ee4")
 
 echo "1..$((${#QOMPOTER_FILES[*]}+3))"
 
