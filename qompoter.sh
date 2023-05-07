@@ -24,6 +24,7 @@ IS_INCLUDE_DEV=(-dev)?
 IS_NO_QOMPOTE=0
 IS_SAVE=0
 IS_STABLE_ONLY=0
+IS_HINT=1
 IS_VERBOSE=0
 DEPTH_SIZE=10
 DOWNLOADED_PACKAGES=
@@ -295,16 +296,12 @@ usage()
 	                          inqlude, jsonh, md5sum
 
 	Options:
-          --tree            Make a tree with all dependencies and sub-dependecies
-                            of the project.
-                            Supported action is: inspect
-
           --all             List or apply actions to all elements depending of
                             the action
                             Supported action is: inspect
 
 	        --by-pass         By-pass error and continue the process
-	                          Supported actions are: export --repo, install
+	                          Supported actions are: export --repo, install, update
 
 	    -d, --depth SIZE      Depth of the recursivity in the searching of
 	                          subpackages [default = $DEPTH_SIZE]
@@ -316,7 +313,7 @@ usage()
 
 	    -f, --force           By-pass error by forcing the action to be taken
 	                          and continue the process
-	                          Supported actions are: export --repo, install
+	                          Supported actions are: export --repo, install, update
 
 	        --minify          Minify the provided file
 	                          Supported action is: inqlude
@@ -330,11 +327,15 @@ usage()
 	        --no-dep          Do not retrieve dependencies, only use listed
 	                          packages from the Qompoter file, or the one
 	                          requested in command line  [default = false]
-	                          Supported action is: install
+	                          Supported action is: install, update
+
+	        --no-hint         Do not display hints on output (like higher versions)
+                            [default = false]
+	                          Supported action is: install, update
 
 	        --no-qompote      Do not generate any Qompoter specific stuffs
 	                          like qompote.pri and vendor.pri [default = false]
-	                          Supported actions are: init, install
+	                          Supported actions are: init, install, update
 
 	    -r, --repo DIR        Select a repository path as a location for
 	                          dependency research or export. It is used in
@@ -348,23 +349,27 @@ usage()
 	        --stable-only     Do not select unstable versions [default = false]
 	                          E.g. If "v1.*" is given to Qompoter, it will select
 	                          "v1.0.3" and not "v1.0.4-RC1"
-	                          Supported action is: install
+	                          Supported action is: install, update
 
 	        --save            Add the requested package into the Qompoter file
 	                          [default = false]
 	                          Supported action is: install
 
+          --tree            Make a tree with all dependencies and sub-dependecies
+                            of the project.
+                            Supported action is: inspect
+
 	        --vendor-dir DIR  Pick another vendor directory [default = $VENDOR_DIR]
 	                          Supported actions are: export, inspect, install,
-	                          md5sum
+	                          md5sum, update
 
-	    -V, --verbose         Enable more verbosity
+	    -V, --verbose         Enable more verbosity
 
 	    -VV                   Enable really more verbosity
 
 	    -VVV                  Enable really really more verbosity
 
-	    -h, --help            Display this help
+	    -h, --help            Display this help
 
 	    -v, --version         Display the version
 
@@ -377,10 +382,10 @@ usage()
 	      $C_PROGNAME install --no-dev --stable-only --repo ~/qompoter-repo
 
 	    Install only the "http-parser-wrapper" package (from Github):
-	      $C_PROGNAME install qompoter/http-parser-wrapper dev-master --repo https://github.com
+	      $C_PROGNAME install "qompoter/http-parser-wrapper" "dev-master" --repo https://github.com
 
 	    Install only the "qhttp-wrapper" package (from Github) but do not install its dependencies:
-	      $C_PROGNAME install qompoter/qhttp-wrapper v3.1.* --no-dep --repo https://github.com
+	      $C_PROGNAME install "qompoter/qhttp-wrapper" "v3.1.*" --no-dep --repo https://github.com
 
 	    List required dependencies for this project:
 	      $C_PROGNAME require
@@ -793,7 +798,7 @@ downloadPackage()
   local qompoterPriFile=${requireLocalPath}/qompoter.pri
   local inqludeDistUrl
 
-  echo "* ${requireName} ${requireVersionFull}"
+  echo -e "* ${vendorName}/${C_OK}${packageName}${C_END} ${C_INFO}${requireVersionFull}${C_END}"
 
   mkdir -p "${requireLocalPath}"
 
@@ -952,7 +957,7 @@ downloadPackageFromCp()
       return 2
     fi
     packageVersion=${selectedVersion}
-    echo "  Selected version: ${packageVersion}"
+    echo -e "  Selected version: ${C_INFO}${packageVersion}${C_END}"
   fi
 
   # Copy
@@ -961,6 +966,33 @@ downloadPackageFromCp()
     logDebug "  Copy \"${packageDistUrl}\" to \"${requireLocalPath}\""
     cp -rf ${packageDistUrl}/* "${requireLocalPath}" \
       >> ${C_LOG_FILENAME} 2>&1
+    # Check if an higher version is existing
+    if [ "1" == "${IS_HINT}" ]; then
+      local majorVersion
+      # Retrieve major version name in current requested version: take only two first characters
+      if [[ ${rawPackageVersion} == "v"* ]]; then
+        majorVersion="${rawPackageVersion::2}.*"
+      fi
+      # _ (underscore) added at the end of every tag without a hyphen to get "official" tags after alpha/beta/rc tags
+      # .0 added before underscore to make sure that tags with X.Y numbering with a higher Y number get chosen before a X.Y.Z numbering tag
+      logDebug "  Check if an higher version is existing and log it"
+      logTrace "ls \""${requireBasePath}\"" | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//'"
+      logTrace $(ls "${requireBasePath}" | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//') # noquote for oneline
+      logDebug "   Check highest version"
+      logTrace "ls \"${requireBasePath}\" | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//' | getBestVersionNumber \"v*\""
+      local highestExistingVersion
+      highestExistingVersion=$(ls "${requireBasePath}" | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//' | getBestVersionNumber "v*")
+      logDebug "   Check highest version in the same major branch"
+      logTrace "ls \"${requireBasePath}\" | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//' | getBestVersionNumber \"${majorVersion}\""
+      local majorExistingVersion
+      majorExistingVersion=$(ls "${requireBasePath}" | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//' | getBestVersionNumber "${majorVersion}")
+      if [ "" != "${majorExistingVersion}" ] && [ "${packageVersion}" != "${majorExistingVersion}" ] && [ "${highestExistingVersion}" != "${majorExistingVersion}" ]; then
+        echo -e "  Hint: Think about upgrading to the last version of this branch ${C_INFO}${majorExistingVersion}${C_END}"
+      fi
+      if [ "" != "${highestExistingVersion}" ] && [ "${packageVersion}" != "${highestExistingVersion}" ]; then
+        echo -e "  Hint: Think about upgrading to the last version ${C_INFO}${highestExistingVersion}${C_END}"
+      fi
+    fi
     PACKAGE_VERSION=${packageVersion}
     PACKAGE_DIST_URL=${packageDistUrl}
     return 0
@@ -1037,7 +1069,7 @@ downloadLibPackage()
       return 2
     fi
     packageVersion=${selectedVersion}
-    echo "  Selected version: ${packageVersion}"
+    echo -e "  Selected version: ${C_INFO}${packageVersion}${C_END}"
   fi
   packageDistUrl=${requireBasePath}/${packageVersion}
   # Download from CP
@@ -1045,6 +1077,41 @@ downloadLibPackage()
   downloadLibFromCp "${packageDistUrl}" "${requireLocalPath}"
   res=$?
   if [ "$res" == "0" ]; then
+    # Check if an higher version is existing
+    if [ "1" == "${IS_HINT}" ]; then
+      local majorVersion
+      # Retrieve major version name in current requested version: take only two first characters
+      if [[ ${rawPackageVersion} == "v"* ]]; then
+        majorVersion="${rawPackageVersion::2}.*"
+      fi
+      # _ (underscore) added at the end of every tag without a hyphen to get "official" tags after alpha/beta/rc tags
+      # .0 added before underscore to make sure that tags with X.Y numbering with a higher Y number get chosen before a X.Y.Z numbering tag
+      logDebug "  Check if an higher version is existing and log it"
+      logTrace "ls \""${requireBasePath}\"" | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//'"
+      logTrace $(ls "${requireBasePath}" | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//') # noquote for oneline
+      logDebug "   Check highest version"
+      logTrace "ls \"${requireBasePath}\" | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//' | getBestVersionNumber \"v*\""
+      local highestExistingVersion
+      highestExistingVersion=$(ls "${requireBasePath}" | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//' | getBestVersionNumber "v*")
+      # It may be already suffixed by "-lib" when using CP, but not all the time, and never with HTTP. Let's add "-lib" if needed only.
+      if [[ "${highestExistingVersion}" != *"-lib" ]]; then
+        highestExistingVersion="${highestExistingVersion}-lib"
+      fi
+      logDebug "   Check highest version in the same major branch"
+      logTrace "ls \"${requireBasePath}\" | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//' | getBestVersionNumber \"${majorVersion}\""
+      local majorExistingVersion
+      majorExistingVersion=$(ls "${requireBasePath}" | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//' | getBestVersionNumber "${majorVersion}")
+      # It may be already suffixed by "-lib" when using CP, but not all the time, and never with HTTP. Let's add "-lib" if needed only.
+      if [[ "${majorExistingVersion}" != *"-lib" ]]; then
+        majorExistingVersion="${majorExistingVersion}-lib"
+      fi
+      if [ "" != "${majorExistingVersion}" ] && [ "${packageVersion}" != "${majorExistingVersion}" ] && [ "${highestExistingVersion}" != "${majorExistingVersion}" ]; then
+        echo -e "  Hint: Think about upgrading to the last version of this branch ${C_INFO}${majorExistingVersion}${C_END}"
+      fi
+      if [ "" != "${highestExistingVersion}" ] && [ "${packageVersion}" != "${highestExistingVersion}" ]; then
+        echo -e "  Hint: Think about upgrading to the last version ${C_INFO}${highestExistingVersion}${C_END}"
+      fi
+    fi
     PACKAGE_VERSION=${packageVersion}
     PACKAGE_DIST_URL=${packageDistUrl}
     return 0
@@ -1231,7 +1298,7 @@ downloadPackageFromGit()
   fi
 
   # Verify no manual changes and warning otherwize
-  #~ FIXME Use also last commit number
+  #~ FIXME Use also last commit number or even better, use the md5sum
   logTrace "git status -s"
   hasChanged=$(git status -s)
   if [ ! -z "${hasChanged}" ]; then
@@ -1275,7 +1342,7 @@ downloadPackageFromGit()
     packageVersion=${selectedVersion}
     rawPackageVersion=${selectedVersion}
     requireBranch=${selectedVersion}
-    echo "  Selected version: ${packageVersion}"
+    echo -e "  Selected version: ${C_INFO}${packageVersion}${C_END}"
   fi
 
   # TODO Verify version availability?
@@ -1302,6 +1369,34 @@ downloadPackageFromGit()
   logTrace "git reset --hard ${packageVersion}"
   git reset --hard "${packageVersion}" > ${C_LOG_FILENAME_PACKAGE} 2>&1
   logGitTrace $(cat "${C_LOG_FILENAME_PACKAGE}")
+
+  # Add information in log: Check if an higher version is existing
+  if [ "1" == "${IS_HINT}" ]; then
+    local majorVersion
+    # Retrieve major version name in current requested version: take only two first characters
+    if [[ ${rawPackageVersion} == "v"* ]]; then
+      majorVersion="${rawPackageVersion::2}.*"
+    fi
+    # _ (underscore) added at the end of every tag without a hyphen to get "official" tags after alpha/beta/rc tags
+    # .0 added before underscore to make sure that tags with X.Y numbering with a higher Y number get chosen before a X.Y.Z numbering tag
+    logDebug "  Check if an higher version is existing and log it"
+    logTrace "git tag --list | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//'"
+    logGitTrace $(git tag --list | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//') # noquote for oneline
+    logDebug "   Check highest version"
+    logTrace "git tag --list | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//' | getBestVersionNumber \"v*\""
+    local highestExistingVersion
+    highestExistingVersion=$(git tag --list | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//' | getBestVersionNumber "v*")
+    logDebug "   Check highest version in the same major branch"
+    logTrace "git tag --list | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//' | getBestVersionNumber \"${majorVersion}\""
+    local majorExistingVersion
+    majorExistingVersion=$(git tag --list | sed '/-/!{s/$/.0_/}' | LC_ALL=C sort -V | sed 's/.0_$//' | getBestVersionNumber "${majorVersion}")
+    if [ "" != "${majorExistingVersion}" ] && [ "${packageVersion}" != "${majorExistingVersion}" ] && [ "${highestExistingVersion}" != "${majorExistingVersion}" ]; then
+      echo -e "  Hint: Think about upgrading to the last version of this branch ${C_INFO}${majorExistingVersion}${C_END}"
+    fi
+    if [ "" != "${highestExistingVersion}" ] && [ "${packageVersion}" != "${highestExistingVersion}" ]; then
+      echo -e "  Hint: Think about upgrading to the last version ${C_INFO}${highestExistingVersion}${C_END}"
+    fi
+  fi
 
   cd - > /dev/null 2>&1 || ( echo "  Error: cannot go back to ${currentPath}" ; echo -e "${C_FAIL}FAILURE${C_END}" ; exit -1)
 
@@ -1355,12 +1450,11 @@ isGitRepositories()
 getBestVersionNumber()
 {
   local versionPattern=$1
-  #~ FIXME Sort version number using natural sort (v1.10 > v1.3)
-    if [ "${IS_STABLE_ONLY}" == "1" ]; then
-      grep "v\?${versionPattern}\$" | grep -v -e "-\(alpha\|beta\|RC[0-9]*\|[0-9]*\)$" | tail -1
-    else
-      grep "v\?${versionPattern}\$" | tail -1
-    fi
+  if [ "${IS_STABLE_ONLY}" == "1" ]; then
+    grep "v\?${versionPattern}\$" | grep -v -e "-\(alpha\|beta\|RC[0-9]*\|[0-9]*\)$" | tail -1
+  else
+    grep "v\?${versionPattern}\$" | tail -1
+  fi
 }
 
 getProjectMd5()
@@ -1847,6 +1941,7 @@ testcase {
 }
 
 OTHER_FILES += \\
+    .gitignore \\
     .gitlab-ci.yml \\
     .qmake.conf \\
     qompoter.json \\
@@ -1991,6 +2086,7 @@ EOF
     echo "* Create \".gitignore\" file"
     cat <<- EOF > .gitignore
 .user
+*.user*
 *.un~
 *.swp
 *.zip
@@ -2555,27 +2651,27 @@ removeBlock()
 
 logWarning()
 {
-  echo "  Warning: $@"
+  echo -e "  Warning: $@"
 }
 
 logDebug()
 {
   if [ "$IS_VERBOSE" == "1" ] || [ "$IS_VERBOSE" == "2" ] || [ "$IS_VERBOSE" == "3" ]; then
-    echo "$@"
+    echo -e "$@"
   fi
 }
 
 logTrace()
 {
   if [ "$IS_VERBOSE" == "2" ] || [ "$IS_VERBOSE" == "3" ]; then
-    echo "    $@"
+    echo -e "    $@"
   fi
 }
 
 logGitTrace()
 {
   if [ "$IS_VERBOSE" == "3" ]; then
-    echo "      $@"
+    echo -e "      $@"
   fi
 }
 
@@ -2633,6 +2729,7 @@ cmdline()
       ;;
     --no-color )
       C_OK=
+      C_INFO=
       C_FAIL=
       C_END=
       shift
@@ -2648,6 +2745,10 @@ cmdline()
       ;;
     --no-dep )
       DEPTH_SIZE=1
+      shift
+      ;;
+    --no-hint )
+      IS_HINT=0
       shift
       ;;
     --no-qompote  )

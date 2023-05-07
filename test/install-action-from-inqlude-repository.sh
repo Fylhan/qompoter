@@ -18,7 +18,7 @@ fi
 for input in ${name}/*${offline}.json
 do
   i=$((i+1))
-  if ! ../qompoter.sh install --no-color --file "$input" --repo qompoter-repo | diff -u - "${input%.json}.expected" \
+  if ! ../qompoter.sh install --no-color --no-hint --file "$input" --repo qompoter-repo | diff -u - "${input%.json}.expected" \
     || ! find vendor -maxdepth 4 | grep -v ".git" | LC_ALL=C sort | diff -u - "${input%.json}.vendor.expected"
   then
     echo "not ok $i - $(echo $input | tr '-' ' ' | sed 's/.json//' | sed 's/ offline//')"
