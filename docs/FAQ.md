@@ -13,13 +13,14 @@ Table of Contents
 * [What is this qompote.pri file?](#what-is-this-qompotepri-file)
 * [Why "Qompoter"?](#why-qompoter)
 * [Why building Qompoter and not using something already there?](#why-building-qompoter-and-not-using-something-already-there)
+* [How did you choose the Qompoter CLI syntax?](#how-did-you-choose-the-qompoter-cli-syntax)
 
 Can I use Qompoter in production?
 ---------------------
 
-The Qompoter project has started at the end of 2014, reached version 0.2 in the end of 2016. and 0.3 in the middle of 2017. This is still a young project with some known bugs, however the main command line options and "qompoter.json" structure should not change a lot in the future and stay stable. I have a small amount of time to improve this tool, but I have it several time a week which allows me to fix things quite quickly, and to improve stuff step by step.
+The Qompoter project has started at the end of 2014, reached version 0.2 in the end of 2016. and 0.3 in the middle of 2017. This is still a young project with some limitations, however the main command line options and "qompoter.json" structure should not change a lot in the future and stay stable. I have a small amount of time to improve this tool, but I am still able to fix things quite quickly, and to improve stuff slowly step by step.
 
-Today, Qompoter is used in production by a small team, it really ease the sharing and repeatability of the build between several people.
+Today, Qompoter is used in production by a small team of more than 10 people, it really ease the sharing and repeatability of the build between several people.
 It is up to you! Please, share your experience.
 
 Which platforms does it run on?
@@ -31,12 +32,12 @@ It should also work on Mac, FreeBSD and more widely on Windows (Cygwin or Mysys 
 Is Qompoter open source?
 ---------------------
 
-Oh yes, Qompoter is open source and also free as in free beer! It is distributed under the [LGPL3+](LICENSE) license: *you can freely use it in any projects, even closed ones. Just keep in mind that if you modify Qompoter, you shall provide these updates as open source. Thanks!* The project is hosted on GitHub.
+Oh yes, Qompoter is open source and also free as in freedom (and free beer)! It is distributed under the [LGPL3+](LICENSE) license: *you can freely use it in any projects, even closed ones. Just keep in mind that if you modify Qompoter, you shall provide these updates as open source. Thanks!* The project is hosted on GitHub.
 
 Can I use SVN or Mercurial with Qompoter?
 ---------------------
 
-Nope, sorry, only Git at the moment. A basic support of SVN might be added in the future.
+Nope, sorry, only Git at the moment.
 
 I ran `qompoter install` but one of the Git based package has not been updated...
 ---------------------
@@ -85,6 +86,7 @@ There are already some dependency managers for the C++ environment:
 * [Conan](https://github.com/conan-io/conan) C/C++ distributed package manager
     * Written in Python.
     * Cmake, make, gcc and whatever but no qmake yet.
+    * Multi-platform
     * Dedicated repository, with possibility to host its own, with a lot of packages.
     * Packages can be easily imported, especially in CMake files. It supports sources and binaries with several architectures in a very advanced ways. More, packages are downloaded in a cached repository which allows offline usage, great!
     * Open source: MIT. Premium plan available.
@@ -104,6 +106,14 @@ There are already some dependency managers for the C++ environment:
     * Qmake only.
     * Dedicated repository.
     * Open source: AGPL.
+* [Craft](https://community.kde.org/Craft)
+    * To be studied
+* [vcpkg](https://github.com/Microsoft/vcpkg) C++ library manager
+    * Written in C++.
+    * Binary only?
+    * Multi-platform: Windows, Linux, MacOS
+    * Open source: MIT.
+    * To be studied
 
 There is also [npm](https://github.com/npm/npm) (Node Package Manager) which is actualy more generic than just Node.js. Still it seems difficult to provide easy installation of a C++ dependency manager based on "npm". More, I am not sure the C++ community is willing to use something based on "npm".
 
@@ -117,4 +127,22 @@ When I decided to start building Qompoter, I asked myself: what do I really need
 
 That is why I started building Qompoter. In Bash because it is easy to share and can still run in Linux, Mac and even Windows. It also involves less boilerplate than C++ to kick-off the project.
 
-Today, Qompoter is used in production by a small team, it still have some issues but really ease the sharing and repeatability of the build between several people. Please, share your experience.
+Today, Qompoter is used in production by a small team, it still have some limitations but really ease the sharing and repeatability of the build between several people. Please, share your experience.
+
+If Qompoter's features do not fit your needs, please check [Conan](https://github.com/conan-io/conan).
+
+How did you choose the Qompoter CLI syntax?
+---------------------
+
+During the first days of Qompoter, I was using Composer, the PHP dependency manager, a lot. So yes, Qompoter is well inspired from Composer concepts, but I also tried to use the most common syntax.
+
+| Project  | Install                 | Update   | Add in depencency list file |
+|:--------:|:-----------------------:|:---------:|:--------------------------:|
+| qompoter | `install` (using lock)  | `update` | `add` (`updateOne` and `require` as aliases)
+| composer | `install` (using lock)  | `update` | `require`
+| npm      | `install`               | `update` | `install --save`
+| yarn     | `install` (using lock)  | `update` | `add`
+| bower    | `install`               | `update` | `install --save`
+| conan    | `install` (using lock?) | ?        | ?
+| maven    | `install`               | N/A      | N/A
+| qpm      | `install`               | N/A      | N/A

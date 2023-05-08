@@ -1,6 +1,6 @@
 Qompoter is an attempt of dependency manager for Qt / C++, because I am sick of managing each C++ piece of code separately!
 
-The current version is still a work in progress but it is now usable for non-critical projects!
+The current version is still a work in progress but it is usable for simple and complex projects!
 
 Check the [FAQ](docs/FAQ.md) to understand "Why Qompoter?", but here is what **Qompoter is good for**:
 

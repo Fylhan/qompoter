@@ -6,9 +6,29 @@ Usage: qompoter [action] [ --repo <repo> | other options ]
 Actions
 ------------
 
-Select an action in: export, init, inspect, install, require
+Select an action in: add, export, init, inspect, install, update, updateOne
 
 Other actions are useful for digging into Qompoter: inqlude, jsonh, md5sum.
+
+### add
+
+Download and install locally into the "vendor" directory, the requested package. If the version number is not provided, the one from the Qompoter file is used (if any). By default, the requested package and all its dependencies are installed. To only install or update the requested package alone, use `--no-dep` option. Several other options can be used to select another "qompoter.json" file, "vendor" directory, repository path or to select only nominal or stable packages.
+
+The existing "qompoter.lock" file is updated, or a new one is created, listing the downloaded packages, their selected version and a MD5 sum of each package.
+To prevent updating the "qompoter.json" file, use the `--no-save` option.
+
+Notice: `add` and `updateOne` are performing exactly the same thing. Conceptually, you will `add` a package not existing yet into your "qompoter.json" file, and use `updateOne` to upgrade the version of an existing package.
+
+Examples:
+
+```bash
+# Install only the "http-parser-wrapper" package (from Github) with all its dependencies:
+qompoter add qompoter/http-parser-wrapper dev-master --repo https://github.com
+# Install only the "qhttp-wrapper" package (from Github) but do not install its dependencies and do not save this action:
+qompoter updateOne qompoter/qhttp-wrapper 3.1.* --no-dep --repo https://github.com --no-save
+# Install only a stable version (listed in the "qompoter.json" file) of the "qhttp-wrapper" package (from Github), in a "myvendor" directory, with all its dependencies:
+qompoter updateOne qompoter/qhttp-wrapper --stable-only --repo https://github.com --file myqompoter.json --vendor myvendor
+```
 
 ### export
 
@@ -28,8 +48,6 @@ qompoter export --vendor-dir myvendor
 qompoter export --repo ~/other-qompoter-repo
 ```
 
-The other features are not implemented yet.
-
 ### init
 
 Generates Qompoter and Qt boilerplate for a new application. By providing a vendor name and a package name, the "init" action will generates:
@@ -39,40 +57,47 @@ Generates Qompoter and Qt boilerplate for a new application. By providing a vend
 * README.md and changelogs.md
 * .qmake.conf
 * .gitlab-ci.yml
+* .gitignore
 
-Notice: this action is too "Qtish" and too specific. It may change a lot in the future or even be deprecated.
+Notice: this action may be too "Qtish" and too specific. It may change in the future.
 
 Examples:
 
 ```bash
 # Generate boilerplate for the "old/yoda" package starting from version 900.0
-qompoter init old/yoda v900.0
+qompoter init "old/yoda" v900.0
 ```
-
-The other features are not implemented yet.
 
 ### inspect
 
 Inspect the packages available in the "vendor" directory and compare them with the information available in the "qompoter.lock" file in order to check changes since the packages has been retrieved.
 
-This action is useful to show manual changes performed onto packages, and therefore to push them manually to the Qompoter repository. To override changes, use `qompoter install --force`, to keep them and continue the installation process normally use `qompoter install --by-pass`.
+This action is useful to show manual changes performed onto packages, and therefore to push them manually to the Qompoter repository.
+To override changes, use `qompoter update --force`.
+To keep them and continue the installation process normally use `qompoter update --by-pass`.
 
 Examples:
 
 ```bash
 # Inspect the "vendor" directory
 qompoter inspect
-# Inspect the "vendor" directory and lisy all packages, not only modified ones
+# Inspect the "vendor" directory and list all packages, not only modified ones
 qompoter inspect --all
+# Inspect the "vendor" directory and list all packages and display them as a tree, not only modified ones (wip)
+qompoter inspect --tree
 # Inspect the directory called "myvendor" based on file "myqompoter.lock"
 qompoter inspect --vendor-dir "myvendor" --file "myqompoter.json"
 ```
 
+To list packages required in the "qompoter.json" file, use [`qompoter require`](#require).
+
 ### install
 
-Download and install locally (i.e. into a "vendor" directory) the packages listed as required into the "qompoter.json" file. Several options can be used to select another "qompoter.json" file, "vendor" directory, repository path or to select only nominal or stable packages.
+Download and install locally into the "vendor" directory, the packages listed as required into the "qompoter.lock" file. Several options can be used to select another "qompoter.lock" file, "vendor" directory, repository path or to select only nominal or stable packages.
 
-The installation process generates a "qompoter.lock" file listing the downloaded packages, their selected version and a MD5 sum of each package.
+The `update` action does the same, using the "qompoter.json" file and generating a "qompoter.lock" file with the selected dependency versions ("v3.0.\*" -> "v3.0.2"). Even if a newer version of a package is pushed (like "v3.0."), the `install` action will use the "qompoter.lock" file and will allow to use the versions selected when `update` was used.
+
+In case there is no "qompoter.lock" file, `install` will behave as `update` and generate a lock file for next time.
 
 Examples:
 
@@ -83,24 +108,49 @@ qompoter install --repo /Project
 qompoter install --no-dev --repo /Project
 # Install only stable required packages
 qompoter install --stable-only --repo /Project
-# Install all required packages with specific options, and do not generate Qt specific stuff thanks to the "--no-qompote" option
-qompoter install --repo /Project --file myqompoter.json --vendor myvendor --no-qompote --no-color
+# Install all required packagesn listed in "myqompoter.lock" file, in a "myvendor" directory, without using color in stdout, and do not generate Qt specific stuff thanks to the "--no-qompote" option
+qompoter install --repo /Project --file myqompoter.lock --vendor myvendor --no-qompote --no-color
 ```
 
-### require
+### show
 
-With the `--list` options, lists the required packages of a project.
+List the required packages of a project from the "qompoter.json" file.
 
 Example:
 
 ```bash
 # List required dependencies of the project
-qompoter require --list
+qompoter show
 # List required dependencies of "myqompoter.json" file
-qompoter require --list --file myqompoter.json
+qompoter show --file myqompoter.json
 ```
 
-The other features are not implemented yet.
+To list packages available in the "vendor" directory, use [`qompoter inspect --all`](#inspect).
+
+### update
+
+Download and install locally into the "vendor" directory, the packages listed as required into the "qompoter.json" file. Several options can be used to select another "qompoter.json" file, "vendor" directory, repository path or to select only nominal or stable packages.
+
+The installation process generates a "qompoter.lock" file listing the downloaded packages, their selected version and a MD5 sum of each package.
+
+Examples:
+
+```bash
+# Install all required packages
+qompoter update --repo /Project
+# Install only nominal required packages
+qompoter update --no-dev --repo /Project
+# Install only stable required packages
+qompoter update --stable-only --repo /Project
+# Install all required packagesn listed in "myqompoter.json" file, in a "myvendor" directory, without using color in stdout, and do not generate Qt specific stuff thanks to the "--no-qompote" option
+qompoter update --repo /Project --file myqompoter.json --vendor myvendor --no-qompote --no-color
+```
+
+### updateOne
+
+`updateOne` is an alias for `add`. See [`add`](docs/Command-line.md#add) for details.
+
+Notice: `add` and `updateOne` are performing exactly the same thing. Conceptually, you will `add` a package not existing yet into your "qompoter.json" file, and use `updateOne` to upgrade the version of an existing package.
 
 ### inqlude
 
@@ -123,7 +173,7 @@ The other features are not implemented yet.
 
 ### jsonh
 
-Dig into a JSON file using the [SON.sh](https://github.com/dominictarr/JSON.sh) tool used by Qompoter.
+Dig into a JSON file using the [JSON.sh](https://github.com/dominictarr/JSON.sh) tool used by Qompoter.
 
 Example:
 
@@ -145,33 +195,37 @@ Options
 ------------
 
 * **--all** List or apply actions to all elements depending of the action
-  * Supported action is: (inspect)[#inspect]
+  * Supported action is: inspect
 * **--by-pass** By-pass error and continue the process
-  * Supported actions are: export --repo, install
+  * Supported actions are: add, export --repo, install, update, updateOne
 * **-d, --depth SIZE** Depth of the recursivity in the searching of sub-packages [default = 10]
 * **--inqlude-file FILE** Pick the provided file to search into the inqlude repository
-* **--file FILE** Pick another Qompoter file [default = qompoter.json]
+* **--file FILE** Pick another lock file or Qompoter file [default = qompoter.lock and qompoter.json]
 * **-f, --force** By-pass error by forcing the action to be taken and continue the process
-  * Supported actions are: export --repo, install
-* **-l, --list** List elements depending of the action
-  * Supported action is: require
+  * Supported actions are: export --repo, install, update, updateOne
 * **--minify** Minify the provided file
   * Supported action is: inqlude
 * **--no-color** Do not enable color on output [default = false]
 * **--no-dev** Do not retrieve dev dependencies listed in "require-dev" [default = false]
-  * Supported action is: install
+  * Supported action is: add, install, update, updateOne
+* **--no-dep** Do not retrieve dependencies, only use listed packages from the Qompoter file, or the one requested in command line [default = false]
+  * Supported action is: add, install, update, updateOne
+* **--no-hint** Do not display hints on output (like higher versions) [default = false]
+  * Supported action is: add, install, update, updateOne
 * **--no-qompote** Do not generate any Qompoter specific stuffs like qompote.pri and vendor.pri [default = false]
-  * Supported actions are: init, install
+  * Supported actions are: add, init, install, update, updateOne
 * **-r, --repo DIR** Select a repository path as a location for dependency research or export. It is used in addition of the "repositories" provided in "qompoter.json".
-  * Supported actions are: export, install
+  * Supported actions are: add, export, install, update, updateOne
 * **--search PACKAGE** Search related packages in a repository
   * Supported action is: inqlude
 * **--stable-only** Do not select unstable versions [default = false]
   * E.g. If `v1.*` is given to Qompoter, it will select "v1.0.3" and not "v1.0.4-RC1"
   * E.g. If `v1.*`" is given to Qompoter, it will select "v1.0.3" and not "v1.0.4-RC1"
-  * Supported action is: install
+  * Supported action is: add, install, update, updateOne
+* **--tree** List all packages as a tree
+  * Supported action is: inspect
 * **--vendor-dir DIR** Pick another vendor directory [default = vendor]
-  * Supported actions are: export, inspect, install, md5sum
+  * Supported actions are: add, export, inspect, install, md5sum, update, updateOne
 * **-V, --verbose** Enable more verbosity
 * **-VV** Enable really more verbosity
 * **-VVV** Enable really really more verbosity

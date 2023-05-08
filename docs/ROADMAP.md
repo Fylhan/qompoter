@@ -1,20 +1,37 @@
 Qompoter Roadmap
 ================
 
-Version 0.4 - in progress
+Version 0.5 - in progress, first release 2022, May
 -----------
 
+* [x] Study: Make a study around `qompoter install` / `qompoter update` / `qompoter install --save` (compare with Composer, npm, yarn) and post the result into the blog. See FAQ.
+* [x] Installation: Create Debian package (in progress)
 * [ ] Installation: Create Ubuntu/Snap package (?)
-* [ ] New action: qompoter install <packagename>
-* [ ] New action: qompoter install / update (using qompoter.lock)
-* [x] Feature: Add aliases for most used actions e=export, i=install, u=update
-* [x] Feature: Improve qompoter inspect (show only modified packages by default, now use `--all` to list all of them)
+* [ ] Installation: Create FlatPack package (?)
+* [ ] Feature: Support `--save --dev` option in `qompoter add <packagename>`
+* [x] New action: `qompoter install` / `qompoter update` (using lock file)
+  * url is ok, unit test are ok, cannot download on Github?
+* [ ] Feature: Propose to download source version if lib one is outdated
+* [ ] Feature: Allow soft version management v2 (e.g. >=v2.1.3)
 * [ ] Feature: Prevent from overriding manual changes for all packages in vendor (md5sum)
 * [ ] Feature: Update automatically the inqlude repository data
+* [ ] Feature: Support `--no-dev` option in `qompoter export --repo`
+* [ ] Feature: Support `--prefer-source` option in `qompoter update` to prefer source packages instead over library packages
 * [ ] Feature: Support CMake
 * [ ] Bugfix campaign
-  * [ ] Fix: url field is not always filled in lock file
+  * [ ] Fix: Url field is not always filled in lock file
+  * [ ] Fix: Add dev packages to "require-dev" in lock file and remove them from "require"
+  * [ ] Fix: When using local repository, libraries are still searched first in Inqlude repository
+  * [ ] Fix: If a package is manually deleted, `qompoter inspect` displays an unexpected error `find: ‘vendor/package-dir’: No file or folder of this type`
 * [ ] Clean documentation and release
+
+Version 0.4 - released 2019, December
+-----------
+
+* [x] New action: `qompoter install <packagename>`
+* [x] Feature: Add `--no-dep` flag to not load dependencies during `qompoter install` or `qompoter install <packagename>` (alias of `--depth 0`)
+* [x] Feature: Add aliases for most used actions e=export, i=install, u=update
+* [x] Feature: Improve `qompoter inspect` (show only modified packages by default, now use `--all` to list all of them)
 
 Version 0.3 - released 2017, August
 -----------
@@ -49,28 +66,28 @@ Proof of concept.
 Plan for future
 -----------
 
-* [ ] New action: qompoter release
-* [ ] Installation: create Debian package
-* [ ] Installation: create other Linux package
-* [ ] Installation: qompoter self-update (from Github)
+* [ ] New action: `qompoter release`
+* [ ] Installation: Create other Linux package
+* [ ] Installation: `qompoter self-update` (from Github)
 * [ ] Installation: install Qompoter though the "Qt Maintenance Tool"
 * [ ] Feature: Cache downloaded packages
 * [ ] Feature: Integrate automatically inqlude packages if possible (generate qompoter.pri, ... ?)
-* [ ] Feature: Allow soft version management v2 (e.g. ^v1.0 etc)
+* [ ] Feature: Allow soft version management v3 (e.g. ^v1.0 etc)
 * [ ] Feature: Search in other package manager repositories (QPM, CPM, ...)
 * [ ] Feature: Increase security by checking integrity of packages (md5sum or SHA1, SHA-256, ...)
-* [ ] Feature: qompoter install --repo vendor.zip
-* [ ] Feature: add qompoter install --local / --global
+* [ ] Feature: Support `--force=<number>` and `--bypass=<number>`
+* [ ] Feature: `qompoter install --repo vendor.zip`
+* [ ] Feature: add `qompoter install --local / --global`
 * [ ] Feature: Improve qompoter export with compression / optimization
 * [ ] Support extension using qompoter-command available in PATH
 * [ ] Integrate automatically Qt plugins if possible (generate qompoter.pri, ... ?)
 * [ ] Integrate into QtCreator
-* [ ] Split qompoter.sh into several files and add build step to create qompoter.sh
+* [ ] Split `qompoter.sh` into several files and add build step to generate `qompoter.sh`
 * [ ] Describe and implement a "Packagist" like server for Qompoter
-* [ ] Use QT += package instead of CONFIG which leverage the usage of include(vendor.pri)
+* [ ] Use `QT += package` instead of CONFIG which leverage the usage of include(vendor.pri)
 * [ ] Check Windows support
+* [ ] Check Mac support
 * [ ] Support SVN based packages
 * [ ] JSON schema for qompoter.json
 * [ ] Translate doc into French
-* [ ] Take a look http://www.pkgsrc.org/
 * [ ] Better documentation

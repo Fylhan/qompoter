@@ -7,7 +7,6 @@ But what is a package? Actually any project can be a package and be included in 
 
 To know how to define the required packages of a project, see [Qompoter file](Qompoter-json-file.md), but for now let's discuss about how to create packages.
 
-
 Two Kinds of Packages
 ---------------------
 
