@@ -22,7 +22,7 @@ IS_FORCE=0
 IS_DEV=0
 IS_INCLUDE_DEV=(-dev)?
 IS_NO_QOMPOTE=0
-IS_SAVE=0
+IS_SAVE=1
 IS_STABLE_ONLY=0
 IS_HINT=1
 IS_VERBOSE=0
@@ -1884,12 +1884,15 @@ exportAction()
     rm "${vendorBackup}"
   fi
 
+  echo "Saving existing ${VENDOR_DIR} directory..."
   if [ -d "${VENDOR_DIR}" ]; then
     zip "${vendorBackup}" -r "${VENDOR_DIR}" \
       >> ${C_LOG_FILENAME} 2>&1
     echo "Exported to ${vendorBackup}"
+    echo
   else
     echo "Nothing to do: no '${VENDOR_DIR}' dir"
+    echo
     return 0
   fi
 }
@@ -2338,7 +2341,7 @@ updateAction()
   return $globalRes
 }
 
-requireAction()
+updateOneAction()
 {
   local qompoterFile=$1
   local qompoterLockFile
@@ -2543,10 +2546,12 @@ repoExportAction()
     local currentPath=`pwd`
     (cd ${REPO_PATH} ; tar czf ${currentPath}/${repositoryBackup} *)
     if [ "$?" == "0" ]; then
-      echo "Exported to ${REPO_PATH}"
+      echo "Exported to \"${REPO_PATH}\" directory and \"${repositoryBackup}\""
+      echo
       return 0
     else
       echo "Cannot generate the tarball"
+      echo
     fi
   fi
   return 1
@@ -2562,7 +2567,8 @@ usage()
 	Usage: $C_PROGNAME [action] [ --repo <repo> | other options ]
 
 	    action               Select an action:
-	                          export, init, inspect, install, require
+	                          add, export, init, inspect, install, show, update,
+	                          updateOne
 
 	                         Other actions are useful for digging into Qompoter:
 	                          inqlude, jsonh, md5sum
@@ -2577,18 +2583,20 @@ help()
 	Usage: $C_PROGNAME [action] [ --repo <repo> | other options ]
 
 	    action               Select an action:
-	                          export, init, inspect, install, require
+	                          add, export, init, inspect, install, show, update,
+	                          updateOne
 
 	                         Other actions are useful for digging into Qompoter:
 	                          inqlude, jsonh, md5sum
 
 	Options:
-          --all             List or apply actions to all elements depending of
-                            the action
-                            Supported action is: inspect
+	        --all             List or apply actions to all elements depending of
+	                          the action
+	                          Supported action is: inspect
 
 	        --by-pass         By-pass error and continue the process
-	                          Supported actions are: export --repo, install, update
+	                          Supported actions are: add, export --repo, install,
+	                          update, updateOne
 
 	    -d, --depth SIZE      Depth of the recursivity in the searching of
 	                          subpackages [default = $DEPTH_SIZE]
@@ -2600,7 +2608,8 @@ help()
 
 	    -f, --force           By-pass error by forcing the action to be taken
 	                          and continue the process
-	                          Supported actions are: export --repo, install, update
+	                          Supported actions are: add, export --repo, install,
+	                          update, updateOne
 
 	        --minify          Minify the provided file
 	                          Supported action is: inqlude
@@ -2609,26 +2618,31 @@ help()
 
 	        --no-dev          Do not retrieve dev dependencies listed
 	                          in "require-dev" [default = false]
-	                          Supported action is: install
+	                          Supported action is: install, update
 
 	        --no-dep          Do not retrieve dependencies, only use listed
 	                          packages from the Qompoter file, or the one
 	                          requested in command line  [default = false]
-	                          Supported action is: install, update
+	                          Supported action is: add, install, update, updateOne
 
 	        --no-hint         Do not display hints on output (like higher versions)
-                            [default = false]
-	                          Supported action is: install, update
+	                          [default = false]
+	                          Supported action is: add, install, update, updateOne
 
 	        --no-qompote      Do not generate any Qompoter specific stuffs
 	                          like qompote.pri and vendor.pri [default = false]
-	                          Supported actions are: init, install, update
+	                          Supported actions are: add, init, install, update,
+                            updateOne
+
+	        --no-save         Do not add the requested package into the Qompoter file
+	                          [default = false]
+	                          Supported action is: add, updateOne
 
 	    -r, --repo DIR        Select a repository path as a location for
 	                          dependency research or export. It is used in
 	                          addition of the "repositories" provided in
 	                          "qompoter.json".
-	                          Supported actions are: export, install
+	                          Supported actions are: add, export, install, update, updateOne
 
 	        --search PACKAGE  Search related packages in a repository
 	                          Supported action is: inqlude
@@ -2636,19 +2650,15 @@ help()
 	        --stable-only     Do not select unstable versions [default = false]
 	                          E.g. If "v1.*" is given to Qompoter, it will select
 	                          "v1.0.3" and not "v1.0.4-RC1"
-	                          Supported action is: install, update
+	                          Supported action is: add, install, update, updateOne
 
-	        --save            Add the requested package into the Qompoter file
-	                          [default = false]
-	                          Supported action is: install
-
-          --tree            Make a tree with all dependencies and sub-dependecies
-                            of the project.
-                            Supported action is: inspect
+	        --tree            Make a tree with all dependencies and sub-dependecies
+	                          of the project.
+	                          Supported action is: inspect
 
 	        --vendor-dir DIR  Pick another vendor directory [default = $VENDOR_DIR]
-	                          Supported actions are: export, inspect, install,
-	                          md5sum, update
+	                          Supported actions are: add, export, inspect, install,
+	                          md5sum, update, updateOne
 
 	    -V, --verbose         Enable more verbosity
 
@@ -2662,28 +2672,35 @@ help()
 
 	Examples:
 
-	    Install all dependencies listed in the Qompoter file:
+	    Install all dependencies listed in the Qompoter file and generate a lock file:
+	      $C_PROGNAME update --repo ~/qompoter-repo
+
+	    Install only nominal and stable dependencies listed in the Qompoter file
+	    and generate a lock file:
+	      $C_PROGNAME update --no-dev --stable-only --repo ~/qompoter-repo
+
+	    Install all dependencies listed in the lock file:
 	      $C_PROGNAME install --repo ~/qompoter-repo
 
-	    Install only nominal and stable dependencies:
-	      $C_PROGNAME install --no-dev --stable-only --repo ~/qompoter-repo
+	    Add "http-parser-wrapper" package to Qompoter and lock files and install it (from Github):
+	      $C_PROGNAME add "qompoter/http-parser-wrapper" "dev-master" --save --repo https://github.com
 
-	    Install only the "http-parser-wrapper" package (from Github):
-	      $C_PROGNAME install "qompoter/http-parser-wrapper" "dev-master" --repo https://github.com
+	    Update version of existing "qhttp-wrapper" package in Qompoter and lock files and
+	    install it (from Github) but do not install its dependencies:
+	      $C_PROGNAME updateOne "qompoter/qhttp-wrapper" "v3.1.*" --save --no-dep --repo https://github.com
 
-	    Install only the "qhttp-wrapper" package (from Github) but do not install its dependencies:
-	      $C_PROGNAME install "qompoter/qhttp-wrapper" "v3.1.*" --no-dep --repo https://github.com
+	    List required dependencies for this project (i.e. show Qompoter file):
+	      $C_PROGNAME show
 
-	    List required dependencies for this project:
-	      $C_PROGNAME require
-
-	    List manually modified dependencies for this project:
+	    List manually modified dependencies for this project (i.e. show modified packages
+	    listed in the lock file):
 	      $C_PROGNAME inspect
 
-	    List downloaded dependencies for this project:
+	    List all dependencies for this project (i.e. show lock file):
 	      $C_PROGNAME inspect --all
 	      
-        Make a tree with all downloaded dependencies and sub-dependencies for this project:
+	    Make a tree with all dependencies and sub-dependencies for this project (i.e. show 
+	    lock file as a tree):
 	      $C_PROGNAME inspect --tree
 	      
 	    Export vendor directory:
@@ -2785,13 +2802,17 @@ cmdline()
       IS_NO_QOMPOTE=1
       shift
       ;;
+    --no-save )
+      IS_SAVE=0
+      shift
+      ;;
     --qompoter-token  )
       shift
       QOMP_TOKEN=$1
       shift
       ;;
     --save )
-      IS_SAVE=1
+      # already 1 by default, keep for backward compatibility
       shift
       ;;
     --stable-only )
@@ -2851,7 +2872,7 @@ cmdline()
       if [ "${ACTION}" == ""  ]; then
         ACTION=$1
         shift
-      elif [ "${ACTION}" == "inqlude"  ] || [ "${ACTION}" == "init" ] || [ "${ACTION}" == "install" ] || [ "${ACTION}" == "update" ]; then
+      elif [ "${ACTION}" == "add"  ] || [ "${ACTION}" == "inqlude"  ] || [ "${ACTION}" == "init" ] || [ "${ACTION}" == "require" ]  || [ "${ACTION}" == "updateOne" ]; then
         if [ "${VENDOR_NAME}" == ""  ]; then
           VENDOR_NAME=$(echo "${1}" | cut -d'/' -f1)
           PROJECT_NAME=$(echo "${1}" | cut -d'/' -f2)
@@ -2886,7 +2907,7 @@ cmdline()
   fi
 
   # Specific usage
-  if [[ "${ACTION}" == "init" ]] && [[ ${PROJECT_NAME} == "" ]]; then
+  if [[ "${ACTION}" == "add" ]] || [[ "${ACTION}" == "init" ]] || [ "${ACTION}" == "require" ]  || [[ "${ACTION}" == "updateOne" ]] && [[ ${PROJECT_NAME} == "" ]]; then
     echo -e "${C_FAIL}FAILURE${C_END} missing parameters for action '${ACTION}'"
     echo "Usage: $C_PROGNAME ${ACTION} \"<vendor/packagename>\" [<version>]"
     exit -1
@@ -2927,6 +2948,11 @@ main()
 
   updateVendorDirFromQompoterFile "${QOMPOTER_FILENAME}"
   case ${ACTION} in
+    "add")
+      echo "======== ${ACTION}"
+      echo
+      updateOneAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}" "${VENDOR_NAME}" "${PROJECT_NAME}" "${PACKAGE_VERSION}"
+      ;;
     "export")
       echo "======== ${ACTION}"
       echo
@@ -2985,7 +3011,9 @@ main()
     "require")
       echo "======== ${ACTION}"
       echo
-      requireAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}" "${VENDOR_NAME}" "${PROJECT_NAME}" "${PACKAGE_VERSION}"
+      echo "${ACTION} is deprecated. Use \"add\" or \"updateOne\" instead".
+      echo
+      updateOneAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}" "${VENDOR_NAME}" "${PROJECT_NAME}" "${PACKAGE_VERSION}"
       ;;
     "show")
       echo "======== ${ACTION}"
@@ -2996,6 +3024,11 @@ main()
       echo "======== ${ACTION}"
       echo
       updateAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
+      ;;
+    "updateOne")
+      echo "======== ${ACTION}"
+      echo
+      updateOneAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}" "${VENDOR_NAME}" "${PROJECT_NAME}" "${PACKAGE_VERSION}"
       ;;
     *)
       echo "======== ${ACTION}"

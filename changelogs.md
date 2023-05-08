@@ -1,13 +1,19 @@
 Qompoter Changelogs
 ===================
 
-[0.5.2] - released 2023-05-07
+[0.6.0] - released 2023-05-08
 -------
 
 ### Added
 
-* Add hints to `install` and `update` actions to notify when a higher version is available
+* Feature: Add hints to `install` and `update` actions to notify when a higher version is available
 * Support `--no-hint` option in `install` and `update` actions to prevent display of hints
+
+### Changed
+
+* Reorganise ordering of functions in qompoter.sh
+* Renamed action: `qompoter require` to `qompoter add` and `qompoter updateOne` with the exact same behavior (`qompoter require` is deprecated)
+* `add` and `updateOne` actions are now automatically saving in Qompoter and lock files. Use `--no-save` to avoid this behavior (`--save` is deprecated)
 
 [0.5.1] - released 2023-01-31
 -------
