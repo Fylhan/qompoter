@@ -3,10 +3,9 @@ Qompoter
 
 An attempt of dependency manager for Qt / C++, because I am sick of managing each C++ piece of code separately!
 
-
 [![Build Status](https://travis-ci.org/Fylhan/qompoter.svg?branch=master)](https://travis-ci.org/Fylhan/qompoter)
 
-The current version is still a work in progress but it is now usable for non-critical projects!
+The current version is still a work in progress but is fully usable for simple and complex projects!
 
 Check the [FAQ](docs/FAQ.md) to understand "Why Qompoter?", but here is what **Qompoter is good for**:
 
@@ -14,11 +13,11 @@ Check the [FAQ](docs/FAQ.md) to understand "Why Qompoter?", but here is what **Q
   * describe them in a "qompoter.json" file
   * let Qompoter search and download them for you into a "vendor" directory
 * share C++ code to the [inqlude](https://inqlude.org/) repository, a development forge (like Github) or any [local or remote Qompotist-fs repository](docs/Repositories.md)
-* ease the repetability of the build
+* ease the repetability of the build thanks to the lock file
 * work with several platforms (Linux, Windows, Mac, ...)
 * keep it simple
 
-Qompoter is also useful to share *library* (or binary) dependencies of you Qt / C++ project. However, keep in mind this is not that simple, this requires precompiling these dependencies somewhere for all the required targets (x86, x86_64, ARM, ...).
+Qompoter is also useful to share *library* (or binary) dependencies of you Qt / C++ project. However, keep in mind this is not that simple, this requires precompiling these dependencies somewhere for all your required targets (x86, x86_64, ARM, ...).
 
 Installation
 -------------

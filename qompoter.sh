@@ -2718,7 +2718,8 @@ version()
 {
 	cat <<- EOF
 	Qompoter ${C_PROGVERSION}
-	Dependency manager for C++/Qt by Fylhan
+	Light dependency manager for C++/Qt by Fylhan
+	Contributors: jhaws1982, mlitre, fbaizeau
 	EOF
 }
 

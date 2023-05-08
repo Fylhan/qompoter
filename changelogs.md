@@ -11,9 +11,10 @@ Qompoter Changelogs
 
 ### Changed
 
-* Reorganise ordering of functions in qompoter.sh
 * Renamed action: `qompoter require` to `qompoter add` and `qompoter updateOne` with the exact same behavior (`qompoter require` is deprecated)
 * `add` and `updateOne` actions are now automatically saving in Qompoter and lock files. Use `--no-save` to avoid this behavior (`--save` is deprecated)
+* Update embedded documentation
+* Reorganise ordering of functions in qompoter.sh
 
 [0.5.1] - released 2023-01-31
 -------
