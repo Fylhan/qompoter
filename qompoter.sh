@@ -284,141 +284,6 @@ jsonh()
 #######################
 #######################
 
-usage()
-{
-	cat <<- EOF
-	Usage: $C_PROGNAME [action] [ --repo <repo> | other options ]
-
-	    action               Select an action:
-	                          export, init, inspect, install, require
-
-	                         Other actions are useful for digging into Qompoter:
-	                          inqlude, jsonh, md5sum
-
-	Options:
-          --all             List or apply actions to all elements depending of
-                            the action
-                            Supported action is: inspect
-
-	        --by-pass         By-pass error and continue the process
-	                          Supported actions are: export --repo, install, update
-
-	    -d, --depth SIZE      Depth of the recursivity in the searching of
-	                          subpackages [default = $DEPTH_SIZE]
-
-	    --inqlude-file FILE   Pick the provided file to search into the
-	                          inqlude repository
-
-	        --file FILE       Pick another Qompoter file [default = $QOMPOTER_FILENAME]
-
-	    -f, --force           By-pass error by forcing the action to be taken
-	                          and continue the process
-	                          Supported actions are: export --repo, install, update
-
-	        --minify          Minify the provided file
-	                          Supported action is: inqlude
-
-	        --no-color        Do not enable color on output [default = false]
-
-	        --no-dev          Do not retrieve dev dependencies listed
-	                          in "require-dev" [default = false]
-	                          Supported action is: install
-
-	        --no-dep          Do not retrieve dependencies, only use listed
-	                          packages from the Qompoter file, or the one
-	                          requested in command line  [default = false]
-	                          Supported action is: install, update
-
-	        --no-hint         Do not display hints on output (like higher versions)
-                            [default = false]
-	                          Supported action is: install, update
-
-	        --no-qompote      Do not generate any Qompoter specific stuffs
-	                          like qompote.pri and vendor.pri [default = false]
-	                          Supported actions are: init, install, update
-
-	    -r, --repo DIR        Select a repository path as a location for
-	                          dependency research or export. It is used in
-	                          addition of the "repositories" provided in
-	                          "qompoter.json".
-	                          Supported actions are: export, install
-
-	        --search PACKAGE  Search related packages in a repository
-	                          Supported action is: inqlude
-
-	        --stable-only     Do not select unstable versions [default = false]
-	                          E.g. If "v1.*" is given to Qompoter, it will select
-	                          "v1.0.3" and not "v1.0.4-RC1"
-	                          Supported action is: install, update
-
-	        --save            Add the requested package into the Qompoter file
-	                          [default = false]
-	                          Supported action is: install
-
-          --tree            Make a tree with all dependencies and sub-dependecies
-                            of the project.
-                            Supported action is: inspect
-
-	        --vendor-dir DIR  Pick another vendor directory [default = $VENDOR_DIR]
-	                          Supported actions are: export, inspect, install,
-	                          md5sum, update
-
-	    -V, --verbose         Enable more verbosity
-
-	    -VV                   Enable really more verbosity
-
-	    -VVV                  Enable really really more verbosity
-
-	    -h, --help            Display this help
-
-	    -v, --version         Display the version
-
-	Examples:
-
-	    Install all dependencies listed in the Qompoter file:
-	      $C_PROGNAME install --repo ~/qompoter-repo
-
-	    Install only nominal and stable dependencies:
-	      $C_PROGNAME install --no-dev --stable-only --repo ~/qompoter-repo
-
-	    Install only the "http-parser-wrapper" package (from Github):
-	      $C_PROGNAME install "qompoter/http-parser-wrapper" "dev-master" --repo https://github.com
-
-	    Install only the "qhttp-wrapper" package (from Github) but do not install its dependencies:
-	      $C_PROGNAME install "qompoter/qhttp-wrapper" "v3.1.*" --no-dep --repo https://github.com
-
-	    List required dependencies for this project:
-	      $C_PROGNAME require
-
-	    List manually modified dependencies for this project:
-	      $C_PROGNAME inspect
-
-	    List downloaded dependencies for this project:
-	      $C_PROGNAME inspect --all
-	      
-        Make a tree with all downloaded dependencies and sub-dependencies for this project:
-	      $C_PROGNAME inspect --tree
-	      
-	    Export vendor directory:
-	      $C_PROGNAME export
-
-	    Export vendor directory as a qompotist-fs repository:
-	      $C_PROGNAME export --repo ~/other-qompoter-repo
-
-	    Search dependency in the inqlude repository:
-	      $C_PROGNAME inqlude --search vogel/injeqt
-
-	EOF
-}
-
-version()
-{
-	cat <<- EOF
-	Qompoter ${C_PROGVERSION}
-	Dependency manager for C++/Qt by Fylhan
-	EOF
-}
-
 createQompotePri()
 {
 	local qompotePri=$1
@@ -1857,6 +1722,157 @@ getPackageInqludeData()
    | sed -r "s/\[${packageId},\"${keys}\"\]\\s*\"([^\"]*)\"/\1/"
 }
 
+listRequirement()
+{
+  local match=$(grep -w -o $1 qompoter.json)
+  if [ "$match" = "$1" ];then
+        local data=$(echo $(<qompoter.json) |sed "s/$1/%/" | cut -d'%' -f2 | sed "s/://" | sed "s/{//" | cut -d'}' -f1| sed "s/,/\r\n|\t|----/g")
+        data=$(tr -d ' ' <<<"$data")
+        echo -e "\e[37m|\t|----$data"
+  fi
+}
+
+recursiveInstallFromQompoterFile()
+{
+  local qompoterFile=$1
+  local qompoterLockFile=$2
+  local vendorDir=$3
+  local vendorPriFile
+  local globalRes=0
+
+  NEW_SUBPACKAGES=${qompoterFile}
+  vendorPriFile=${vendorDir}/vendor.pri
+
+  local depth=0
+  while [ "${depth}" -lt "${DEPTH_SIZE}" ] && [ -n "${NEW_SUBPACKAGES}" ]; do
+    depth=$((depth+1))
+    local newSubpackages=${NEW_SUBPACKAGES}
+    NEW_SUBPACKAGES=""
+    for subQompoterFile in ${newSubpackages}; do
+      downloadQompoterFilePackages "${subQompoterFile}" "${qompoterLockFile}" "${vendorDir}"
+      #~ Exit on error if no force
+      local returnCode=$?
+      if [ "${returnCode}" != "0" ]; then
+        globalRes=${returnCode}
+        test "${IS_BYPASS}" == "0" && test "${IS_FORCE}" == "0" && return 1
+      fi
+      IS_INCLUDE_DEV=
+    done
+    if [ "$depth" == "$DEPTH_SIZE" ] && [ -n "${NEW_SUBPACKAGES}" ]; then
+      echo -e "${C_FAIL}WARNING${C_END} There are still packages to download but maximal recursive depth of $DEPTH_SIZE have been reached."
+    fi
+  done
+  return $globalRes
+}
+
+##############################
+# Helpers: file modification #
+##############################
+
+# destFile line newText
+insertAfter()
+{
+   local file="$1"
+   local line="$2"
+   local newText="$3"
+   # sed -i not supported by Solaris
+   sed -i -e "/$line$/a"$'\\\n'"$newText"$'\n' "${file}"
+   # sed -e "/$line$/a"$'\\\n'"$newText"$'\n' "$file" > "$file".tmp && mv "$file".tmp "$file"
+   # Use following to match exact line
+   # sed -e "/^$line$/a"$'\\\n'"$newText"$'\n' "$file" > "$file".tmp && mv "$file".tmp "$file"
+}
+
+# destFile patternLine file
+insertFileAfterLine()
+{
+  local destFile="$1"
+  local line="$2"
+  local file="$3"
+  sed -i -e "/$line$/r ${file}" "${destFile}"
+}
+
+replaceLineByFile()
+{
+  local destFile="$1"
+  local line="$2"
+  local file="$3"
+  sed -i -e "/$line$/r ${file}" "${destFile}"
+  removeLine "${destFile}" "${line}"
+}
+
+# destFile oldLine newLine
+replaceLine()
+{
+   local file="$1"
+   local oldLine="$2"
+   local newLine="$3"
+   # sed -i not supported by Solaris
+   sed -i -e "s/${oldLine}/${newLine}/" "${file}"
+}
+
+replaceBlock()
+{
+   local file="$1"
+   local oldBlock="$2"
+   local newBlock="$3"
+   # sed multiline @see http://austinmatzko.com/2008/04/26/sed-multi-line-search-and-replace/
+   # In case of issue use instead: cat "${file}" | tr '\n' '|' | sed -e "s/${oldBlock}/${newBlock}/" | tr '|' '\n' > "${file}"
+   # sed -i not supported by Solaris
+   sed -i -n '1h;1!H;${;g;s/\n'"${oldBlock}"'/'"${newBlock}"'/g;p;}' "${file}"
+}
+
+removeLine()
+{
+   local file="$1"
+   local line="$2"
+   # sed -i not supported by Solaris
+   sed -i "/${line}/d" "${file}"
+}
+
+removeBlock()
+{
+   local file="$1"
+   local block="$2"
+   # sed multiline @see http://austinmatzko.com/2008/04/26/sed-multi-line-search-and-replace/
+   # In case of issue use instead: cat "${file}" | tr '\n' '@@@' | sed -e "s/${block}//" | tr '@' '\n' > "${file}"
+   # sed -i not supported by Solaris
+   sed -i -n '1h;1!H;${;g;s/\n'"${block}"'//g;p;}' "${file}"
+}
+
+##################
+#  Helpers: log  #
+##################
+
+logWarning()
+{
+  echo -e "  Warning: $@"
+}
+
+logDebug()
+{
+  if [ "$IS_VERBOSE" == "1" ] || [ "$IS_VERBOSE" == "2" ] || [ "$IS_VERBOSE" == "3" ]; then
+    echo -e "$@"
+  fi
+}
+
+logTrace()
+{
+  if [ "$IS_VERBOSE" == "2" ] || [ "$IS_VERBOSE" == "3" ]; then
+    echo -e "    $@"
+  fi
+}
+
+logGitTrace()
+{
+  if [ "$IS_VERBOSE" == "3" ]; then
+    echo -e "      $@"
+  fi
+}
+
+#############
+#  Actions  #
+#############
+
 exportAction()
 {
   local qompoterFile=$1
@@ -2225,17 +2241,7 @@ inspectAction()
   echo
 }
 
-listRequirement()
-{
-  local match=$(grep -w -o $1 qompoter.json)
-  if [ "$match" = "$1" ];then
-        local data=$(echo $(<qompoter.json) |sed "s/$1/%/" | cut -d'%' -f2 | sed "s/://" | sed "s/{//" | cut -d'}' -f1| sed "s/,/\r\n|\t|----/g")
-        data=$(tr -d ' ' <<<"$data")
-        echo -e "\e[37m|\t|----$data"
-  fi
-}
-
-treeAction()
+inspectTreeAction()
 {
   local qompoterFile=$1
   local qompoterLockFile
@@ -2277,39 +2283,6 @@ treeAction()
       cd ../..
     done
     echo
-}
-
-recursiveInstallFromQompoterFile()
-{
-  local qompoterFile=$1
-  local qompoterLockFile=$2
-  local vendorDir=$3
-  local vendorPriFile
-  local globalRes=0
-
-  NEW_SUBPACKAGES=${qompoterFile}
-  vendorPriFile=${vendorDir}/vendor.pri
-
-  local depth=0
-  while [ "${depth}" -lt "${DEPTH_SIZE}" ] && [ -n "${NEW_SUBPACKAGES}" ]; do
-    depth=$((depth+1))
-    local newSubpackages=${NEW_SUBPACKAGES}
-    NEW_SUBPACKAGES=""
-    for subQompoterFile in ${newSubpackages}; do
-      downloadQompoterFilePackages "${subQompoterFile}" "${qompoterLockFile}" "${vendorDir}"
-      #~ Exit on error if no force
-      local returnCode=$?
-      if [ "${returnCode}" != "0" ]; then
-        globalRes=${returnCode}
-        test "${IS_BYPASS}" == "0" && test "${IS_FORCE}" == "0" && return 1
-      fi
-      IS_INCLUDE_DEV=
-    done
-    if [ "$depth" == "$DEPTH_SIZE" ] && [ -n "${NEW_SUBPACKAGES}" ]; then
-      echo -e "${C_FAIL}WARNING${C_END} There are still packages to download but maximal recursive depth of $DEPTH_SIZE have been reached."
-    fi
-  done
-  return $globalRes
 }
 
 installAction()
@@ -2579,100 +2552,157 @@ repoExportAction()
   return 1
 }
 
-# destFile line newText
-insertAfter()
+##################
+# CLI management #
+##################
+
+usage()
 {
-   local file="$1"
-   local line="$2"
-   local newText="$3"
-   # sed -i not supported by Solaris
-   sed -i -e "/$line$/a"$'\\\n'"$newText"$'\n' "${file}"
-   # sed -e "/$line$/a"$'\\\n'"$newText"$'\n' "$file" > "$file".tmp && mv "$file".tmp "$file"
-   # Use following to match exact line
-   # sed -e "/^$line$/a"$'\\\n'"$newText"$'\n' "$file" > "$file".tmp && mv "$file".tmp "$file"
+	cat <<- EOF
+	Usage: $C_PROGNAME [action] [ --repo <repo> | other options ]
+
+	    action               Select an action:
+	                          export, init, inspect, install, require
+
+	                         Other actions are useful for digging into Qompoter:
+	                          inqlude, jsonh, md5sum
+	
+	For more details, use: $C_PROGNAME --help 
+	EOF
 }
 
-# destFile patternLine file
-insertFileAfterLine()
+help()
 {
-  local destFile="$1"
-  local line="$2"
-  local file="$3"
-  sed -i -e "/$line$/r ${file}" "${destFile}"
+	cat <<- EOF
+	Usage: $C_PROGNAME [action] [ --repo <repo> | other options ]
+
+	    action               Select an action:
+	                          export, init, inspect, install, require
+
+	                         Other actions are useful for digging into Qompoter:
+	                          inqlude, jsonh, md5sum
+
+	Options:
+          --all             List or apply actions to all elements depending of
+                            the action
+                            Supported action is: inspect
+
+	        --by-pass         By-pass error and continue the process
+	                          Supported actions are: export --repo, install, update
+
+	    -d, --depth SIZE      Depth of the recursivity in the searching of
+	                          subpackages [default = $DEPTH_SIZE]
+
+	    --inqlude-file FILE   Pick the provided file to search into the
+	                          inqlude repository
+
+	        --file FILE       Pick another Qompoter file [default = $QOMPOTER_FILENAME]
+
+	    -f, --force           By-pass error by forcing the action to be taken
+	                          and continue the process
+	                          Supported actions are: export --repo, install, update
+
+	        --minify          Minify the provided file
+	                          Supported action is: inqlude
+
+	        --no-color        Do not enable color on output [default = false]
+
+	        --no-dev          Do not retrieve dev dependencies listed
+	                          in "require-dev" [default = false]
+	                          Supported action is: install
+
+	        --no-dep          Do not retrieve dependencies, only use listed
+	                          packages from the Qompoter file, or the one
+	                          requested in command line  [default = false]
+	                          Supported action is: install, update
+
+	        --no-hint         Do not display hints on output (like higher versions)
+                            [default = false]
+	                          Supported action is: install, update
+
+	        --no-qompote      Do not generate any Qompoter specific stuffs
+	                          like qompote.pri and vendor.pri [default = false]
+	                          Supported actions are: init, install, update
+
+	    -r, --repo DIR        Select a repository path as a location for
+	                          dependency research or export. It is used in
+	                          addition of the "repositories" provided in
+	                          "qompoter.json".
+	                          Supported actions are: export, install
+
+	        --search PACKAGE  Search related packages in a repository
+	                          Supported action is: inqlude
+
+	        --stable-only     Do not select unstable versions [default = false]
+	                          E.g. If "v1.*" is given to Qompoter, it will select
+	                          "v1.0.3" and not "v1.0.4-RC1"
+	                          Supported action is: install, update
+
+	        --save            Add the requested package into the Qompoter file
+	                          [default = false]
+	                          Supported action is: install
+
+          --tree            Make a tree with all dependencies and sub-dependecies
+                            of the project.
+                            Supported action is: inspect
+
+	        --vendor-dir DIR  Pick another vendor directory [default = $VENDOR_DIR]
+	                          Supported actions are: export, inspect, install,
+	                          md5sum, update
+
+	    -V, --verbose         Enable more verbosity
+
+	    -VV                   Enable really more verbosity
+
+	    -VVV                  Enable really really more verbosity
+
+	    -h, --help            Display this help
+
+	    -v, --version         Display the version
+
+	Examples:
+
+	    Install all dependencies listed in the Qompoter file:
+	      $C_PROGNAME install --repo ~/qompoter-repo
+
+	    Install only nominal and stable dependencies:
+	      $C_PROGNAME install --no-dev --stable-only --repo ~/qompoter-repo
+
+	    Install only the "http-parser-wrapper" package (from Github):
+	      $C_PROGNAME install "qompoter/http-parser-wrapper" "dev-master" --repo https://github.com
+
+	    Install only the "qhttp-wrapper" package (from Github) but do not install its dependencies:
+	      $C_PROGNAME install "qompoter/qhttp-wrapper" "v3.1.*" --no-dep --repo https://github.com
+
+	    List required dependencies for this project:
+	      $C_PROGNAME require
+
+	    List manually modified dependencies for this project:
+	      $C_PROGNAME inspect
+
+	    List downloaded dependencies for this project:
+	      $C_PROGNAME inspect --all
+	      
+        Make a tree with all downloaded dependencies and sub-dependencies for this project:
+	      $C_PROGNAME inspect --tree
+	      
+	    Export vendor directory:
+	      $C_PROGNAME export
+
+	    Export vendor directory as a qompotist-fs repository:
+	      $C_PROGNAME export --repo ~/other-qompoter-repo
+
+	    Search dependency in the inqlude repository:
+	      $C_PROGNAME inqlude --search vogel/injeqt
+	EOF
 }
 
-replaceLineByFile()
+version()
 {
-  local destFile="$1"
-  local line="$2"
-  local file="$3"
-  sed -i -e "/$line$/r ${file}" "${destFile}"
-  removeLine "${destFile}" "${line}"
-}
-
-# destFile oldLine newLine
-replaceLine()
-{
-   local file="$1"
-   local oldLine="$2"
-   local newLine="$3"
-   # sed -i not supported by Solaris
-   sed -i -e "s/${oldLine}/${newLine}/" "${file}"
-}
-
-replaceBlock()
-{
-   local file="$1"
-   local oldBlock="$2"
-   local newBlock="$3"
-   # sed multiline @see http://austinmatzko.com/2008/04/26/sed-multi-line-search-and-replace/
-   # In case of issue use instead: cat "${file}" | tr '\n' '|' | sed -e "s/${oldBlock}/${newBlock}/" | tr '|' '\n' > "${file}"
-   # sed -i not supported by Solaris
-   sed -i -n '1h;1!H;${;g;s/\n'"${oldBlock}"'/'"${newBlock}"'/g;p;}' "${file}"
-}
-
-removeLine()
-{
-   local file="$1"
-   local line="$2"
-   # sed -i not supported by Solaris
-   sed -i "/${line}/d" "${file}"
-}
-
-removeBlock()
-{
-   local file="$1"
-   local block="$2"
-   # sed multiline @see http://austinmatzko.com/2008/04/26/sed-multi-line-search-and-replace/
-   # In case of issue use instead: cat "${file}" | tr '\n' '@@@' | sed -e "s/${block}//" | tr '@' '\n' > "${file}"
-   # sed -i not supported by Solaris
-   sed -i -n '1h;1!H;${;g;s/\n'"${block}"'//g;p;}' "${file}"
-}
-
-logWarning()
-{
-  echo -e "  Warning: $@"
-}
-
-logDebug()
-{
-  if [ "$IS_VERBOSE" == "1" ] || [ "$IS_VERBOSE" == "2" ] || [ "$IS_VERBOSE" == "3" ]; then
-    echo -e "$@"
-  fi
-}
-
-logTrace()
-{
-  if [ "$IS_VERBOSE" == "2" ] || [ "$IS_VERBOSE" == "3" ]; then
-    echo -e "    $@"
-  fi
-}
-
-logGitTrace()
-{
-  if [ "$IS_VERBOSE" == "3" ]; then
-    echo -e "      $@"
-  fi
+	cat <<- EOF
+	Qompoter ${C_PROGVERSION}
+	Dependency manager for C++/Qt by Fylhan
+	EOF
 }
 
 cmdline()
@@ -2794,7 +2824,7 @@ cmdline()
       shift
       ;;
     -h | --help )
-      usage
+      help
       exit 0
       ;;
     -v | --version )
@@ -2821,7 +2851,7 @@ cmdline()
       if [ "${ACTION}" == ""  ]; then
         ACTION=$1
         shift
-      elif [ "${ACTION}" == "inqlude"  ] || [ "${ACTION}" == "init" ] || [ "${ACTION}" == "install" ]; then
+      elif [ "${ACTION}" == "inqlude"  ] || [ "${ACTION}" == "init" ] || [ "${ACTION}" == "install" ] || [ "${ACTION}" == "update" ]; then
         if [ "${VENDOR_NAME}" == ""  ]; then
           VENDOR_NAME=$(echo "${1}" | cut -d'/' -f1)
           PROJECT_NAME=$(echo "${1}" | cut -d'/' -f2)
@@ -2858,7 +2888,7 @@ cmdline()
   # Specific usage
   if [[ "${ACTION}" == "init" ]] && [[ ${PROJECT_NAME} == "" ]]; then
     echo -e "${C_FAIL}FAILURE${C_END} missing parameters for action '${ACTION}'"
-    echo "Usage: $C_PROGNAME ${ACTION} <vendor/packagename> [<version>]"
+    echo "Usage: $C_PROGNAME ${ACTION} \"<vendor/packagename>\" [<version>]"
     exit -1
   elif [[ "${ACTION}" == "inqlude" ]]; then
     if [[ ${SUB_ACTION} == "" ]]; then
@@ -2867,7 +2897,7 @@ cmdline()
       exit -1
     elif [[ "${ACTION}" == "inqlude" ]] && [[ ${SUB_ACTION} == "search" ]] && [[ ${PROJECT_NAME} == "" ]]; then
       echo -e "${C_FAIL}FAILURE${C_END} missing parameters for action '${ACTION}'"
-      echo "Usage: $C_PROGNAME ${ACTION} [ --minify | --search <vendor/packagename> <version> ]"
+      echo "Usage: $C_PROGNAME ${ACTION} [ --minify | --search \"<vendor/packagename>\" <version> ]"
       exit -1
     fi
   elif [[ "${ACTION}" == "md5sum" ]] && [[ ${VENDOR_NAME} == "" ]]; then
@@ -2924,7 +2954,7 @@ main()
       if [[ "${IS_TREE}" == "1" ]]; then
         echo "======== ${ACTION} as tree"
         echo
-        treeAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
+        inspectTreeAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
       else
         echo "======== ${ACTION}"
         echo
