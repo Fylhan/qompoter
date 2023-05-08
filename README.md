@@ -133,17 +133,20 @@ The `qompoter install` action has been modified as follow: take the `qompoter.lo
 Documentation
 -------------
 
-* [Concept of packages](docs/Packages.md)
-* [Concept of repositories](docs/Repositories.md)
-* [Concept of package's versions](docs/Qompoter-json-file.md#require)
-* [How to create a Qompoter.json file?](docs/Qompoter-json-file.md)
-* [How to create a Qompoter.pri file?](docs/Qompoter-pri-file.md)
-* [What is this qompote.pri file?](docs/Home-made-qompote.md)
-* [Command line interface](docs/Command-line.md)
-* [Contribution guide](CONTRIBUTING.md)
-* [FAQ](docs/FAQ.md)
+[Documentation is available online](https://fylhan.github.io/qompoter/) and in the `gh-pages` branch inside the `docs` directory.
 
-There is a previsional [roadmap](ROADMAP.md).
+* [Concept of packages](https://github.com/Fylhan/qompoter/blob/gh-pages/docs/Packages.md)
+* [Concept of repositories](https://github.com/Fylhan/qompoter/blob/gh-pages/docs/Repositories.md)
+* [Concept of package's versions](https://github.com/Fylhan/qompoter/blob/gh-pages/docs/Qompoter-json-file.md#require)
+* [How to create a Qompoter.json file?](https://github.com/Fylhan/qompoter/blob/gh-pages/docs/Qompoter-json-file.md)
+* [How to create a Qompoter.pri file?](dhttps://github.com/Fylhan/qompoter/blob/gh-pages/ocs/Qompoter-pri-file.md)
+* [What is this qompote.pri file?](https://github.com/Fylhan/qompoter/blob/gh-pages/docs/Home-made-qompote.md)
+* [Command line interface](https://github.com/Fylhan/qompoter/blob/gh-pages/docs/Command-line.md)
+* [Contribution guide](CONTRIBUTING.md)
+* [LICENSE](LICENSE)
+* [FAQ](https://github.com/Fylhan/qompoter/blob/gh-pages/docs/FAQ.md)
+
+There is a previsional [roadmap](https://github.com/Fylhan/qompoter/blob/gh-pages/docs/ROADMAP.md).
 
 License
 -------------
