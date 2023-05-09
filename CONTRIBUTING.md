@@ -7,7 +7,7 @@ Qompoter is distributed under the [LGPL3+](LICENSE) license.
 Please feel free to contribute!
 
 * If you would like to modify something, it is better to open first an issue just to be sure I am not working on it already, then feel free to send a Pull Request and I will consider adding your changes to the nominal branch.
-* If you would like to participate but do not have any idea, take a look at the [roadmap](ROADMAP.md). Update or translation of the documentation are always welcome!
+* If you would like to participate but do not have any idea, take a look at the [roadmap](https://github.com/Fylhan/qompoter/blob/gh-pages/docs/ROADMAP.md). Update or translation of the documentation are always welcome!
 * Feel free to share
 * If you have any ideas, critics, suggestions or whatever you want to call it, please open an issue. I will be happy to hear from you what you would like to see in this tool. I think about all suggestions, and I try to add those that make sense.
 
@@ -49,3 +49,26 @@ Updating an existing test case
 --------
 
 Most test cases are launching a Qompoter action (e.g. "install", "export", ...) on different "qompoter.json" files. The Qompoter output is then compared against a "qompoter.expected" files, and the content of the "vendor" directory is compared against the "qompoter.vendor.expected" files. Feel free to add a new element in a "qompoter.json" file and updating accordingly "qompoter.expected"  and "qompoter.vendor.expected" files; or to generate a new set of "qompoter.json", "qompoter.expected"  and "qompoter.vendor.expected" files.
+
+Generate a release
+--------
+
+Do the following steps:
+
+* Check unit tests are passing
+* Change version number at the top of `qompoter.sh` and `package.json`
+* Compute MD5 and SHA512 sums and update README file + index.md (on `gh-pages` branch) with them
+
+```
+$ md5sum qompoter.sh 
+6975405fd3b5cda0164765c870dedcb6  qompoter.sh
+$ sha512sum qompoter.sh 
+76009f6225ca9137c5ed298ffb4f3138007dd4fe3c6d3beed98499b179316ae7d62dde22d6f9601ec7cb4e9a72928f2a755288d8f87f8e9a70cda398b9f0c724  qompoter.sh
+```
+
+* Check changelogs are updated
+* Create a commit and push these changes
+* Run `resources/create-deb-package.sh <version number>`
+* Run `npm publish`
+* Create the release on Github and copy/paste changelogs on it
+* Optional: Create a new ticket on the website
