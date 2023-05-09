@@ -1,7 +1,7 @@
 #!/bin/bash
 
 readonly C_PROGNAME=$(basename $0)
-readonly C_PROGVERSION="v0.5.1"
+readonly C_PROGVERSION="v0.6.0"
 readonly C_ARGS="$@"
 C_OK="\e[1;32m"
 C_FAIL="\e[1;31m"
@@ -2939,6 +2939,9 @@ cmdline()
 
 main()
 {
+  local startTime
+  local endTime
+  startTime="$(date -u +%s.%N)"
   cmdline $C_ARGS
   if [ -f "${C_LOG_FILENAME}" ]; then
     rm ${C_LOG_FILENAME}
@@ -3043,6 +3046,9 @@ main()
   if [ "$IS_VERBOSE" == "0" ] && [ -f ${C_LOG_FILENAME} ]; then
     rm ${C_LOG_FILENAME}
   fi
+
+  endTime="$(date -u +%s.%N)"
+  logTrace "Elapsed time: $(bc <<<"$endTime-$startTime")s"
 
   if [ "$status" != "0" ]; then
     echo -e "${C_FAIL}FAILURE${C_END}"

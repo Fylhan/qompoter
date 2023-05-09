@@ -1,13 +1,14 @@
 Qompoter Changelogs
 ===================
 
-[0.6.0] - released 2023-05-08
+[0.6.0] - released 2023-05-09
 -------
 
 ### Added
 
 * Feature: Add hints to `install` and `update` actions to notify when a higher version is available
 * Support `--no-hint` option in `install` and `update` actions to prevent display of hints
+* Add elapsed time in logs in very very verbose mode (`-VVV`)
 
 ### Changed
 
