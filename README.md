@@ -42,8 +42,8 @@ It should also work on FreeBSD and more widely on Windows (Cygwin or Mysys comma
 ```bash
 $ npm install -g qompoter
 $ qompoter --version
-Qompoter v0.5.1
-Dependency manager for C++/Qt by Fylhan
+Qompoter v0.6.0
+Light dependency manager for C++/Qt by Fylhan
 ```
 
 ### From scratch
@@ -51,10 +51,10 @@ Dependency manager for C++/Qt by Fylhan
 Download it from Github and move it to a place accessible in the `PATH`:
 
 ```bash
-$ wget https://github.com/Fylhan/qompoter/releases/download/v0.5.1/qompoter.sh -O qompoter.sh && sudo mv qompoter.sh /usr/bin/qompoter
+$ wget https://github.com/Fylhan/qompoter/releases/download/v0.6.0/qompoter.sh -O qompoter.sh && sudo mv qompoter.sh /usr/bin/qompoter
 $ qompoter --version
-Qompoter v0.5.1
-Dependency manager for C++/Qt by Fylhan
+Qompoter v0.6.0
+Light dependency manager for C++/Qt by Fylhan
 ```
 
 The MD5 sum of qompoter.sh v0.5.1 version is `6975405fd3b5cda0164765c870dedcb6`.

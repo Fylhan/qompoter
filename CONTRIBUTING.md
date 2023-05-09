@@ -57,6 +57,7 @@ Do the following steps:
 
 * Check unit tests are passing
 * Change version number at the top of `qompoter.sh` and `package.json`
+* Change version number on the Installation guide (README file + index.md on `gh-pages` branch)
 * Compute MD5 and SHA512 sums and update README file + index.md (on `gh-pages` branch) with them
 
 ```
@@ -69,6 +70,6 @@ $ sha512sum qompoter.sh
 * Check changelogs are updated
 * Create a commit and push these changes
 * Run `resources/create-deb-package.sh <version number>`
-* Run `npm publish`
 * Create the release on Github and copy/paste changelogs on it
+* Run `npm publish`
 * Optional: Create a new ticket on the website
