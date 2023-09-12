@@ -18,6 +18,7 @@ test "${REPO_PATH}" == "" && REPO_PATH=https://github.com
 IS_TREE=0
 IS_ALL=0
 IS_BYPASS=0
+IS_DRYRUN=0
 IS_FORCE=0
 IS_DEV=0
 IS_INCLUDE_DEV=(-dev)?
@@ -503,7 +504,7 @@ updateVendorPri()
     return;
   fi
   if [ ! -f "${qompoterPriFile}" ]; then
-    logWarning "no 'qompoter.pri' found for this package"
+    logWarning "no 'qompoter.pri' found for this package ${packageFullName}"
     return
   fi
 
@@ -1765,6 +1766,33 @@ recursiveInstallFromQompoterFile()
   return $globalRes
 }
 
+refreshVendorPriFromQompoterLock()
+{
+  local qompoterLockFile=$1
+  local vendorDir=$2
+  local globalRes=0
+  local requires
+  requires=$(getProjectRequiresFromLock "${qompoterLockFile}")
+
+  for packageInfo in ${requires}; do
+      local vendorName
+      local projectName
+      vendorName=$(echo "${packageInfo}" | cut -d'/' -f1)
+      packageName=$(echo "${packageInfo}" | cut -d'/' -f2)
+      local qompoterPriFile=${vendorDir}/${packageName}/qompoter.pri
+      echo -e "* ${vendorName}/${packageName}"
+      updateVendorPri "${vendorName}" "${packageName}" "${vendorDir}" "${qompoterPriFile}"
+      echo
+      #~ Exit on error if no force
+      local returnCode=$?
+      if [ "${returnCode}" != "0" ]; then
+        globalRes=${returnCode}
+        test "${IS_BYPASS}" == "0" && test "${IS_FORCE}" == "0" && return 1
+      fi
+  done
+  return $globalRes
+}
+
 ##############################
 # Helpers: file modification #
 ##############################
@@ -2412,6 +2440,54 @@ updateOneAction()
   return $globalRes
 }
 
+refreshVendorPriAction()
+{
+  local qompoterFile=$1
+  local qompoterLockFile
+  local vendorDir=$2
+  local vendorPriFile
+  local globalRes=0
+
+  qompoterLockFile="${qompoterFile/.json/.lock}"
+  vendorPriFile=${vendorDir}/vendor.pri
+
+  # Check lock is available
+  checkQompoterFile "${qompoterLockFile}" || return 100
+  
+  # Generate first part of the vendor.pri file (in a temporary file)
+  createQompotePri ${vendorPriFile}.tmp
+  { echo ''; echo 'INCLUDEPATH += $$PWD'; echo ' $$setLibPath()'; echo ''; } >> "${vendorPriFile}.tmp"
+  
+  # Loop on lock file and add each qompoter.pri into the temporary vendor.pri file
+  refreshVendorPriFromQompoterLock "${qompoterLockFile}" "${vendorDir}"
+  globalRes=$?
+
+  # Replace existing vendor.pri file in case of success
+  if [[ "${IS_DRYRUN}" == "1" ]]; then
+    diff -q ${vendorPriFile} ${vendorPriFile}.tmp > /dev/null 2>&1
+    if [[ "$?" == 1 ]]; then
+      echo "Changes to be expected on ${vendorPriFile}"
+    else
+      echo "No change to be expected on ${vendorPriFile}"
+    fi
+    echo
+  else
+    if [[ "${globalRes}" == 0 ]] || [[ "${IS_BYPASS}" == "1" ]]; then
+      diff -q ${vendorPriFile} ${vendorPriFile}.tmp > /dev/null 2>&1
+      if [[ "$?" == 1 ]]; then
+        echo "Changes applied on ${vendorPriFile}"
+      else
+        echo "No change on ${vendorPriFile}"
+      fi
+      echo
+      mv "${vendorPriFile}.tmp" "${vendorPriFile}"
+    else
+      rm "${vendorPriFile}.tmp"
+    fi
+  fi
+  return $globalRes
+}
+
 jsonhAction()
 {
   local qompoterFile=$1
@@ -2583,8 +2659,8 @@ help()
 	Usage: $C_PROGNAME [action] [ --repo <repo> | other options ]
 
 	    action               Select an action:
-	                          add, export, init, inspect, install, show, update,
-	                          updateOne
+	                          add, export, init, inspect, install, refresh-vendor-pri, show
+	                          update, updateOne
 
 	                         Other actions are useful for digging into Qompoter:
 	                          inqlude, jsonh, md5sum
@@ -2600,6 +2676,9 @@ help()
 
 	    -d, --depth SIZE      Depth of the recursivity in the searching of
 	                          subpackages [default = $DEPTH_SIZE]
+	                          
+	    --dry-run             Display stuff but do not really do things [default = $DRY_RUN]
+	                          Supported actions are: refresh-vendor-pri
 
 	    --inqlude-file FILE   Pick the provided file to search into the
 	                          inqlude repository
@@ -2689,6 +2768,9 @@ help()
 	    install it (from Github) but do not install its dependencies:
 	      $C_PROGNAME updateOne "qompoter/qhttp-wrapper" "v3.1.*" --save --no-dep --repo https://github.com
 
+	    Reload the vendor/vendor.pri file from all the available vendor/<package>/qompoter.pri files available
+	      $C_PROGNAME refresh-vendor-pri
+
 	    List required dependencies for this project (i.e. show Qompoter file):
 	      $C_PROGNAME show
 
@@ -2753,6 +2835,10 @@ cmdline()
       ;;
     --by-pass )
       IS_BYPASS=1
+      shift
+      ;;
+    --dry-run )
+      IS_DRYRUN=1
       shift
       ;;
     -d | --depth )
@@ -3011,6 +3097,15 @@ main()
       echo "======== ${ACTION}"
       echo
       md5sumAction "${VENDOR_NAME}"
+      ;;
+    "refresh-vendor-pri")
+      if [[ "${IS_DRYRUN}" == "1" ]]; then
+        echo "======== ${ACTION} (dry run)"
+      else
+        echo "======== ${ACTION}"
+      fi
+      echo
+      refreshVendorPriAction "${QOMPOTER_FILENAME}" "${VENDOR_DIR}"
       ;;
     "require")
       echo "======== ${ACTION}"
