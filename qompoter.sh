@@ -1316,10 +1316,20 @@ isGitRepositories()
 getBestVersionNumber()
 {
   local versionPattern=$1
-  if [ "${IS_STABLE_ONLY}" == "1" ]; then
-    grep "v\?${versionPattern}\$" | grep -v -e "-\(alpha\|beta\|RC[0-9]*\|[0-9]*\)$" | tail -1
+  # Remove * since grep will aready handle it
+  if [ "${versionPattern: -1}" == "*" ]; then
+      versionPattern=${versionPattern:: -1}
+  fi
+  # Insert "\" character before "." character to have the correct regex expression
+  versionPattern=$(echo "${versionPattern}" | sed 's/\./\\\./g')
+  if [ "${IS_STABLE_ONLY}" == "1" ] && [ "${versionPattern: -4}" == "-lib" ]; then
+    grep -- '-lib$' | grep "v\?${versionPattern:: -4}" | grep -v -e "-\(alpha\|beta\|RC[0-9]*\|[0-9]*\)$" | tail -1
+  elif [ "${IS_STABLE_ONLY}" == "1" ]; then
+    grep "v\?${versionPattern}" | grep -v -e "-\(alpha\|beta\|RC[0-9]*\|[0-9]*\)$" | tail -1
+  elif [ "${versionPattern: -4}" == "-lib" ]; then
+    grep -- '-lib$' | grep "v\?${versionPattern:: -4}" | grep -v -e "-\(alpha\|beta\|RC[0-9]*\|[0-9]*\)$" | tail -1
   else
-    grep "v\?${versionPattern}\$" | tail -1
+    grep "v\?${versionPattern}" | tail -1
   fi
 }
 
@@ -2303,7 +2313,7 @@ inspectTreeAction()
       if [ -f qompoter.json ]; then
           if [ -z "$(grep -w -o ""\"require\""" qompoter.json)" ] && [ -z "$(grep -w -o ""\"require-dev\""" qompoter.json)" ] && [ -z "$(grep -w -o ""\"require-global\""" qompoter.json)" ]; then
               echo -e "\e[37m|\t|---- There is no dependencies in the qompoter.json of this project"
-          else 
+          else
               listRequirement ""\"require\"""
               listRequirement ""\"require-dev\"""
               listRequirement ""\"require-global\"""
@@ -2355,7 +2365,7 @@ updateAction()
   checkQompoterFile "${qompoterFile}" || return 100
   prepareVendorDir "${vendorDir}"
   prepareQompoterLock "${qompoterLockFile}.tmp" "$(getProjectFullName "${qompoterFile}")"
-  
+
   recursiveInstallFromQompoterFile "${qompoterFile}" "${qompoterLockFile}.tmp" "${vendorDir}"
   globalRes=$?
 
@@ -2648,8 +2658,8 @@ usage()
 
 	                         Other actions are useful for digging into Qompoter:
 	                          inqlude, jsonh, md5sum
-	
-	For more details, use: $C_PROGNAME --help 
+
+	For more details, use: $C_PROGNAME --help
 	EOF
 }
 
@@ -2780,11 +2790,11 @@ help()
 
 	    List all dependencies for this project (i.e. show lock file):
 	      $C_PROGNAME inspect --all
-	      
-	    Make a tree with all dependencies and sub-dependencies for this project (i.e. show 
+
+	    Make a tree with all dependencies and sub-dependencies for this project (i.e. show
 	    lock file as a tree):
 	      $C_PROGNAME inspect --tree
-	      
+
 	    Export vendor directory:
 	      $C_PROGNAME export
 
